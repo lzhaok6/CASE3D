@@ -38,6 +38,7 @@ Shock properties are automatically calculated in the code based on the stand-off
 1/17/2018 Integrate the pure FEM element into the code. Zhaokuan Lu
 3/30/2018 Modify the code to take nonuniform element size (Jacobian determinant, Matrix calculation are affected). 
 add a comment here
+add another comment here
 */
 
 double time_step_size;
