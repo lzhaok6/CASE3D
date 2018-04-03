@@ -155,7 +155,7 @@ struct TIMINTstruct {
 };
 
 //Input values
-const int N = 3;    //N is the element order of fluid mesh 
+const int N = 1;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;

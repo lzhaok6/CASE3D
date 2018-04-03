@@ -381,7 +381,7 @@ int main()
 	std::string lineA;
 	std::ifstream myyfile("shock_amplitude.txt");
 	if (!myyfile) {
-		std::cout << "can not open the mesh file" << std::endl;
+		std::cout << "can not open the shock amplitude file" << std::endl;
 		system("PAUSE ");
 	}
 	while (myyfile.good()) {

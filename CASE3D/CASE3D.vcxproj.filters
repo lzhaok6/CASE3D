@@ -16,6 +16,9 @@
     <Filter Include="Header Files\MpCCI">
       <UniqueIdentifier>{62d81fce-6857-490e-8ddf-9a3da6af68f7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\MpCCI">
+      <UniqueIdentifier>{caccefec-117a-483c-8ee3-02bf631bfc0c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -145,6 +148,12 @@
     </ClCompile>
     <ClCompile Include="WAVE_IN.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="adapter.c">
+      <Filter>Source Files\MpCCI</Filter>
+    </ClCompile>
+    <ClCompile Include="data.c">
+      <Filter>Source Files\MpCCI</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
