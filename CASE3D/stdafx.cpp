@@ -1,8 +1,8 @@
 // stdafx.cpp : source file that includes just the standard includes
-// CASE3D.pch will be the pre-compiled header
+// 3Dbarge_TFM_Abaqus_ext_intf.pch will be the pre-compiled header
 // stdafx.obj will contain the pre-compiled type information
 
-#include "stdafx.h"
+//#include "stdafx.h"
 
 // TODO: reference any additional headers you need in STDAFX.H
 // and not in this file

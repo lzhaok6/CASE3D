@@ -1,0 +1,256 @@
+# mpcci_quantities.def
+# **************************************************************************************
+#
+#  Purpose:
+#     Defines the quantities used with MpCCI. This file is the root for all
+#     other files containing quantity description or ID's etc.
+
+#     This file is used together with a perl script qc.pl to create the following files:
+#
+#        C/C++ header file        : mpcci_quantities.h
+#        FORTRAN header file      : mpcci_quantities.inc
+#        MpCCI GUI properties file: quantityprops.xcf
+#        MpCCI Server QID file    : mpcci_quantities.qid
+#
+#
+#  $Id: mpcci_quantities.def 1568 2015-05-06 15:51:33Z pbayrasy $
+#
+# **************************************************************************************
+#
+#
+#  rule for the MPCCI_QID_xxx line:
+#
+#  NAM SIG DIM ORD VFLP TYP PHY XIOK SYM DEF UNI DESC
+#   |   |   |   |   |    |   |   |    |   |   |   |
+#   |   |   |   |   |    |   |   |    |   |   |   |
+#   |   |   |   |   |    |   |   |    |   |   |   + descriptive text
+#   |   |   |   |   |    |   |   |    |   |   |
+#   |   |   |   |   |    |   |   |    |   |   +---SI units
+#   |   |   |   |   |    |   |   |    |   |
+#   |   |   |   |   |    |   |   |    |   +--- default value
+#   |   |   |   |   |    |   |   |    |
+#   |   |   |   |   |    |   |   |    +--- symbolic shortcut
+#   |   |   |   |   |    |   |   |
+#   |   |   |   |   |    |   |   +--- extra/interpolate/ramp x/i/r = true, - = false
+#   |   |   |   |   |    |   |
+#   |   |   |   |   |    |   +--- quantity meaning (0 = any
+#   |   |   |   |   |    |                          1 = mass source
+#   |   |   |   |   |    |                          2 = momentum source
+#   |   |   |   |   |    |                          3 = energy source
+#   |   |   |   |   |    |                          4 = material property
+#   |   |   |   |   |    |                          5 = bc value
+#   |   |   |   |   |    |                          6 = face normal gradient/flux
+#   |   |   |   |   |    |                          7 = grid displacement/coordinate
+#   |   |   |   |   |    |                          8 = chemical component
+#   |   |   |   |   |    |
+#   |   |   |   |   |    +--- quantity interpolation type
+#   |   |   |   |   |                          0 = invalid
+#   |   |   |   |   |                          1 = mesh coordinate/displacement
+#   |   |   |   |   |                          2 = field
+#   |   |   |   |   |                          3 = flux integral
+#   |   |   |   |   |                          4 = flux density
+#   |   |   |   |   |                         10 = ipol(min)
+#   |   |   |   |   |                         11 = ipol(max)
+#   |   |   |   |   |                         12 = ipol(sum)
+#   |   |   |   |   |                         13 = ipol(prod)
+#   |   |   |   |   |
+#   |   |   |   |   +--- allowed coupling dimension is a bitmask with 4 keys for each dimension
+#   |   |   |   |                          -: none == global quantity
+#   |   |   |   |                          p: point quantity bit set
+#   |   |   |   |                          l: line quantity bit set
+#   |   |   |   |                          f: face quantity bit set
+#   |   |   |   |                          v: volume quantity bit set
+#   |   |   |   |
+#   |   |   |   +-- tensor order (0=scalar,1=vector,2=matrix, ... max=7)
+#   |   |   |
+#   |   |   +--- quantity dimension (1=scalar/2=biscalar/3=vector/6/9=tensor,... max=64)
+#   |   |
+#   |   +-- signatur: number between [0..255] to make a QID unique
+#   |
+#   +--- CPP macro name of quantity
+#
+
+# ******************************************************************************
+# any global non mesh based quantity
+# ******************************************************************************
+
+
+# standard useful global scalar quantities
+
+MPCCI_QID_INT_SWITCH           1 1 0 ---- 11 0 --- IntFlag                        0 []          "Control switch(Int)"
+MPCCI_QID_REAL_SWITCH          2 1 0 ---- 11 0 --- RealFlag                     0.0 []          "Control switch(Real)"
+MPCCI_QID_PHYSICAL_TIME        3 1 0 ---- 10 0 --- PhysicalTime                 0.0 [s]         "Physical time"
+MPCCI_QID_TIMESTEP_SIZE        4 1 0 ---- 10 0 --- DeltaTime                    1.0 [s]         "Time step size"
+MPCCI_QID_TIMESTEP_COUNT       5 1 0 ---- 11 0 --- TimeStepNo                     0 []          "Time step number"
+MPCCI_QID_ITERATION_COUNT      6 1 0 ---- 11 0 --- IterationNo                    0 []          "Iteration number"
+MPCCI_QID_GLOBAL_RESIDUAL      7 1 0 ---- 11 0 --- Residual                     0.0 []          "Global residual"
+
+MPCCI_QID_REF_PRESSURE        11 1 0 ---- 11 0 --- RefPressure               1.12e5 [N/m^2]     "Reference pressure"
+
+
+# special case: electromagnetic coupling, electric network, max 4 lines
+
+MPCCI_QID_VOLTAGE1            21 1 0 ---- 11 0 --- Voltage1                     0.0 [V]         "Electric voltage - phase 1"
+MPCCI_QID_VOLTAGE2            22 1 0 ---- 11 0 --- Voltage2                     0.0 [V]         "Electric voltage - phase 2"
+MPCCI_QID_VOLTAGE3            23 1 0 ---- 11 0 --- Voltage3                     0.0 [V]         "Electric voltage - phase 3"
+MPCCI_QID_VOLTAGE4            24 1 0 ---- 11 0 --- Voltage4                     0.0 [V]         "Electric voltage - phase 4"
+MPCCI_QID_CURRENT1            25 1 0 ---- 11 0 --- Current1                     0.0 [A]         "Electric current - phase 1"
+MPCCI_QID_CURRENT2            26 1 0 ---- 11 0 --- Current2                     0.0 [A]         "Electric current - phase 2"
+MPCCI_QID_CURRENT3            27 1 0 ---- 11 0 --- Current3                     0.0 [A]         "Electric current - phase 3"
+MPCCI_QID_CURRENT4            28 1 0 ---- 11 0 --- Current4                     0.0 [A]         "Electric current - phase 4"
+
+# special case: moving obstacle center of gravity GC
+
+MPCCI_QID_MO_POSITION         31 3 1 ---- 11 7 --- CGPosition                   0.0 [m]         "Moving obstacle CG position"
+MPCCI_QID_MO_ANGLE            32 3 1 ---- 11 7 --- CGAngle                      0.0 [rad]       "Moving obstacle CG angle"
+MPCCI_QID_MO_VELOCITY         33 3 1 ---- 11 5 --- CGVelocity                   0.0 [m/s]       "Moving obstacle CG velocity"
+MPCCI_QID_MO_OMEGA            34 3 1 ---- 11 5 --- CGOmega                      0.0 [rad/s]     "Moving obstacle CG angular velocity"
+
+
+# users global scalar 0..increment by 1
+
+MPCCI_QID_UGS_00              40 1 0 ---- 11 0 --- gs00                         0.0 []          "Global scalar 00"
+MPCCI_QID_UGS_01              41 1 0 ---- 11 0 --- gs01                         0.0 []          "Global scalar 01"
+MPCCI_QID_UGS_02              42 1 0 ---- 11 0 --- gs02                         0.0 []          "Global scalar 02"
+MPCCI_QID_UGS_03              43 1 0 ---- 11 0 --- gs03                         0.0 []          "Global scalar 03"
+MPCCI_QID_UGS_04              44 1 0 ---- 11 0 --- gs04                         0.0 []          "Global scalar 04"
+MPCCI_QID_UGS_05              45 1 0 ---- 11 0 --- gs05                         0.0 []          "Global scalar 05"
+MPCCI_QID_UGS_06              46 1 0 ---- 11 0 --- gs06                         0.0 []          "Global scalar 06"
+MPCCI_QID_UGS_07              47 1 0 ---- 11 0 --- gs07                         0.0 []          "Global scalar 07"
+
+#define MPCCI_QID_UGS_COUNT   8
+
+#
+# users global vector 0.. increment by 1
+#
+MPCCI_QID_UGV_00              40 3 1 ---- 11 0 --- gv00                         0.0 []          "Global vector 00"
+MPCCI_QID_UGV_01              41 3 1 ---- 11 0 --- gv01                         0.0 []          "Global vector 01"
+MPCCI_QID_UGV_02              42 3 1 ---- 11 0 --- gv02                         0.0 []          "Global vector 02"
+MPCCI_QID_UGV_03              43 3 1 ---- 11 0 --- gv03                         0.0 []          "Global vector 03"
+MPCCI_QID_UGV_04              44 3 1 ---- 11 0 --- gv04                         0.0 []          "Global vector 04"
+MPCCI_QID_UGV_05              45 3 1 ---- 11 0 --- gv05                         0.0 []          "Global vector 05"
+MPCCI_QID_UGV_06              46 3 1 ---- 11 0 --- gv06                         0.0 []          "Global vector 06"
+MPCCI_QID_UGV_07              47 3 1 ---- 11 0 --- gv07                         0.0 []          "Global vector 07"
+
+#define MPCCI_QID_UGV_COUNT   8
+
+
+# ******************************************************************************
+# any mesh based quantities on lines/faces, but not volumes
+# ******************************************************************************
+
+
+# quantities for thermal coupling, face normal values only
+
+MPCCI_QID_WALLTEMPERATURE      1 1 0 -fl-  2 5 xir WallTemp                   300.0 [K]         "Boundary temperature"
+MPCCI_QID_WALLHEATFLUX         2 1 0 -fl-  4 6 xir WallHeatFlux                 0.0 [W/m^2]     "Boundary normal heat flux density"
+MPCCI_QID_WALLHTCOEFF          3 1 0 -fl-  2 5 xir WallHTCoeff                  0.0 [W/m^2 K]   "Boundary heat transfer coefficient"
+MPCCI_QID_FILMTEMPERATURE      4 1 0 -fl-  2 5 xir FilmTemp                   300.0 [K]         "Film temperature"
+MPCCI_QID_HEATRATE             5 1 0 vflp  3 5 xir HeatRate                     0.0 [W]         "Heat rate"
+
+
+MPCCI_QID_WALLFORCE           10 3 1 -fl-  3 5 xir WallForce                    0.0 [N]         "Boundary absolute force vector"
+MPCCI_QID_RELWALLFORCE        11 3 1 -fl-  3 5 xir RelWallForce                 0.0 [N]         "Boundary relative force vector"
+
+
+# ******************************************************************************
+# any mesh based quantities on lines/faces/volumes
+# ******************************************************************************
+
+MPCCI_QID_TEMPERATURE         21 1 0 vflp  2 5 xir Temperature                300.0 [K]         "Temperature"
+MPCCI_QID_TOTALTEMP           22 1 0 vfl-  2 5 xir TotalTemp                  300.0 [K]         "Total Temperature"
+
+MPCCI_QID_ABSPRESSURE         31 1 0 vfl-  4 5 xir AbsPressure                  0.0 [N/m^2]     "Absolute pressure"
+MPCCI_QID_OVERPRESSURE        32 1 0 vfl-  4 5 xir OverPressure                 0.0 [N/m^2]     "Relative pressure"
+MPCCI_QID_POREPRESSURE        33 1 0 vfl-  4 5 xir PorePressure                 0.0 [N/m^2]     "Pore pressure"
+MPCCI_QID_ACSTPRESSURE        34 1 0 vfl-  4 5 xir AcstPressure                 0.0 [N/m^2]     "Acoustic pressure"
+MPCCI_QID_TOTALPRESSURE       35 1 0 vflp  4 5 xir TotalPressure                0.0 [N/m^2]     "Total pressure"
+MPCCI_QID_DYNPRESSURE         36 1 0 vfl-  4 5 xir DynPressure                  0.0 [N/m^2]     "Dynamic pressure"
+MPCCI_QID_STATICPRESSURE      37 1 0 vflp  4 5 xir StaticPressure               0.0 [N/m^2]     "Static pressure"
+
+MPCCI_QID_VELOCITY            41 3 1 vflp  2 5 xir Velocity                     0.0 [m/s]       "Velocity vector"
+MPCCI_QID_ACCELERATION        42 3 1 vflp  2 5 xir Acceleration                 0.0 [m/s^2]     "Acceleration vector"
+MPCCI_QID_VELOCITYMAG         43 1 0 vflp  2 5 xir VelocityMagnitude            0.0 [m/s]       "Velocity magnitude"
+
+MPCCI_QID_ANGULARCOORD        44 3 1 ---p  1 7 -ir AngularCoordinate            0.0 [rad]       "Angular coordinate"
+MPCCI_QID_ANGULARVELOCITY     45 3 1 ---p  2 5 -ir AngularVelocity              0.0 [rad/s]     "Angular velocity"
+MPCCI_QID_ANGULARACCELERATION 46 3 1 ---p  2 5 -ir AngularAcceleration          0.0 [rad/s^2]   "Angular acceleration"
+
+MPCCI_QID_POREFLOW            49 1 0 vf--  4 6 xi- PorousFlow                   0.0 [m/s]       "Pore fluid flow"
+
+MPCCI_QID_BODYFORCE           51 3 1 v---  4 2 xir BodyForce                    0.0 [N/m^3]     "General body force density vector"
+MPCCI_QID_LORENTZFORCE        52 3 1 v---  4 2 xir LorentzForce                 0.0 [N/m^3]     "Lorentz force density vector"
+
+MPCCI_QID_FORCE               53 3 1 vflp  3 2 xir Force                        0.0 [N]         "Force"
+MPCCI_QID_TORQUE              54 3 1 vflp  3 2 xir Torque                       0.0 [N m]       "Torque"
+
+MPCCI_QID_HEATFLUX            61 3 1 v---  4 6 xi- HeatFlux                     0.0 [W/m^2]     "Heat flux density vector"
+MPCCI_QID_HEATSOURCE          62 1 0 v---  4 3 xi- HeatSource                   0.0 [W/m^3]     "General heat source density"
+MPCCI_QID_ENTHALPY            63 1 0 v---  4 0 xi- Enthalpy                     0.0 [W/m^3]     "Enthalpy density"
+MPCCI_QID_JOULEHEAT           64 1 0 v---  4 3 xi- JouleHeat                    0.0 [W/m^3]     "Joule heat density"
+MPCCI_QID_JOULEHEATLIN        65 1 0 v---  4 3 xi- JouleHeatLin                 0.0 [W/m^3 K]   "Joule heat linearization"
+
+MPCCI_QID_VOLFLOWVECT         71 3 1 v---  3 1 xi- VolumeFlow                   0.0 [m^3/s]     "Volume flow vector"
+MPCCI_QID_VOLFLOWRATE         72 1 0 -f-p  3 1 xi- VolumeFlowRate               0.0 [m^3/s]     "Volume flow rate"
+MPCCI_QID_MASSFLOWVECT        73 3 1 v---  3 1 xi- MassFlowVect                 0.0 [kg/s]      "Mass flow vector"
+MPCCI_QID_MASSFLOWRATE        74 1 0 -f-p  3 1 xi- MassFlowRate                 0.0 [kg/s]      "Mass flow rate"
+MPCCI_QID_MASSFLUXVECT        75 3 1 v---  4 1 xi- MassFluxVect                 0.0 [kg/m^2 s]  "Mass flux vector"
+MPCCI_QID_MASSFLUXRATE        76 1 0 -f-p  4 1 xi- MassFluxRate                 0.0 [kg/m^2 s]  "Mass flux rate"
+
+#
+# coordinate type quantities: TYP = 1
+#
+MPCCI_QID_NPOSITION           82 3 1 vfl-  1 7 -ir NPosition                    0.0 [m]         "Nodal position"
+MPCCI_QID_POINTPOSITION       84 3 1 ---p  1 7 -ir PointPosition                0.0 [m]         "Point position"
+
+#
+# special case electromagnetic coupling
+#
+MPCCI_QID_CURRENTDENSITY      91 3 1 vfl-  4 6 xi- CurrentDensity               0.0 [A/m^2]     "Electric current density vector"
+MPCCI_QID_MAGNETICFLUX        92 3 1 vfl-  4 6 xi- MagneticFlux                 0.0 [T]         "Magnetic flux density vector"
+MPCCI_QID_MAGNETICFIELD       93 3 1 vfl-  2 6 xi- MagneticField                0.0 [A/m]       "Magnetic field vector"
+MPCCI_QID_ELECTRICFLUX        94 3 1 vfl-  4 6 xi- ElectricFlux                 0.0 [C/m^2]     "Electric flux vector"
+MPCCI_QID_ELECTRICFIELD       95 3 1 vfl-  2 6 xi- ElectricField                0.0 [V/m]       "Electric field vector"
+MPCCI_QID_CHARGEDENSITY       96 1 0 vfl-  2 0 xi- ChargeDensity                0.0 [C/m^3]     "Charge density"
+MPCCI_QID_ELECTRICPOT         97 1 0 vfl-  2 5 xi- ElectricPot                  0.0 [V]         "Electric Potential"
+
+#
+# material/cell properties defined in FV cells of finite elements
+#
+MPCCI_QID_DENSITY            101 1 0 v---  2 4 xi- Density                      1.0 [kg/m^3]    "Density"
+MPCCI_QID_SPECHEAT           102 1 0 v---  2 4 xi- SpecificHeat                 1.0 [J/kg K]    "Specific heat"
+
+MPCCI_QID_THERMCONDX         111 1 0 vfl-  2 4 xi- ThermCondX                   0.0 [W/m K]     "Thermal conductivity - x"
+MPCCI_QID_THERMCONDY         112 1 0 vfl-  2 4 xi- ThermCondY                   0.0 [W/m K]     "Thermal conductivity - y"
+MPCCI_QID_THERMCONDZ         113 1 0 vfl-  2 4 xi- ThermCondZ                   0.0 [W/m K]     "Thermal conductivity - z"
+MPCCI_QID_THERMCOND1         114 1 0 vfl-  2 4 xi- ThermCond1                   0.0 [W/m K]     "Thermal conductivity - xyz"
+MPCCI_QID_THERMCOND3         115 3 1 vfl-  2 4 xi- ThermCond3                   0.0 [W/m K]     "Thermal conductivity -(x,y,z)"
+
+MPCCI_QID_ELECTCONDX         121 1 0 vfl-  2 4 xi- ElectrCondX                  0.0 [S/m]       "Electric conductivity - x"
+MPCCI_QID_ELECTCONDY         122 1 0 vfl-  2 4 xi- ElectrCondY                  0.0 [S/m]       "Electric conductivity - y"
+MPCCI_QID_ELECTCONDZ         123 1 0 vfl-  2 4 xi- ElectrCondZ                  0.0 [S/m]       "Electric conductivity - z"
+MPCCI_QID_ELECTCOND1         124 1 0 vfl-  2 4 xi- ElectrCond1                  0.0 [S/m]       "Electric conductivity - xyz"
+MPCCI_QID_ELECTCOND3         125 3 1 vfl-  2 4 xi- ElectrCond3                  0.0 [S/m]       "Electric conductivity - (x,y,z)"
+
+MPCCI_QID_ELECTRESVX         131 1 0 vfl-  2 4 xi- ElectrResX                   0.0 [ohm m]     "Electric resistivity - x"
+MPCCI_QID_ELECTRESVY         132 1 0 vfl-  2 4 xi- ElectrResY                   0.0 [ohm m]     "Electric resistivity - y"
+MPCCI_QID_ELECTRESVZ         133 1 0 vfl-  2 4 xi- ElectrResZ                   0.0 [ohm m]     "Electric resistivity - z"
+MPCCI_QID_ELECTRESV1         134 1 0 vfl-  2 4 xi- ElectrRes1                   0.0 [ohm m]     "Electric resistivity - xyz"
+MPCCI_QID_ELECTRESV3         135 3 1 vfl-  2 4 xi- ElectrRes3                   0.0 [ohm m]     "Electric resistivity - (x,y,z)"
+
+#
+# species mass fraction
+#
+MPCCI_QID_YI_00               10 1 0 vfl-  2 8 xi- YI00                        0.0 []           "Species mass fraction 00"
+MPCCI_QID_YI_01               11 1 0 vfl-  2 8 xi- YI01                        0.0 []           "Species mass fraction 01"
+MPCCI_QID_YI_02               12 1 0 vfl-  2 8 xi- YI02                        0.0 []           "Species mass fraction 02"
+MPCCI_QID_YI_03               13 1 0 vfl-  2 8 xi- YI03                        0.0 []           "Species mass fraction 03"
+MPCCI_QID_YI_04               14 1 0 vfl-  2 8 xi- YI04                        0.0 []           "Species mass fraction 04"
+MPCCI_QID_YI_05               15 1 0 vfl-  2 8 xi- YI05                        0.0 []           "Species mass fraction 05"
+MPCCI_QID_YI_06               16 1 0 vfl-  2 8 xi- YI06                        0.0 []           "Species mass fraction 06"
+MPCCI_QID_YI_07               17 1 0 vfl-  2 8 xi- YI07                        0.0 []           "Species mass fraction 07"
+MPCCI_QID_YI_08               18 1 0 vfl-  2 8 xi- YI08                        0.0 []           "Species mass fraction 08"
+MPCCI_QID_YI_09               19 1 0 vfl-  2 8 xi- YI09                        0.0 []           "Species mass fraction 09"
+
+#define MPCCI_QID_YI_COUNT  10
+
