@@ -83,9 +83,6 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CASE3D.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="EIGENMAX.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
