@@ -167,12 +167,33 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CASE3D.cpp" />
+    <ClCompile Include="EIGENMAX.cpp" />
+    <ClCompile Include="ELE_GEN.cpp" />
+    <ClCompile Include="FSILINK.cpp" />
+    <ClCompile Include="GLLQUAD.cpp" />
+    <ClCompile Include="GLOBAL_SHAPE.cpp" />
+    <ClCompile Include="interface_mapping.cpp" />
+    <ClCompile Include="Jacobian.cpp" />
+    <ClCompile Include="LEGENDRE.cpp" />
+    <ClCompile Include="LOBATTO.cpp" />
+    <ClCompile Include="LOCAL_GSHAPE.cpp" />
+    <ClCompile Include="LOCAL_NODE.cpp" />
+    <ClCompile Include="LOCAL_SHAPE.cpp" />
+    <ClCompile Include="Mainprogram.cpp" />
+    <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="meshgeneration.cpp" />
+    <ClCompile Include="NRB.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="TD_ELE_GEN.cpp" />
+    <ClCompile Include="TD_LOCAL_NODE.cpp" />
+    <ClCompile Include="TIME_INT.cpp" />
+    <ClCompile Include="TIMINT.cpp" />
+    <ClCompile Include="WAVE_IN.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
