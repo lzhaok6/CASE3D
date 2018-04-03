@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\MpCCI">
+      <UniqueIdentifier>{62d81fce-6857-490e-8ddf-9a3da6af68f7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -23,6 +26,57 @@
     </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="adapter.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="data.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_ccvx.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_chain.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_coreapi.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_defs.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_elements.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_igeom.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_limits.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_monitor.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_platform.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_quantities.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_server.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_stdioapi.h">
+      <Filter>Header Files\MpCCI</Filter>
+    </ClInclude>
+    <ClInclude Include="mpcci_types.h">
+      <Filter>Header Files\MpCCI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
