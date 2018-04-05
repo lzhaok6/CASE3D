@@ -1978,7 +1978,6 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 		//std::cout << "total CPU time (ms): " << duration << std::endl;
 		//std::cout << " " << std::endl;
 
-
 		//count = 0; 
 		/*
 		for (j = 0; j < NNODE; j++) {
