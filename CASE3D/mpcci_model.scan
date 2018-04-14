@@ -1,0 +1,23 @@
+# This file was automatically created for the MpCCI GUI.
+#@ Code: "3Dbarge_Nastran_test"
+#@ Scan: "C:\Program Files\MpCCI\4.4.2\codes\3Dbarge_Nastran_test\Scanner.pm"
+#@ File: "model.txt"
+#@ Path: "C:\Users\lzhaok6\OneDrive\UNDEX research\MpCCI\codes\CASE3D\CASE3D"
+#@ Date: "Sun Apr  8 15:34:07 2018"
+#@ User: "lzhaok6"
+#@ Host: "distance7"
+#
+# MpCCI relevant information:
+#   Model dimensions  : 3D
+#   Coordinate system : Cartesian
+#   Solution type     : Transient
+#   Load cases        : ?
+#   Unit system       : ?
+#   Precision         : Double precision (64 bit)
+#
+   Physical-Time      GLOBAL     1
+   Time-Step-Size     GLOBAL     1
+   wetsurface1        Face       1
+   wetsurface2        Face       2
+   wetsurface3        Face       3
+   wetsurface4        Face       4

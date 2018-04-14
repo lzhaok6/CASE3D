@@ -140,10 +140,10 @@ int main()
 
 	//std::cout << "JACOBIAN done" << std::endl;
 	GLOBAL_SHAPEstruct n;
-	n = GLOBAL_SHAPE(a.NEL, m.XS, m.JACOB, g.SHL);
+	n = GLOBAL_SHAPE(a.NEL, m.XS, m.JACOB, g.SHL, m.xs, m.jacob);
 	//std::cout << "GLOBAL_SHAPE done" << std::endl;
 	MATRIXstruct o;
-	o = MATRIX(a.NEL, a.NNODE, n.SHG, g.SHL, m.JACOB, f.W, a.IEN, c.LNA, m.XS);
+	o = MATRIX(a.NEL, a.NNODE, n.SHG, g.SHL, m.JACOB, f.W, a.IEN, c.LNA, m.XS, n.shg, m.jacob);
 	//duration_int = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 	//std::cout << "time lapse for until this point: " << duration_int << std::endl;
 

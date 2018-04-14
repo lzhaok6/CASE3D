@@ -16,8 +16,8 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int NQUAD);
 struct LEGENDREstruct LEGENDRE(int N);
 struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA);
 struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **IEN, int***LNA);
-struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double******XS, double****JACOB, double*****SHL);
-struct MATRIXstruct MATRIX(int NEL, int NNODE, double******SHG, double*****SHL, double****JACOB, double*W, int**IEN, int***LNA, double******XS);
+struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double******XS, double****JACOB, double*****SHL, double****xs, double**jacob);
+struct MATRIXstruct MATRIX(int NEL, int NNODE, double******SHG, double*****SHL, double****JACOB, double*W, int**IEN, int***LNA, double******XS, double****shg, double**jacob);
 double EIGENMAX(double** QMASTER, double*** HMASTER, int NEL);
 struct TIMINTstruct TIMINT(double LMAX);
 struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN, int NEL, double*****SHL, double***SHOD);
@@ -116,10 +116,13 @@ struct LOCAL_GSHAPEstruct {
 struct JACOBIANstruct {
 	double******XS;
 	double****JACOB;
+	double****xs;
+	double**jacob; 
 };
 
 struct GLOBAL_SHAPEstruct {
 	double****** SHG;
+	double****shg;
 };
 
 struct MATRIXstruct {
@@ -151,7 +154,7 @@ struct NRBstruct {
 struct TIMINTstruct {
 	double DT; //TIME STEP
 	int NDT;    //NUMBER OF TIME STEP 
-				//int dtscale;
+	//int dtscale;
 };
 
 //Input values
@@ -163,8 +166,8 @@ const int Nq = N + 1; //The integration order for boundary nodal force term (exa
 const int NqINT = Nq + 1;
 const int refine = 1; //The refinement rate of fluid mesh against base fluid mesh for h refinement. 
 const int hpref = refine*N; //total refinement level of h and p refinement
-const int hprefg = refine*N - 1; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5)
-//const int hprefg = 1;
+//const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
+const int hprefg = 1;
 const int mappingalgo = 5; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
 const double RHO = 1025.0; //original
 //const double RHO = 989.0; //Bleich-Sandler
@@ -196,9 +199,11 @@ const double PATM = 101.3e3; //pa
 const double stdoff = 10; //ft
 const double depth = 30; //ft
 const double W = 60; //charge weight (lb)
+
+					 
 //Mesh definition
-/*
 //Abaqus2 symmetric
+/*
 const double SX = 8.5344 / 2;
 //const double SY = 0.9144 + 0.2032;
 const double SY = 0.9144;
@@ -214,8 +219,8 @@ const double YHE = SY / SYNEL;
 const double ZHE = SZ / SZNEL;
 */
 
-/*
 //Abaqus2 symmetric with waterline adjusted (0.1m)
+/*
 const double SX = 4.2672; //8.5344/2
 const double SY = 0.9144 + 0.2032;
 const double SZ = 4.8768;
@@ -230,7 +235,7 @@ const double YHE = SY / SYNEL;
 const double ZHE = SZ / SZNEL;
 */
 
-
+/*
 //Abaqus 10 symmetric (0.3048m/1ft mesh) with waterline adjusted (0.3048)
 const double SX = 8.5344 / 2; //14ft
 //const double SY = (0.9144 + 0.3048) * 2; //8ft
@@ -251,10 +256,10 @@ const double XHE = SX / SXNEL;
 const double YHE = SY / SYNEL;
 const double ZHE = SZ / SZNEL;
 const double DRAFT = SY;
+*/
 
-
-/*
 //Abaqus 10 symmetric extended (0.3048m/1ft mesh) with waterline adjusted (0.3048)
+/*
 //the XHE and ZHE are slightly changed to make the base fluid mesh mismatch with base structural mesh
 const double SX = 8.5344 / 2; //14ft
 //const double SY = (0.9144 + 0.3048) * 2; //8ft
@@ -299,21 +304,20 @@ const double ZHE = SZ / SZNEL;
 const double DRAFT = SY;
 */
 
-/*
 //Abaqus 10 symmetric extended3 enlarge the fluid domain (BZ=10ft)
 const double SX = 8.5344 / 2; //14ft
 //const double SY = (0.9144 + 0.3048) * 2; //8ft
 const double SY = (0.9144 + 0.3048); //4ft
 //const double SY = 0.3048; //1ft
 const double SZ = 4.8768; //16ft
-const int SXNEL = 7 * refine;
-const int SYNEL = 2 * refine; //for 4 ft draft
+const int SXNEL = 14 * refine;
+const int SYNEL = 4 * refine; //for 4 ft draft
 //const int SYNEL = 8 * refine; //for 8 ft draft
 //const int SYNEL = refine;
-const int SZNEL = 8 * refine;
+const int SZNEL = 16 * refine;
 //const double AX = 1.524; //5ft
 const double AX = 1.8288; //6ft
-const double DY = 2 * SY; //4ft
+const double DY = 2 * SY; //8ft
 //const double DY = SY;
 const double BZ = 3.048; //10ft
 //const double BZ = 1.2192 * 6; //24ft
@@ -321,10 +325,10 @@ const double XHE = SX / SXNEL;
 const double YHE = SY / SYNEL;
 const double ZHE = SZ / SZNEL;
 const double DRAFT = SY;
-*/
 
-/*
+
 //Abaqus 11 symmetric (0.1524m/0.5ft mesh) with waterline adjusted (0.3048)
+/*
 const double SX = 8.5344 / 2; //14ft
 const double SY = 0.9144 + 0.3048; //4ft
 const double SZ = 4.8768; //16ft
@@ -340,8 +344,8 @@ const double ZHE = SZ / SZNEL;
 const double DRAFT = SY;
 */
 
-/*
 //Abaqus 12 symmetric (0.25ft mesh) with waterline adjusted (0.3048)
+/*
 const double SX = 8.5344 / 2; //14ft
 const double SY = 0.9144 + 0.3048; //4ft
 const double SZ = 4.8768; //16ft
@@ -356,8 +360,8 @@ const double YHE = SY / SYNEL;
 const double ZHE = SZ / SZNEL;
 */
 
-/*
 //smaller shell model with 0.2032m draft
+/*
 const double SX = 4.2672; //8.5344/2
 const double SY = 0.2032;
 const double SZ = 4.8768;
@@ -372,8 +376,8 @@ const double YHE = SY / SYNEL;
 const double ZHE = SZ / SZNEL;
 */
 
-/*
 //coarser mesh for debug purposes
+/*
 const double SX = 4.2672; //8.5344/2
 const double SY = 0.2032;
 const double SZ = 4.8768;
@@ -388,9 +392,9 @@ const double YHE = SY / SYNEL;
 const double ZHE = SZ / SZNEL;
 */
 
-/*
 //0.1m base fluid mesh
 //Further decrease the size of the shell structure with 0.2032m draft
+/*
 const double SX = 4.2672 / 6; //8.5344/2
 const double SY = 0.2032;
 const double SZ = 4.8768 / 6;
@@ -409,9 +413,9 @@ const double ZHE = SZ / SZNEL;
 const double DRAFT = SY; 
 */
 
-/*
 //0.05m base fluid mesh
 //Further decrease the size of the shell structure with 0.2032m draft
+/*
 const double SX = 4.2672 / 6; //8.5344/2
 const double SY = 0.2032;
 const double SZ = 4.8768 / 6;
@@ -427,9 +431,10 @@ const double XHE = SX / SXNEL;
 const double YHE = SY / SYNEL;
 const double ZHE = SZ / SZNEL;
 */
-/*
+
 //0.025m base fluid mesh
 //Further decrease the size of the shell structure with 0.2032m draft
+/*
 const double SX = 4.2672 / 6; //8.5344/2
 const double SY = 0.2032;
 const double SZ = 4.8768 / 6;
@@ -446,8 +451,9 @@ const double YHE = SY / SYNEL;
 const double ZHE = SZ / SZNEL;
 */
 
-/*
 //3D Bleich-Sandler case configuration (unit surface)
+
+/*
 const double SX = 1; //8.5344/2
 //const double SY = 0.141; //draft of the plate
 const double SY = 0.141;
@@ -467,9 +473,9 @@ const double YHE = SY / SYNEL;
 const double ZHE = SZ / SZNEL;
 */
 
-/*
 //smaller Bleich-Sandler mesh
 //3D Bleich-Sandler case configuration
+/*
 const double SX = 0.1; //8.5344/2
 const double SY = 0.141;
 const double SZ = 0.1;
@@ -489,9 +495,9 @@ const double ZHE = SZ / SZNEL;
 const double DRAFT = SY;
 */
 
-/*
 //smaller Bleich-Sandler mesh (extended to make the base mesh mismatch)
 //3D Bleich-Sandler case configuration
+/*
 const double SX = 0.1; //8.5344/2
 const double SY = 0.141;
 const double SZ = 0.1;
@@ -511,8 +517,8 @@ const double ZHE = SZ / SZNEL;
 const double DRAFT = 0.141; 
 */
 
-/*
 //the mesh for reproducing the result in Klenow CH6 
+/*
 const double SX = 0.15; //8.5344/2
 const double SY = 0.15;
 const double SZ = 0.1;
@@ -545,7 +551,7 @@ const double output_int = 5e-4; //output file time interval
 const int debug = 0; //is the code in debug mode?
 const int Bleich = 0; //is this a Bleich-Sandler case?
 const int tfm = 1; //is total field model used? 
-const int tensorfactorization = 0;
+const int tensorfactorization = 1;
 const int TNT = 1;
 const int output = 0; 
 const int FEM = 0; //Is this a first order FEM code? 

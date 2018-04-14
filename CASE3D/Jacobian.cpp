@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include "header.h"
 #include <fstream>
+#include <Eigen/Dense>
+#include <Eigen/LU>
 
 struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **IEN, int*** LNA) {
 	int i, j, k, l, m, n;
@@ -40,6 +42,27 @@ struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **
 		}
 	}
 
+	//initialize t.xs
+	t.xs = new double***[NEL];
+	for (i = 0; i < NEL; i++) {
+		t.xs[i] = new double**[3];
+		for (j = 0; j < 3; j++) {
+			t.xs[i][j] = new double*[3];
+			for (k = 0; k < 3; k++) {
+				t.xs[i][j][k] = new double[NINT*NINT*NINT];
+			}
+		}
+	}
+	for (i = 0; i < NEL; i++) {
+		for (j = 0; j < 3; j++) {
+			for (k = 0; k < 3; k++) {
+				for (l = 0; l < NINT*NINT*NINT; l++) {
+					t.xs[i][j][k][l] = 0.0;
+				}
+			}
+		}
+	}
+
 	t.JACOB = new double***[NEL];
 	for (i = 0; i < NEL; i++) {
 		t.JACOB[i] = new double**[NINT];
@@ -60,6 +83,16 @@ struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **
 		}
 	}
 
+	t.jacob = new double*[NEL];
+	for (i = 0; i < NEL; i++) {
+		t.jacob[i] = new double[NINT*NINT*NINT];
+	}
+	for (i = 0; i < NEL; i++) {
+		for (j = 0; j < NINT*NINT*NINT; j++) {
+			t.jacob[i][j] = 0.0;
+		}
+	}
+
 	//Jacobian matrix is evaluated on integration points
 	//XS is the Jacobian matrix
 	//corner nodes arrary
@@ -74,7 +107,9 @@ struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **
 	cn[6] = LNA[N][N][N];
 	cn[7] = LNA[0][N][N];
 
+	/*
 	//New Jacobian matrix definition
+	//This only works for linear geometric mapping
 	for (m = 0; m < NEL; m++) {
 		for (i = 0; i < NINT; i++) {
 			for (j = 0; j < NINT; j++) {
@@ -95,6 +130,32 @@ struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **
 					t.JACOB[m][i][j][k] = t.XS[m][0][0][i][j][k] * (t.XS[m][1][1][i][j][k] * t.XS[m][2][2][i][j][k] - t.XS[m][2][1][i][j][k] * t.XS[m][1][2][i][j][k])
 						- t.XS[m][1][0][i][j][k] * (t.XS[m][0][1][i][j][k] * t.XS[m][2][2][i][j][k] - t.XS[m][2][1][i][j][k] * t.XS[m][0][2][i][j][k])
 						+ t.XS[m][2][0][i][j][k] * (t.XS[m][0][1][i][j][k] * t.XS[m][1][2][i][j][k] - t.XS[m][1][1][i][j][k] * t.XS[m][0][2][i][j][k]);
+				}
+			}
+		}
+	}
+	*/
+
+	for (m = 0; m < NEL; m++) {
+		for (i = 0; i < NINT; i++) {
+			for (j = 0; j < NINT; j++) {
+				for (k = 0; k < NINT; k++) {
+					for (l = 0; l < 8; l++) {
+						//same with 2D code, the transpose of that in Mindmap (the determinant of two transpose matrix is the same)
+						t.xs[m][0][0][i*NINT*NINT + j*NINT + k] = t.xs[m][0][0][i*NINT*NINT + j*NINT + k] + GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dxi
+						t.xs[m][1][0][i*NINT*NINT + j*NINT + k] = t.xs[m][1][0][i*NINT*NINT + j*NINT + k] + GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dxi
+						t.xs[m][2][0][i*NINT*NINT + j*NINT + k] = t.xs[m][2][0][i*NINT*NINT + j*NINT + k] + GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dxi
+						t.xs[m][0][1][i*NINT*NINT + j*NINT + k] = t.xs[m][0][1][i*NINT*NINT + j*NINT + k] + GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/deta
+						t.xs[m][1][1][i*NINT*NINT + j*NINT + k] = t.xs[m][1][1][i*NINT*NINT + j*NINT + k] + GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/deta
+						t.xs[m][2][1][i*NINT*NINT + j*NINT + k] = t.xs[m][2][1][i*NINT*NINT + j*NINT + k] + GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/deta
+						t.xs[m][0][2][i*NINT*NINT + j*NINT + k] = t.xs[m][0][2][i*NINT*NINT + j*NINT + k] + GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dzeta
+						t.xs[m][1][2][i*NINT*NINT + j*NINT + k] = t.xs[m][1][2][i*NINT*NINT + j*NINT + k] + GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dzeta
+						t.xs[m][2][2][i*NINT*NINT + j*NINT + k] = t.xs[m][2][2][i*NINT*NINT + j*NINT + k] + GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dzeta
+					}
+					//The determinant of jacobian matrix
+					t.jacob[m][i*NINT*NINT + j*NINT + k] = t.xs[m][0][0][i*NINT*NINT + j*NINT + k] * (t.xs[m][1][1][i*NINT*NINT + j*NINT + k] * t.xs[m][2][2][i*NINT*NINT + j*NINT + k] - t.xs[m][2][1][i*NINT*NINT + j*NINT + k] * t.xs[m][1][2][i*NINT*NINT + j*NINT + k])
+						- t.xs[m][1][0][i*NINT*NINT + j*NINT + k] * (t.xs[m][0][1][i*NINT*NINT + j*NINT + k] * t.xs[m][2][2][i*NINT*NINT + j*NINT + k] - t.xs[m][2][1][i*NINT*NINT + j*NINT + k] * t.xs[m][0][2][i*NINT*NINT + j*NINT + k])
+						+ t.xs[m][2][0][i*NINT*NINT + j*NINT + k] * (t.xs[m][0][1][i*NINT*NINT + j*NINT + k] * t.xs[m][1][2][i*NINT*NINT + j*NINT + k] - t.xs[m][1][1][i*NINT*NINT + j*NINT + k] * t.xs[m][0][2][i*NINT*NINT + j*NINT + k]);
 				}
 			}
 		}

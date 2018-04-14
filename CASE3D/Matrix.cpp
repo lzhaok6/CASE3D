@@ -7,7 +7,7 @@
 #include <Eigen/Dense>
 #include <Eigen/LU>
 
-struct MATRIXstruct MATRIX(int NEL, int NNODE, double******SHG, double*****SHL, double****JACOB, double*W, int**IEN, int***LNA, double******XS) {
+struct MATRIXstruct MATRIX(int NEL, int NNODE, double******SHG, double*****SHL, double****JACOB, double*W, int**IEN, int***LNA, double******XS, double****shg, double**jacob) {
 	MATRIXstruct t;
 	double QFUNC;  //CAPACITANCE MATRIX SUM VARIABLE (mass matrix)
 	double HFUNC;  //REACTANCE MATRIX SUM VARIABLE (stiffness matrix)
@@ -51,7 +51,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double******SHG, double*****SHL, 
 						for (l = 0; l < NINT; l++) {
 							for (m = 0; m < NINT; m++) {
 								//PERFORM GLL INTERGRATION FOR CAPACITANCE MATRIX
-								QFUNC = JACOB[e][k][l][m] * (SHL[3][i][k][l][m] * SHL[3][j][k][l][m]);
+								QFUNC = jacob[e][k*NINT*NINT + l*NINT + m] * (SHL[3][i][k][l][m] * SHL[3][j][k][l][m]);
 								t.QMASTER[i][i] += W[k] * W[l] * W[m] * QFUNC;  //MULTIDIMENSIONAL GAUSSIAN QUADRATURE: INTEGRATE INNER INTERGRAL FIRST, THEN OUTER INTEGRAL
 							}
 						} //check point: whether the QMASTER matrix is diagonal, if not wrong
@@ -79,7 +79,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double******SHG, double*****SHL, 
 							for (l = 0; l < NINT; l++) {
 								for (m = 0; m < NINT; m++) {
 									//PERFORM GLL INTERGRATION FOR CAPACITANCE MATRIX
-									QFUNC = JACOB[e][k][l][m] * (SHL[3][i][k][l][m] * SHL[3][j][k][l][m]);
+									QFUNC = jacob[e][k*NINT*NINT + l*NINT + m] * (SHL[3][i][k][l][m] * SHL[3][j][k][l][m]);
 									t.QMASTER[i][j] = t.QMASTER[i][j] + W[k] * W[l] * W[m] * QFUNC;  //MULTIDIMENSIONAL GAUSSIAN QUADRATURE: INTEGRATE INNER INTERGRAL FIRST, THEN OUTER INTEGRAL
 								}
 							} //check point: whether the QMASTER matrix is diagonal, if not wrong
@@ -99,7 +99,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double******SHG, double*****SHL, 
 				for (k = 0; k < NINT; k++) {       //k l m are for four points
 					for (l = 0; l < NINT; l++) {
 						for (m = 0; m < NINT; m++) {
-							HFUNC = (JACOB[e][k][l][m])*(SHG[e][2][i][k][l][m] * SHG[e][2][j][k][l][m] + SHG[e][1][i][k][l][m] * SHG[e][1][j][k][l][m] + SHG[e][0][i][k][l][m] * SHG[e][0][j][k][l][m]);
+							HFUNC = jacob[e][k*NINT*NINT + l*NINT + m]*(shg[e][2][i][k*NINT*NINT+l*NINT+m] * shg[e][2][j][k*NINT*NINT + l*NINT + m] + shg[e][1][i][k*NINT*NINT + l*NINT + m] * shg[e][1][j][k*NINT*NINT + l*NINT + m] + shg[e][0][i][k*NINT*NINT + l*NINT + m] * shg[e][0][j][k*NINT*NINT + l*NINT + m]);
 							//ASSEMBLE MASTER REACTANCE MATRIX
 							t.HMASTER[e][i][j] = t.HMASTER[e][i][j] + W[k] * W[l] * W[m] * HFUNC;
 							//QMASTER is diagonal because of the orthogonality of polynomial 
