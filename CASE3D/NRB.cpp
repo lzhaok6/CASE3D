@@ -7,7 +7,7 @@
 
 
 //NRB determines the NRB local node numbering and the associated NRB arrays
-struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN, int NEL, double*****SHL, double***SHOD) {
+struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN, int NEL, double***SHL, double***SHOD) {
 	NRBstruct t;
 	//int* NRBA;
 	int i, j, k, l, m;
@@ -158,7 +158,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 					if (m == l) {
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								DUNC += W[j] * W[k] * (SHL[3][ol[0].DP[m] - 1][j][0][k] / SHOD[0][0][0]) * (SHL[3][ol[0].DP[l] - 1][j][0][k] / SHOD[0][0][0]) * (XHE / 2.0)*(ZHE / 2.0);
+								DUNC += W[j] * W[k] * (SHL[3][ol[0].DP[m] - 1][j*NINT*NINT+0*NINT+k] / SHOD[0][0][0]) * (SHL[3][ol[0].DP[l] - 1][j*NINT*NINT + 0 * NINT + k] / SHOD[0][0][0]) * (XHE / 2.0)*(ZHE / 2.0);
 							}
 						}
 						t.AD[IEN[ol[0].DP[m] - 1][t.NRBELE_ARR[i][0] - 1] - 1][0] += DUNC;
@@ -175,7 +175,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 				DUNC = 0.0; //accumulator 
 				for (j = 0; j < NqINT; j++) {
 					for (k = 0; k < NqINT; k++) {
-						DUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[0].DP[m] - 1][j][0][k] / SHOD[0][0][0]) * (ls.SHL[3][ol[0].DP[l] - 1][j][0][k] / SHOD[0][0][0]) * (XHE / 2.0)*(ZHE / 2.0);
+						DUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[0].DP[m] - 1][j*NqINT*NqINT+0*NqINT+k] / SHOD[0][0][0]) * (ls.SHL[3][ol[0].DP[l] - 1][j*NqINT*NqINT + 0 * NqINT + k] / SHOD[0][0][0]) * (XHE / 2.0)*(ZHE / 2.0);
 					}
 				}
 				ol[0].ADMASTER[m][l] += DUNC;
@@ -277,7 +277,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 						if (m == l) {
 							for (j = 0; j < NINT; j++) {
 								for (k = 0; k < NINT; k++) {
-									DUNC += W[j] * W[k] * (SHL[3][ol[0].DP[m] - 1][j][0][k] / SHOD[0][0][0]) * (SHL[3][ol[0].DP[l] - 1][j][0][k] / SHOD[0][0][0]) * (XHE / 2.0)*(ZHE / 2.0);
+									DUNC += W[j] * W[k] * (SHL[3][ol[0].DP[m] - 1][j*NINT*NINT+0*NINT+k] / SHOD[0][0][0]) * (SHL[3][ol[0].DP[l] - 1][j*NINT*NINT + 0 * NINT + k] / SHOD[0][0][0]) * (XHE / 2.0)*(ZHE / 2.0);
 								}
 							}
 							t.AD[IEN[ol[0].DP[m] - 1][i] - 1][1] += DUNC;
@@ -300,7 +300,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 				DUNC = 0.0; //accumulator 
 				for (j = 0; j < NqINT; j++) {
 					for (k = 0; k < NqINT; k++) {
-						DUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[0].DP[m] - 1][j][0][k] / SHOD[0][0][0]) * (ls.SHL[3][ol[0].DP[l] - 1][j][0][k] / SHOD[0][0][0]) * (XHE / 2.0)*(ZHE / 2.0);
+						DUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[0].DP[m] - 1][j*NqINT*NqINT+0*NqINT+k] / SHOD[0][0][0]) * (ls.SHL[3][ol[0].DP[l] - 1][j*NqINT*NqINT + 0 * NqINT + k] / SHOD[0][0][0]) * (XHE / 2.0)*(ZHE / 2.0);
 					}
 				}
 				ol[0].ADMASTER[m][l] += DUNC;
@@ -319,7 +319,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 						if (m == l) {
 							for (j = 0; j < NINT; j++) {
 								for (k = 0; k < NINT; k++) {
-									DUNC += W[j] * W[k] * (SHL[3][ol[1].DP[m] - 1][j][k][0] / SHOD[0][0][0]) * (SHL[3][ol[1].DP[l] - 1][j][k][0] / SHOD[0][0][0]) * (XHE / 2.0)*(YHE / 2.0);
+									DUNC += W[j] * W[k] * (SHL[3][ol[1].DP[m] - 1][j*NINT*NINT+k*NINT+0] / SHOD[0][0][0]) * (SHL[3][ol[1].DP[l] - 1][j*NINT*NINT + k*NINT + 0] / SHOD[0][0][0]) * (XHE / 2.0)*(YHE / 2.0);
 								}
 							}
 							t.AD[IEN[ol[1].DP[m] - 1][i] - 1][2] += DUNC;
@@ -342,7 +342,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 				DUNC = 0.0; //accumulator 
 				for (j = 0; j < NqINT; j++) {
 					for (k = 0; k < NqINT; k++) {
-						DUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[1].DP[m] - 1][j][k][0] / SHOD[0][0][0]) * (ls.SHL[3][ol[1].DP[l] - 1][j][k][0] / SHOD[0][0][0]) * (XHE / 2.0)*(YHE / 2.0);
+						DUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[1].DP[m] - 1][j*NqINT*NqINT+k*NqINT+0] / SHOD[0][0][0]) * (ls.SHL[3][ol[1].DP[l] - 1][j*NqINT*NqINT + k*NqINT + 0] / SHOD[0][0][0]) * (XHE / 2.0)*(YHE / 2.0);
 					}
 				}
 				ol[1].ADMASTER[m][l] += DUNC;
@@ -360,7 +360,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 						if (m == l) {
 							for (j = 0; j < NINT; j++) {
 								for (k = 0; k < NINT; k++) {
-									DUNC += W[j] * W[k] * (SHL[3][ol[2].DP[m] - 1][0][j][k] / SHOD[0][0][0]) * (SHL[3][ol[2].DP[l] - 1][0][j][k] / SHOD[0][0][0]) * (YHE / 2.0)*(ZHE / 2.0);
+									DUNC += W[j] * W[k] * (SHL[3][ol[2].DP[m] - 1][0*NINT*NINT+j*NINT+k] / SHOD[0][0][0]) * (SHL[3][ol[2].DP[l] - 1][0 * NINT*NINT + j*NINT + k] / SHOD[0][0][0]) * (YHE / 2.0)*(ZHE / 2.0);
 								}
 							}
 							//if (abs(GCOORD[IEN[ol[2].DP[m] - 1][i] - 1][0] + (SX / 2 + AX)) < 1e-5) {
@@ -385,7 +385,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 				DUNC = 0.0; //accumulator 
 				for (j = 0; j < NqINT; j++) {
 					for (k = 0; k < NqINT; k++) {
-						DUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[2].DP[m] - 1][0][j][k] / SHOD[0][0][0]) * (ls.SHL[3][ol[2].DP[l] - 1][0][j][k] / SHOD[0][0][0]) * (YHE / 2.0)*(ZHE / 2.0);
+						DUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[2].DP[m] - 1][0 * NqINT*NqINT + j*NqINT + k] / SHOD[0][0][0]) * (ls.SHL[3][ol[2].DP[l] - 1][0 * NqINT*NqINT + j*NqINT + k] / SHOD[0][0][0]) * (YHE / 2.0)*(ZHE / 2.0);
 					}
 				}
 				ol[2].ADMASTER[m][l] += DUNC;
@@ -403,7 +403,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 						if (m == l) {
 							for (j = 0; j < NINT; j++) {
 								for (k = 0; k < NINT; k++) {
-									DUNC += W[j] * W[k] * (SHL[3][ol[3].DP[m] - 1][j][k][N] / SHOD[0][N][N]) * (SHL[3][ol[3].DP[l] - 1][j][k][N] / SHOD[0][N][N]) * (XHE / 2.0)*(YHE / 2.0);
+									DUNC += W[j] * W[k] * (SHL[3][ol[3].DP[m] - 1][j*NINT*NINT+k*NINT+N] / SHOD[0][N][N]) * (SHL[3][ol[3].DP[l] - 1][j*NINT*NINT + k*NINT + N] / SHOD[0][N][N]) * (XHE / 2.0)*(YHE / 2.0);
 								}
 							}
 							t.AD[IEN[ol[3].DP[m] - 1][i] - 1][4] += DUNC;
@@ -426,7 +426,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 				DUNC = 0.0; //accumulator 
 				for (j = 0; j < NqINT; j++) {
 					for (k = 0; k < NqINT; k++) {
-						DUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[3].DP[m] - 1][j][k][Nq] / SHOD[0][N][N]) * (ls.SHL[3][ol[3].DP[l] - 1][j][k][Nq] / SHOD[0][N][N]) * (XHE / 2.0)*(YHE / 2.0);
+						DUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[3].DP[m] - 1][j*NqINT*NqINT + k*NqINT + Nq] / SHOD[0][N][N]) * (ls.SHL[3][ol[3].DP[l] - 1][j*NqINT*NqINT + k*NqINT + Nq] / SHOD[0][N][N]) * (XHE / 2.0)*(YHE / 2.0);
 					}
 				}
 				ol[3].ADMASTER[m][l] += DUNC;

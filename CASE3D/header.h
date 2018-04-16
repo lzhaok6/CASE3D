@@ -16,15 +16,15 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int NQUAD);
 struct LEGENDREstruct LEGENDRE(int N);
 struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA);
 struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **IEN, int***LNA);
-struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double******XS, double****JACOB, double*****SHL, double****xs, double**jacob);
-struct MATRIXstruct MATRIX(int NEL, int NNODE, double******SHG, double*****SHL, double****JACOB, double*W, int**IEN, int***LNA, double******XS, double****shg, double**jacob);
+struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double****XS, double**JACOB);
+struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double****XS, double****SHG, double**JACOB);
 double EIGENMAX(double** QMASTER, double*** HMASTER, int NEL);
 struct TIMINTstruct TIMINT(double LMAX);
-struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN, int NEL, double*****SHL, double***SHOD);
+struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN, int NEL, double***SHL, double***SHOD);
 double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, int *NRBA, int NRBNODE, double*timer, double*ampt, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO);
-void FSILINK(double* W, int*** LNA, int**IEN, double*****SHL, double**GCOORD, int NNODE, double***SHOD);
+void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int NNODE, double***SHOD);
 void interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int**LNA_base, int**LNA_basealgo5, double *Z, int TIME, double** GCOORD, double ***phi_fem, double *W, double ***phi_femg, double*** phi_fem2);
-void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, int**IEN, int NEL, double* S, double*****SHL, int TIME, double *T, double DT, int NDT, double* Z,
+void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, int**IEN, int NEL, double* S, double***SHL, int TIME, double *T, double DT, int NDT, double* Z,
 	double** AYIN, double*** HMASTER, double* Q, double*** phi_fem, double* timer, double* ampt, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
 	double XO, double YO, double ZO, double ***SHOD, double ****gamma, double****gamma_t, double*****G, double** gamman, double** gamma_tn, double****Gn, double*** phi_femg, double*** phi_fem2);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
@@ -105,7 +105,7 @@ struct LEGENDREstruct {
 };
 
 struct LOCAL_SHAPEstruct {
-	double***** SHL;
+	double*** SHL;
 	double ***SHOD;
 };
 
@@ -114,15 +114,12 @@ struct LOCAL_GSHAPEstruct {
 };
 
 struct JACOBIANstruct {
-	double******XS;
-	double****JACOB;
-	double****xs;
-	double**jacob; 
+	double****XS;
+	double**JACOB; 
 };
 
 struct GLOBAL_SHAPEstruct {
-	double****** SHG;
-	double****shg;
+	double****SHG;
 };
 
 struct MATRIXstruct {
@@ -158,7 +155,7 @@ struct TIMINTstruct {
 };
 
 //Input values
-const int N = 4;    //N is the element order of fluid mesh 
+const int N = 3;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;

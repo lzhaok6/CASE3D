@@ -11,7 +11,7 @@
 #include <Eigen/LU>
 
 //construct the link between structure and fluid module A C D separately
-void FSILINK(double* W, int*** LNA, int**IEN, double*****SHL, double**GCOORD, int NNODE, double***SHOD) {
+void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int NNODE, double***SHOD) {
 	int i, j, k, l, m, n;
 	int IC; //counter 
 	extern int owsfnumber;
@@ -74,7 +74,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double*****SHL, double**GCOORD, in
 				if (m == l) {  //collect the diagonal term
 					for (j = 0; j < NINT; j++) { //j and k are integration points in two dimensions 
 						for (k = 0; k < NINT; k++) {
-							FUNC += W[j] * W[k] * (SHL[3][ol[0].FP[m] - 1][j][k][N]/SHOD[0][N][N]) * (SHL[3][ol[0].FP[l] - 1][j][k][N]/SHOD[0][N][N]) * (XHE / 2.0)*(YHE / 2.0);
+							FUNC += W[j] * W[k] * (SHL[3][ol[0].FP[m] - 1][j*NINT*NINT + k*NINT + N] / SHOD[0][N][N]) * (SHL[3][ol[0].FP[l] - 1][j*NINT*NINT + k*NINT + N] / SHOD[0][N][N]) * (XHE / 2.0)*(YHE / 2.0);
 							//FUNC += W[j] * W[k] * SHL[3][ol[0].FP[m] - 1][j][k][N] * SHL[3][ol[0].FP[l] - 1][j][k][N] * (1 / 2.0)*(1 / 2.0);
 						}
 					}
@@ -110,7 +110,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double*****SHL, double**GCOORD, in
 			FUNC = 0.0;
 			for (j = 0; j < NqINT; j++) { //j and k are for integration point (one unit higher than the interpolation point)
 				for (k = 0; k < NqINT; k++) {
-					FUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[0].FP[m] - 1][j][k][Nq] / ls.SHOD[0][N][Nq]) * (ls.SHL[3][ol[0].FP[l] - 1][j][k][Nq] / ls.SHOD[0][N][Nq]) * (XHE / 2.0)*(YHE / 2.0);
+					FUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[0].FP[m] - 1][j*NqINT*NqINT + k*NqINT + Nq] / ls.SHOD[0][N][Nq]) * (ls.SHL[3][ol[0].FP[l] - 1][j*NqINT*NqINT + k*NqINT + Nq] / ls.SHOD[0][N][Nq]) * (XHE / 2.0)*(YHE / 2.0);
 					std::cout << " " << std::endl;
 				}
 			}
@@ -147,7 +147,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double*****SHL, double**GCOORD, in
 				if (m == l) {
 					for (j = 0; j < NINT; j++) {
 						for (k = 0; k < NINT; k++) {
-							FUNC += W[j] * W[k] * (SHL[3][ol[1].FP[m] - 1][N][j][k] / SHOD[0][N][N]) * (SHL[3][ol[1].FP[l] - 1][N][j][k] / SHOD[0][N][N]) * (YHE / 2.0)*(ZHE / 2.0);
+							FUNC += W[j] * W[k] * (SHL[3][ol[1].FP[m] - 1][N*NINT*NINT + j*NINT + k] / SHOD[0][N][N]) * (SHL[3][ol[1].FP[l] - 1][N*NINT*NINT + j*NINT + k] / SHOD[0][N][N]) * (YHE / 2.0)*(ZHE / 2.0);
 						}
 					}
 					ol[1].SF[ol[1].FP[m] - 1][n] = FUNC;
@@ -165,7 +165,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double*****SHL, double**GCOORD, in
 			FUNC = 0.0;
 			for (j = 0; j < NqINT; j++) { //j and k are for integration point (one unit higher than the interpolation point)
 				for (k = 0; k < NqINT; k++) {
-					FUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[1].FP[m] - 1][Nq][j][k] / ls.SHOD[0][N][Nq]) * (ls.SHL[3][ol[1].FP[l] - 1][Nq][j][k] / ls.SHOD[0][N][Nq]) * (ZHE / 2.0)*(YHE / 2.0);
+					FUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[1].FP[m] - 1][Nq*NqINT*NqINT + j*NqINT + k] / ls.SHOD[0][N][Nq]) * (ls.SHL[3][ol[1].FP[l] - 1][Nq*NqINT*NqINT + j*NqINT + k] / ls.SHOD[0][N][Nq]) * (ZHE / 2.0)*(YHE / 2.0);
 				}
 			}
 			ol[1].FPMASTER[m][l] += FUNC;
@@ -196,7 +196,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double*****SHL, double**GCOORD, in
 				if (m == l) {
 					for (j = 0; j < NINT; j++) {
 						for (k = 0; k < NINT; k++) {
-							FUNC += W[j] * W[k] * (SHL[3][ol[2].FP[m] - 1][j][N][k] / SHOD[0][N][N]) * (SHL[3][ol[2].FP[l] - 1][j][N][k] / SHOD[0][N][N]) * (XHE / 2.0)*(ZHE / 2.0);
+							FUNC += W[j] * W[k] * (SHL[3][ol[2].FP[m] - 1][j*NINT*NINT + N*NINT + k] / SHOD[0][N][N]) * (SHL[3][ol[2].FP[l] - 1][j*NINT*NINT + N*NINT + k] / SHOD[0][N][N]) * (XHE / 2.0)*(ZHE / 2.0);
 						}
 					}
 					ol[2].SF[ol[2].FP[m] - 1][n] = FUNC;
@@ -214,7 +214,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double*****SHL, double**GCOORD, in
 			FUNC = 0.0;
 			for (j = 0; j < NqINT; j++) { //j and k are for integration point (one unit higher than the interpolation point)
 				for (k = 0; k < NqINT; k++) {
-					FUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[2].FP[m] - 1][j][Nq][k] / ls.SHOD[0][N][Nq]) * (ls.SHL[3][ol[2].FP[l] - 1][j][Nq][k] / ls.SHOD[0][N][Nq]) * (XHE / 2.0)*(ZHE / 2.0);
+					FUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[2].FP[m] - 1][j*NqINT*NqINT + Nq*NqINT + k] / ls.SHOD[0][N][Nq]) * (ls.SHL[3][ol[2].FP[l] - 1][j*NqINT*NqINT + Nq*NqINT + k] / ls.SHOD[0][N][Nq]) * (XHE / 2.0)*(ZHE / 2.0);
 				}
 			}
 			ol[2].FPMASTER[m][l] += FUNC;
@@ -245,7 +245,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double*****SHL, double**GCOORD, in
 				if (m == l) {  //collect the diagonal term
 					for (j = 0; j < NINT; j++) { //j and k are for integration point
 						for (k = 0; k < NINT; k++) {
-							FUNC += W[j] * W[k] * (SHL[3][ol[3].FP[m] - 1][j][k][0] / SHOD[0][0][0]) * (SHL[3][ol[3].FP[l] - 1][j][k][0] / SHOD[0][0][0]) * (XHE / 2.0)*(YHE / 2.0);
+							FUNC += W[j] * W[k] * (SHL[3][ol[3].FP[m] - 1][j*NINT*NINT + k*NINT + 0] / SHOD[0][0][0]) * (SHL[3][ol[3].FP[l] - 1][j*NINT*NINT + k*NINT + 0] / SHOD[0][0][0]) * (XHE / 2.0)*(YHE / 2.0);
 						}
 					}
 					ol[3].SF[ol[3].FP[m] - 1][n] = FUNC;
@@ -263,7 +263,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double*****SHL, double**GCOORD, in
 			FUNC = 0.0;
 			for (j = 0; j < NqINT; j++) { //j and k are for integration point (one unit higher than the interpolation point)
 				for (k = 0; k < NqINT; k++) {
-					FUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[3].FP[m] - 1][j][k][0] / ls.SHOD[0][0][0]) * (ls.SHL[3][ol[3].FP[l] - 1][j][k][0] / ls.SHOD[0][0][0]) * (XHE / 2.0)*(YHE / 2.0);
+					FUNC += gq.W[j] * gq.W[k] * (ls.SHL[3][ol[3].FP[m] - 1][j*NqINT*NqINT+k*NqINT+0] / ls.SHOD[0][0][0]) * (ls.SHL[3][ol[3].FP[l] - 1][j*NqINT*NqINT + k*NqINT + 0] / ls.SHOD[0][0][0]) * (XHE / 2.0)*(YHE / 2.0);
 				}
 			}
 			ol[3].FPMASTER[m][l] += FUNC;

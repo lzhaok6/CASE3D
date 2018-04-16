@@ -12,32 +12,23 @@
 struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int NQUAD) {
 	int i, j, k, l, m, n;
 	LOCAL_SHAPEstruct t;
-	//double ***t.SHOD;
-	t.SHL = new double****[4];
+
+	t.SHL = new double**[4];
 	for (i = 0; i < 4; i++) {
-		t.SHL[i] = new double***[NINT*NINT*NINT];
+		t.SHL[i] = new double*[NINT*NINT*NINT];
 		for (j = 0; j < NINT*NINT*NINT; j++) {
-			t.SHL[i][j] = new double**[NQUAD + 1];
-			for (k = 0; k < NQUAD + 1; k++) {
-				t.SHL[i][j][k] = new double*[NQUAD + 1];
-				for (l = 0; l < NQUAD + 1;l++) {
-					t.SHL[i][j][k][l] = new double[NQUAD + 1];
-				}
-			}
+			t.SHL[i][j] = new double[(NQUAD + 1)*(NQUAD + 1)*(NQUAD + 1)];
 		}
 	}
 
 	for (i = 0; i < 4; i++) {
 		for (j = 0; j < NINT*NINT*NINT; j++) {
-			for (k = 0; k < NQUAD + 1; k++) {
-				for (l = 0; l < NQUAD + 1; l++) {
-					for (m = 0; m < NQUAD + 1; m++) {
-						t.SHL[i][j][k][l][m] = 0.0;
-					}
-				}
+			for (k = 0; k < (NQUAD + 1)*(NQUAD + 1)*(NQUAD + 1); k++) {
+				t.SHL[i][j][k] = 0.0;
 			}
 		}
 	}
+
 
 	t.SHOD = new double**[2];
 	for (i = 0; i < 2;i++) {
@@ -127,25 +118,6 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int NQUAD) {
 		//reference: Klenow thesis page 35
 		for (l = 0; l < NINT; l++) { //interpolation point
 			for (k = 0; k < NQUAD + 1; k++) { //quadrature point
-				/*
-				if (k != l) {
-					t.SHOD[1][l][k] = (hq.LN[0][k] / hi.LN[0][l])*(1.0 / (gq.S[k] - gi.S[l]));
-				}
-				else if (l == k) { //if k==l, then S[k] - S[l] = 0 if the number of interpolation and quadrature points are the same
-					if (k == 0) {  //left end point
-						t.SHOD[1][l][k] = -double((N + 1)*N) / 4.0;
-					}
-					else if (k == NINT - 1) { //right end point
-						t.SHOD[1][l][k] = double((N + 1)*N) / 4.0;
-					}
-					else { //internal points
-						t.SHOD[1][l][k] = 0.0;
-					}
-				}
-				else {
-					t.SHOD[1][l][k] = 0.0;
-				}
-				*/
 				if (l == 0 && k == 0) {
 					t.SHOD[1][l][k] = -double((N + 1)*N) / 4.0;
 				}
@@ -168,32 +140,16 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int NQUAD) {
 		for (j = 0; j < NINT; j++) {  //Eta
 			for (k = 0; k < NINT; k++) { //Zeta
 				//i j k are interpolation points and l m n are quadrature points 
-				/*
-				for (l = 0; l < NINT; l++) { //the internal nodes on Xi 
-					for (m = 0; m < NINT;m++) { //the internal nodes on Eta 
-						for (n = 0; n < NINT;n++) { //the internal nodes on Zeta 
-							t.SHL[3][LNA[i][j][k] - 1][l][m][n] = t.SHOD[0][i][l] * t.SHOD[0][j][m] * t.SHOD[0][k][n];
-							//3D Nth ORDER SHAPE FUNCTION
-							t.SHL[0][LNA[i][j][k] - 1][l][m][n] = t.SHOD[1][i][l] * t.SHOD[0][j][m] * t.SHOD[0][k][n];
-							//3D Nth ORDER SHAPE FUNCTION DERIVATIVE W/R TO Xi 
-							t.SHL[1][LNA[i][j][k] - 1][l][m][n] = t.SHOD[0][i][l] * t.SHOD[1][j][m] * t.SHOD[0][k][n];
-							//3D Nth ORDER SHAPE FUNCTION DERIVATIVE W/R TO Eta 
-							t.SHL[2][LNA[i][j][k] - 1][l][m][n] = t.SHOD[0][i][l] * t.SHOD[0][j][m] * t.SHOD[1][k][n];
-							//3D Nth ORDER SHAPE FUNCTION DERIVATIVE W/R TO Zeta
-						}
-					}
-				}
-				*/
 				for (l = 0; l < NQUAD + 1; l++) { //the internal nodes on Xi 
 					for (m = 0; m < NQUAD + 1; m++) { //the internal nodes on Eta 
 						for (n = 0; n < NQUAD + 1; n++) { //the internal nodes on Zeta 
-							t.SHL[3][LNA[i][j][k] - 1][l][m][n] = t.SHOD[0][i][l] * t.SHOD[0][j][m] * t.SHOD[0][k][n];
+							t.SHL[3][LNA[i][j][k] - 1][l*(NQUAD + 1)*(NQUAD + 1) + m*(NQUAD + 1) + n] = t.SHOD[0][i][l] * t.SHOD[0][j][m] * t.SHOD[0][k][n];
 							//3D Nth ORDER SHAPE FUNCTION
-							t.SHL[0][LNA[i][j][k] - 1][l][m][n] = t.SHOD[1][i][l] * t.SHOD[0][j][m] * t.SHOD[0][k][n];
+							t.SHL[0][LNA[i][j][k] - 1][l*(NQUAD + 1)*(NQUAD + 1) + m*(NQUAD + 1) + n] = t.SHOD[1][i][l] * t.SHOD[0][j][m] * t.SHOD[0][k][n];
 							//3D Nth ORDER SHAPE FUNCTION DERIVATIVE W/R TO Xi 
-							t.SHL[1][LNA[i][j][k] - 1][l][m][n] = t.SHOD[0][i][l] * t.SHOD[1][j][m] * t.SHOD[0][k][n];
+							t.SHL[1][LNA[i][j][k] - 1][l*(NQUAD + 1)*(NQUAD + 1) + m*(NQUAD + 1) + n] = t.SHOD[0][i][l] * t.SHOD[1][j][m] * t.SHOD[0][k][n];
 							//3D Nth ORDER SHAPE FUNCTION DERIVATIVE W/R TO Eta 
-							t.SHL[2][LNA[i][j][k] - 1][l][m][n] = t.SHOD[0][i][l] * t.SHOD[0][j][m] * t.SHOD[1][k][n];
+							t.SHL[2][LNA[i][j][k] - 1][l*(NQUAD + 1)*(NQUAD + 1) + m*(NQUAD + 1) + n] = t.SHOD[0][i][l] * t.SHOD[0][j][m] * t.SHOD[1][k][n];
 							//3D Nth ORDER SHAPE FUNCTION DERIVATIVE W/R TO Zeta
 						}
 					}
@@ -201,16 +157,6 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int NQUAD) {
 			}
 		}
 	}
-	
-	/*
-	for (i = 0; i < 2;i++) {
-		for (j = 0; j < NINT;j++) {
-			delete[] t.SHOD[i][j];
-		}
-		delete[] t.SHOD[i];
-	}
-	delete[] t.SHOD;
-	*/
 
 	//check point: if the shape function value at the corresponding point is 0 
 	//std::cout << "shape function value on the corresponding point is: " << t.SHL[3][LNA[1][1][1] - 1][1][1][1] << std::endl;
