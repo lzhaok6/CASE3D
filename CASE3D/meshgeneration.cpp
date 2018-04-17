@@ -8,6 +8,8 @@
 #include <sstream>
 #include <cmath>
 #include <ctime>
+#include <iostream>
+#include <vector>
 
 /*
 mesh generation explanation:
@@ -330,7 +332,7 @@ struct meshgenerationstruct meshgeneration() {
 	}
 
 	else {   //external mesh from Gmsh
-		int i, j;
+		int i, j, k;
 		double ptholder[1 + NINT*NINT*NINT];
 		for (i = 0; i < 1 + NINT*NINT*NINT; i++) {
 			ptholder[i] = 0.0;
@@ -340,13 +342,13 @@ struct meshgenerationstruct meshgeneration() {
 		std::string lineA;
 		std::string filename;
 		std::cout << "reading the mesh file: " << std::endl;
-		std::ifstream myfile("mesh_N=1_0.1_abaqus2_sym.txt");
-		//std::ifstream myfile("Abaqus2mesh_debug.txt");
-		if (!myfile) {
+		std::ifstream infile("output.msh");
+		if (!infile) {
 			std::cout << "can not open the mesh file" << std::endl;
 			system("PAUSE ");
 		}
 
+		/*
 		//int NEL = AXNEL*AYNEL*AZNEL + BXNEL*BYNEL*BZNEL + CXNEL*CYNEL*CZNEL + DXNEL*DYNEL*DZNEL + (AXNEL + BXNEL + CXNEL)*BZNEL*AYNEL;
 		int NEL = round((AX + SX) / XHE)*round((DY + SY) / YHE)*round((SZ + 2 * BZ) / ZHE) - SXNEL*SYNEL*SZNEL;
 		t.IEN = new int*[NINT*NINT*NINT];
@@ -363,7 +365,6 @@ struct meshgenerationstruct meshgeneration() {
 		std::clock_t start;
 		double duration;
 		start = std::clock();
-		/* Your algorithm here */
 
 		int NEL_holder;
 		t.NEL = 0;
@@ -412,15 +413,111 @@ struct meshgenerationstruct meshgeneration() {
 				row++;
 			}
 		}
-
-		duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-
-		std::cout << "printf: " << duration << '\n';
-
-		if (t.NEL != NEL) {
-			std::cout << "the prediction NEL is wrong" << std::endl;
-			system("PAUSE ");
+		*/
+		//read the file 
+		int nodestart = 0;
+		int nodeend = 0;
+		int ele_line = 0;
+		std::vector<std::vector<std::string>> output;
+		int ct = -1;
+		std::string csvLine;
+		int physicalgroups = 1;
+		int endfile = 0;
+		std::vector<int> phygrp_start; //the starting line number of the physical group
+		int elestart = 0; //the flag denote the start of element connectivity definition
+		while (getline(infile, csvLine))
+		{
+			ct = ct + 1; //the current line number (starting from 0)
+			std::istringstream csvStream(csvLine);
+			std::vector<std::string> csvColumn;
+			std::string csvElement;
+			while (getline(csvStream, csvElement, ' '))
+			{
+				csvColumn.push_back(csvElement);
+			}
+			output.push_back(csvColumn);
+			if (csvColumn[0] == "$EndElements") {
+				endfile = ct;
+				break;
+			}
+			if (csvColumn[0] == "$Nodes") {
+				nodestart = ct + 2; //the node starts from the next line
+			}
+			if (csvColumn[0] == "$EndNodes") {
+				nodeend = ct - 1; //the node starts from the next line
+			}
+			if (csvColumn[0] == "$Elements") {
+				ele_line = ct + 2; //the line corresponding to the start of element connectivity definition
+				phygrp_start.push_back(ele_line);
+				elestart = 1;
+			}
+			if (elestart == 1 && ct >= ele_line) {
+				if (csvColumn[3] == std::to_string(physicalgroups)) {
+					//do nothing
+				}
+				else {
+					physicalgroups += 1;
+					//push the line number of the starting of the current physical group
+					phygrp_start.push_back(ct);
+				}
+			}
+			
+			std::cout << ct << std::endl;
 		}
+
+		
+
+		//The physical groups except for the last one are the surface mesh (NINT*NINT). 
+		//The last physical group is the volumn mesh (NINT*NINT*NINT)
+		t.NNODE = stoi(output[nodestart - 1][0]);
+		t.NEL = endfile - phygrp_start[physicalgroups - 1];
+		//Define connectivity matrix in the volumn mesh
+		t.IEN = new int*[t.NEL]; 
+		for (i = 0; i < t.NEL;i++) {
+			t.IEN[i] = new int[NINT*NINT*NINT]; 
+		}
+		ct = 0;
+		for (i = phygrp_start[physicalgroups - 1]; i < endfile; i++) {
+			for (j = 5; j < 5 + NINT*NINT*NINT; j++) {
+				t.IEN[ct][j - 5] = stoi(output[i][j]);
+			}
+			ct += 1;
+		}
+
+		//Define the rest of surface boundaries (for boundary condition definition)
+		std::vector<std::vector<std::vector<int>>> BCIEN;
+		for (i = 0; i < physicalgroups - 1; i++) {
+			std::vector<std::vector<int>>iens;
+			for (j = phygrp_start[i]; j < phygrp_start[i + 1]; j++) {
+				std::vector<int>local;
+				for (k = 0; k < NINT*NINT; k++) {
+					local.push_back(stoi(output[j][5 + k]));
+					//BCIEN[i][j - phygrp_start[i]].push_back(stoi(output[j][5 + k]));
+				}
+				iens.push_back(local);
+			}
+			BCIEN.push_back(iens); 
+		}
+
+		//Define node coordinates
+		t.GCOORD = new double*[t.NNODE];
+		for (i = 0; i < t.NNODE; i++) {
+			t.GCOORD[i] = new double[3];
+		}
+
+		for (i = nodestart; i < nodestart + t.NNODE; i++) {
+			for (j = 0; j < 3; j++) {
+				t.GCOORD[i - nodestart][j] = stod(output[i][1 + j]);
+			}
+		}
+		std::cout << " " << std::endl;
+
+
+		//duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
+
+		//std::cout << "printf: " << duration << '\n';
+
+	
 	}
 
 	return t;
