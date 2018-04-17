@@ -11,3 +11,4 @@ CAV: 1 C: 1500 RHO: 1025 atmospheric pressure: 101300 saturated pressure: 0
 FSI coupling
 mapping algorithm: 5
 debug mode: 0
+total CPU time: 2898.52

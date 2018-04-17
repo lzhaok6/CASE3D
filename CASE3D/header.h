@@ -29,6 +29,10 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 	double XO, double YO, double ZO, double ***SHOD, double ****gamma, double****gamma_t, double*****G, double** gamman, double** gamma_tn, double****Gn, double*** phi_femg, double*** phi_fem2);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
+
+const int N = 2;    //N is the element order of fluid mesh 
+const int NINT = N + 1; //NINT=N+1;
+
 typedef struct owetsurf {
 	double **SF; //weighted integration factor: the previous AF, CF, DF... 
 	int *GIDF;   //Coupled fluid element array (numbering)
@@ -75,6 +79,7 @@ struct LOBATTOstruct {
 
 struct LOCAL_NODEstruct {
 	int*** LNA;
+	int L[NINT*NINT*NINT][3];
 };
 
 struct TD_LOCAL_NODEstruct {
@@ -155,8 +160,8 @@ struct TIMINTstruct {
 };
 
 //Input values
-const int N = 3;    //N is the element order of fluid mesh 
-const int NINT = N + 1; //NINT=N+1;
+//const int N = 2;    //N is the element order of fluid mesh 
+//const int NINT = N + 1; //NINT=N+1;
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;
 const int Nq = N + 1; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
@@ -553,3 +558,4 @@ const int TNT = 1;
 const int output = 0; 
 const int FEM = 0; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
+const int internalLNA = 0;
