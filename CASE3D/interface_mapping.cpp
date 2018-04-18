@@ -23,13 +23,17 @@ The algorithm 4 is now the algorithm 3.
 A new algorithm 4 is added. 
 */
 
-void interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int** LNA_base, int**LNA_basealgo5, double *Z, int TIME, double ** GCOORD, double ***phi_fem, double* W, double*** phi_femg, double*** phi_fem2) {
+double BF_val[4];
+struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int** LNA_base, int**LNA_basealgo5, double *Z, int TIME, double ** GCOORD, double ***phi_fem, double* W, double*** phi_femg, double*** phi_fem2) {
+	interface_mappingstruct t;
 	int i, j, k, l, m, h;
 	int u, v;
 	extern int owsfnumber;
 	extern OWETSURF ol[4];
 	double accu = 0.0;
 	int ct = 0;
+	t.energy_rec = 0.0;
+	t.energy_sent = 0.0;
 	
 	//This subroutine is temporarily changed to test the BS fluid domain (without side modules)
 	switch (fluid2structure) //sem points to fem points
@@ -267,7 +271,7 @@ void interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_
 		}
 		
 		//check if the force mapping is conservative 
-		double BF_val[4];
+		//double BF_val[4];
 		ct = 0;
 		for (i = 0; i < 4; i++) {
 			if (ol[i].FSNEL > 0) {
@@ -286,11 +290,21 @@ void interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_
 		break;
 
 	case 0: //map disp from coupling mesh(fem mesh) to user defined mesh(sem mesh)
+		double DISPTEMP;
 		if (mappingalgo == 1 || mappingalgo == 5) {
-			//if (debug == 1) {
-				//wsflist[2]->nodecoord[3 * (ol[2].IEN_2D[LNA_2D[0][1] - 1][0] - 1) + ol[2].dir] = ol[2].location + 2;
-			//}
-			double DISPTEMP;
+			
+			if (debug == 1) {
+				for (m = 0; m < owsfnumber; m++) {
+					for (l = 0; l < ol[m].FSNEL; l++) {
+						for (i = 0; i < NCINT; i++) {
+							for (j = 0; j < NCINT; j++) {
+								wsflist[m]->nodecoord[3 * (ol[m].IEN_2D[LNA_2D[i][j] - 1][l] - 1) + ol[m].dir] = ol[m].location + ((double)rand() / (RAND_MAX));
+							}
+						}
+					}
+				}
+			}
+			
 			ct = 0;
 			for (m = 0; m < owsfnumber; m++) {
 				if (ol[m].FSNEL > 0) {
@@ -384,10 +398,36 @@ void interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_
 				}
 			}
 		}
-		//std::cout << " " << std::endl;
+
+		//Observe the energy input and output (d(E)=sum(d(disp)*F)).
+		//Energy released (positive)/gained(negative) by fluid (energy_sent) and energy gained(positive)/released(negative) by structure (energy_rec). 
+		t.energy_sent = 0.0;
+		for (m = 0; m < owsfnumber; m++) {
+			for (l = 0; l < ol[m].FSNEL; l++) {
+				for (i = 0; i < NINT; i++) {
+					for (j = 0; j < NINT; j++) {
+						DISPTEMP = (ol[m].DISP[IEN_3D[ol[m].FP[i*NINT + j] - 1][ol[m].GIDF[l] - 1] - 1][ol[m].dir][1] -
+							ol[m].DISP[IEN_3D[ol[m].FP[i*NINT + j] - 1][ol[m].GIDF[l] - 1] - 1][ol[m].dir][0]); //DISP is defined on NNODE 
+							//DISPTEMP = ol[m].DISP[IEN_3D[ol[m].FP[i*NINT + j] - 1][ol[m].GIDF[l] - 1] - 1][ol[m].dir][1]; //DISP is defined on NNODE 
+						t.energy_sent += ol[m].BF1[ol[m].FP[i*NINT + j] - 1][l] * DISPTEMP * ol[m].NORM;
+					}
+				}
+			}
+		}
+
+		//total received energy by structural nodes
+		t.energy_rec = 0.0;
+		for (m = 0; m < owsfnumber; m++) {
+			for (i = 0; i < ol[m].GIDNct_st; i++) {
+				DISPTEMP = wsflist[m]->nodecoord[3 * i + ol[m].dir] - ol[m].nodecoord_mpcci[3 * i + ol[m].dir];
+				//DISPTEMP = wsflist[m]->nodecoord[3 * i + ol[m].dir]- ol[m].location;
+				t.energy_rec += wsflist[m]->nodeforce[3 * i + ol[m].dir] * DISPTEMP * ol[m].NORM;
+			}
+		}
+		std::cout << " " << std::endl;
 		break;
 	}
 
-	return;
+	return t;
 }
 

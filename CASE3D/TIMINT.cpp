@@ -21,9 +21,6 @@ struct TIMINTstruct TIMINT(double LMAX) {
 	//CALCULATE THE NUMBER OF TIMESTEPS
 	//t.NDT = int(TTERM / t.DT) + 1;
 	//t.NDT = round(TTERM / t.DT) + 1;
-	if (debug == 1) {
-		t.DT = 1e-06;
-	}
 	t.NDT = floor(TTERM / t.DT) + 1;
 	std::cout << "DT is: " << t.DT << std::endl;
 	std::cout << "number of time step is: " << t.NDT << std::endl;

@@ -537,6 +537,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 	int BCXNODE = BCXNEL + 1;
 	int BCYNODE = BCYNEL + 1;
 	int BCNODE = BCXNODE*BCYNODE;
+	ol[0].GIDNct_st = BCNODE;
 	a = TD_ELE_GEN(BCNEL, BCXNODE, BCNODE, BCXNEL, BCYNEL, SX, SY);
 	//int NEL, int XNODE, int NNODE, int XNEL, int YNEL, double XL, double YL
 	//build the relationship between the SEM mesh and FEM mesh (associate the FEM node numbering with SEM node numbering) 
@@ -654,7 +655,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 	int ACXNODE = ACXNEL + 1;
 	int ACYNODE = ACYNEL + 1;
 	int ACNODE = ACXNODE*ACYNODE;
-	
+	ol[1].GIDNct_st = ACNODE;
 	b = TD_ELE_GEN(ACNEL, ACXNODE, ACNODE, ACXNEL, ACYNEL, SZ, SY);
 	ele1 = 0;
 	line = 0;
@@ -765,6 +766,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 	int DCXNODE = DCXNEL + 1;
 	int DCYNODE = DCYNEL + 1;
 	int DCNODE = DCXNODE*DCYNODE;
+	ol[2].GIDNct_st = DCNODE;
 	ol[2].IEN_gb = new int*[4];
 	for (i = 0; i < 4; i++) {
 		ol[2].IEN_gb[i] = new int[DCNEL];
@@ -914,7 +916,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 			d.GCOORD[i][0] += -SX;
 		}
 	}
-
+	ol[3].GIDNct_st = BCNODE;
 	if (BZ > 0) {
 		//myfile << "EF wetsurface4 3 2" << std::endl;
 		myfile << "EF wetsurface4 3 2" << std::endl;

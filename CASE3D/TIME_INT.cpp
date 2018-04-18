@@ -430,6 +430,22 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 			}
 		}
 	}
+
+	//The variable used to keep track of the nodecoord from MpCCI during the last time step
+	for (m = 0; m < owsfnumber; m++) {
+		if (ol[m].FSNEL > 0) {
+			ol[m].nodecoord_mpcci = new double[3 * ol[m].GIDNct_st];
+		}
+	}
+
+	for (m = 0; m < owsfnumber; m++) {
+		if (ol[m].FSNEL > 0) {
+			for (i = 0; i < 3 * ol[m].GIDNct_st; i++) {
+				ol[m].nodecoord_mpcci[i] = ol[m].location;
+			}
+		}
+	}
+
 	//=======================================================================================//
 	//Dynamic variables for fluid nodal force
 	if (mappingalgo == 1 || mappingalgo == 3) {
@@ -685,9 +701,10 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 	GLLQUADstruct f;
 	f = GLLQUAD(b.Z, b.WL, hprefg, 0); //obtain Gauss-Legendre nodes (Not Gauss-Lobatto nodes)
 
-	interface_mapping(1, IEN, LNA_3D, LNA_2D, ctbase.LNA, ctbase_algo5.LNA, Z, TIME, GCOORD, phi_fem, f.W, phi_femg, phi_fem2);
+	interface_mappingstruct in;
+	in = interface_mapping(1, IEN, LNA_3D, LNA_2D, ctbase.LNA, ctbase_algo5.LNA, Z, TIME, GCOORD, phi_fem, f.W, phi_femg, phi_fem2);
 	dotransfer();
-	interface_mapping(0, IEN, LNA_3D, LNA_2D, ctbase.LNA, ctbase_algo5.LNA, Z, TIME, GCOORD, phi_fem, f.W, phi_femg, phi_fem2);
+	in = interface_mapping(0, IEN, LNA_3D, LNA_2D, ctbase.LNA, ctbase_algo5.LNA, Z, TIME, GCOORD, phi_fem, f.W, phi_femg, phi_fem2);
 
 	//Get the sample points on a line to observe the wave propagation pressure distribution
 	std::vector<int> sampline;
@@ -925,9 +942,9 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 		wetnorm[3][0] = 0; wetnorm[3][1] = 0; wetnorm[3][2] = -1;
 	}
 
-	std::string pressurefile = "pressure_history.txt";
-	std::ofstream pressurefilehd;
-	pressurefilehd.open(pressurefile);
+	std::string energyfile = "energy_history.txt";
+	std::ofstream energyfilehd;
+	energyfilehd.open(energyfile);
 
 	//for (i = 0; i < NDT - 1; i++) { //error prone: i other than time should not present in this loop
 	for (i = 0; i < NDT; i++) {
@@ -1371,14 +1388,14 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 		//start = std::clock();
 		//=======================define double* nodeforce in fluid code==========================//
 		//mapping the fluid force ABF from user defined mesh to MpCCI defined mesh on coupling surface using interpolation
-		interface_mapping(1, IEN, LNA_3D, LNA_2D, ctbase.LNA, ctbase_algo5.LNA, Z, TIME, GCOORD, phi_fem, f.W, phi_femg, phi_fem2);
+		in = interface_mapping(1, IEN, LNA_3D, LNA_2D, ctbase.LNA, ctbase_algo5.LNA, Z, TIME, GCOORD, phi_fem, f.W, phi_femg, phi_fem2);
 		//after this subroutine, the nodeforce should already be mapped onto coupling surface (data.h)
 		//int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int NNODE, double *Z
 	
 		dotransfer();
 
 		//=============map nodal displacement from coupled surface to fluid mesh===================//
-		interface_mapping(0, IEN, LNA_3D, LNA_2D, ctbase.LNA, ctbase_algo5.LNA, Z, TIME, GCOORD, phi_fem, f.W, phi_femg, phi_fem2);
+		in = interface_mapping(0, IEN, LNA_3D, LNA_2D, ctbase.LNA, ctbase_algo5.LNA, Z, TIME, GCOORD, phi_fem, f.W, phi_femg, phi_fem2);
 		
 		if (tfm == 0) {
 			//double angle = 0.0; //cos value
@@ -2169,6 +2186,10 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 					ol[z].DISP[ol[z].GIDN[j] - 1][k][0] = ol[z].DISP[ol[z].GIDN[j] - 1][k][1];
 				}
 			}
+
+			for (j = 0; j < 3 * ol[z].GIDNct_st; j++) {
+				ol[z].nodecoord_mpcci[j] = wsflist[z]->nodecoord[j]; //pass the value of node displacement in all 3 directions
+			}
 		}
 
 		if (output == 1) {
@@ -2181,8 +2202,8 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 			}
 		}
 		//Output the pressure history under a specified point
-		pressurefilehd << current_time << " " << PT[0][0] << std::endl;
-		//pressurefilehd << current_time << " " << PT[478][0] << std::endl; //shell pt 85 
+		extern double BF_val[4];
+		energyfilehd << current_time << " " << in.energy_sent << " " << in.energy_rec << " " << BF_val[0] << " " << BF_val[1] << " " << BF_val[2] << " " << BF_val[3] << " " << ol[0].OBF_val << " " << ol[1].OBF_val << " " << ol[2].OBF_val << " " << ol[3].OBF_val << std::endl;
 	}
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 	myfile << "total CPU time: " << duration << std::endl;
