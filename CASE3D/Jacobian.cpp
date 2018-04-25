@@ -57,6 +57,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **
 	cn[7] = LNA[0][N][N];
 
 	for (m = 0; m < NEL; m++) {
+		std::cout << m << std::endl;
 		for (i = 0; i < NINT; i++) {
 			for (j = 0; j < NINT; j++) {
 				for (k = 0; k < NINT; k++) {

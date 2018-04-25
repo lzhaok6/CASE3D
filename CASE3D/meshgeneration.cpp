@@ -465,21 +465,19 @@ struct meshgenerationstruct meshgeneration() {
 			std::cout << ct << std::endl;
 		}
 
-		
-
 		//The physical groups except for the last one are the surface mesh (NINT*NINT). 
 		//The last physical group is the volumn mesh (NINT*NINT*NINT)
 		t.NNODE = stoi(output[nodestart - 1][0]);
 		t.NEL = endfile - phygrp_start[physicalgroups - 1];
 		//Define connectivity matrix in the volumn mesh
-		t.IEN = new int*[t.NEL]; 
-		for (i = 0; i < t.NEL;i++) {
-			t.IEN[i] = new int[NINT*NINT*NINT]; 
+		t.IEN = new int*[NINT*NINT*NINT]; 
+		for (i = 0; i < NINT*NINT*NINT;i++) {
+			t.IEN[i] = new int[t.NEL]; 
 		}
 		ct = 0;
 		for (i = phygrp_start[physicalgroups - 1]; i < endfile; i++) {
 			for (j = 5; j < 5 + NINT*NINT*NINT; j++) {
-				t.IEN[ct][j - 5] = stoi(output[i][j]);
+				t.IEN[j - 5][ct] = stoi(output[i][j]);
 			}
 			ct += 1;
 		}
