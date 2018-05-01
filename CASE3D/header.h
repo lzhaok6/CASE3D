@@ -30,7 +30,7 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
 
-const int N = 1;    //N is the element order of fluid mesh 
+const int N = 2;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;
 
 typedef struct owetsurf {
@@ -198,7 +198,7 @@ const double C = 1500.0; //original
 //const double ZC = 8.5344; //6.096 + 2.4384  (20ft stdoff) 
 const double CFLFRAC = 0.5;  //original 
 const int dtscale = 1;
-const double BETA = 0.0;   //original 
+const double BETA = 0.25;   //original 
 const double TTERM = 0.08;    //SIMULATION END TIME 
 const int CAV = 1; //1 for cavitation, 0 for non-cavitation 
 const double PSAT = 0.0; //saturated pressure 

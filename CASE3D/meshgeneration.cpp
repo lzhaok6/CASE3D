@@ -342,7 +342,7 @@ struct meshgenerationstruct meshgeneration() {
 		std::string lineA;
 		std::string filename;
 		std::cout << "reading the mesh file: " << std::endl;
-		std::ifstream infile("output.msh");
+		std::ifstream infile("frigate_N=2.msh");
 		if (!infile) {
 			std::cout << "can not open the mesh file" << std::endl;
 			system("PAUSE ");
@@ -475,9 +475,14 @@ struct meshgenerationstruct meshgeneration() {
 			t.IEN[i] = new int[t.NEL]; 
 		}
 		ct = 0;
+
+		int nelstart = 5; //the column number where the element node definition starts
+		if (N > 1) {
+			nelstart = 6; 
+		}
 		for (i = phygrp_start[physicalgroups - 1]; i < endfile; i++) {
-			for (j = 5; j < 5 + NINT*NINT*NINT; j++) {
-				t.IEN[j - 5][ct] = stoi(output[i][j]);
+			for (j = nelstart; j < nelstart + NINT*NINT*NINT; j++) {
+				t.IEN[j - nelstart][ct] = stoi(output[i][j]);
 			}
 			ct += 1;
 		}

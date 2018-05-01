@@ -126,7 +126,7 @@ struct LOCAL_NODEstruct LOCAL_NODE(int n) {
 			int NNODE;
 			int *ELEMENT_POINT;
 			double **FGCOORD;
-			std::string filename = "LNA_info_N=" + std::to_string(N) + ".txt";
+			std::string filename = "LNA_info_N=" + std::to_string(N) + ".msh";
 			std::ifstream infile(filename);   //LNA_info_N=x.txt is for xth order LNA
 			if (!infile) {
 				std::cerr << "can not open the LNA information file" << std::endl;
@@ -134,7 +134,7 @@ struct LOCAL_NODEstruct LOCAL_NODE(int n) {
 			}
 			//read the file 
 			int nodestart = 0;
-			int nodeend = 0;
+			int nodeend = 0;	
 			int ele_line = 0;
 			std::vector<std::vector<std::string>> output;
 			int ct = -1;
@@ -197,5 +197,6 @@ struct LOCAL_NODEstruct LOCAL_NODE(int n) {
 			}
 		}
 	}
+	std::cout << " " << std::endl; 
 	return t;
 }

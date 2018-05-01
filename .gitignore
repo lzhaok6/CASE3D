@@ -244,3 +244,5 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 /CASE3D/output.msh
+/CASE3D/frigate_N=1.msh
+*.msh
