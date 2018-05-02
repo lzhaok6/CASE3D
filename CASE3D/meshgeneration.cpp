@@ -342,7 +342,7 @@ struct meshgenerationstruct meshgeneration() {
 		std::string lineA;
 		std::string filename;
 		std::cout << "reading the mesh file: " << std::endl;
-		std::ifstream infile("frigate_N=2.msh");
+		std::ifstream infile("frigate_N=1.msh");
 		if (!infile) {
 			std::cout << "can not open the mesh file" << std::endl;
 			system("PAUSE ");
@@ -425,6 +425,7 @@ struct meshgenerationstruct meshgeneration() {
 		int endfile = 0;
 		std::vector<int> phygrp_start; //the starting line number of the physical group
 		int elestart = 0; //the flag denote the start of element connectivity definition
+		/*
 		while (getline(infile, csvLine))
 		{
 			ct = ct + 1; //the current line number (starting from 0)
@@ -439,7 +440,7 @@ struct meshgenerationstruct meshgeneration() {
 			if (csvColumn[0] == "$EndElements") {
 				endfile = ct;
 				break;
-			}
+			}	
 			if (csvColumn[0] == "$Nodes") {
 				nodestart = ct + 2; //the node starts from the next line
 			}
@@ -451,6 +452,7 @@ struct meshgenerationstruct meshgeneration() {
 				phygrp_start.push_back(ele_line);
 				elestart = 1;
 			}
+			//Get the information of physical groups
 			if (elestart == 1 && ct >= ele_line) {
 				if (csvColumn[3] == std::to_string(physicalgroups)) {
 					//do nothing
@@ -461,9 +463,86 @@ struct meshgenerationstruct meshgeneration() {
 					phygrp_start.push_back(ct);
 				}
 			}
-			
-			std::cout << ct << std::endl;
+			std::cout << ct << std::endl; //output which line is being read
 		}
+		*/
+
+		while (getline(infile, csvLine))
+		{
+			ct = ct + 1; //the current line number (starting from 0)
+			std::cout << ct << std::endl;
+			std::istringstream csvStream(csvLine);
+			std::vector<std::string> csvColumn;
+			std::string csvElement;
+			while (getline(csvStream, csvElement, ' '))
+			{
+				csvColumn.push_back(csvElement);
+			}
+			output.push_back(csvColumn);
+			if (csvColumn[0] == "$Nodes") {
+				nodestart = ct + 2;
+				while (getline(infile, csvLine)) {
+					ct = ct + 1;
+					std::cout << ct << std::endl; 
+					std::istringstream csvStream(csvLine);
+					std::vector<std::string> csvColumn;
+					std::string csvElement;
+					while (getline(csvStream, csvElement, ' '))
+					{
+						csvColumn.push_back(csvElement);
+					}
+					output.push_back(csvColumn);
+					if (csvColumn[0] == "$EndNodes") {
+						nodeend = ct - 1; //the node starts from the next line
+						while (getline(infile, csvLine)) {
+							ct = ct + 1;
+							std::cout << ct << std::endl;
+							std::istringstream csvStream(csvLine);
+							std::vector<std::string> csvColumn;
+							std::string csvElement;
+							while (getline(csvStream, csvElement, ' '))
+							{
+								csvColumn.push_back(csvElement);
+							}
+							output.push_back(csvColumn);
+							if (csvColumn[0] == "$Elements") {
+								ele_line = ct + 2; //the line corresponding to the start of element connectivity definition
+								phygrp_start.push_back(ele_line);
+								elestart = 1;
+								while (getline(infile, csvLine)) {
+									ct = ct + 1;
+									std::cout << ct << std::endl;
+									std::istringstream csvStream(csvLine);
+									std::vector<std::string> csvColumn;
+									std::string csvElement;
+									while (getline(csvStream, csvElement, ' '))
+									{
+										csvColumn.push_back(csvElement);
+									}
+									output.push_back(csvColumn);
+									//Get the information of physical groups
+									if (elestart == 1 && ct >= ele_line) {
+										if (csvColumn[0] == "$EndElements") {
+											std::cout << "The file ends here." << std::endl;
+											//do nothing, the loop may end here 
+										}
+										else if (csvColumn[3] == std::to_string(physicalgroups)) {
+											//do nothing
+										}
+										else {
+											physicalgroups += 1;
+											//push the line number of the starting of the current physical group
+											phygrp_start.push_back(ct);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		endfile = ct; 
 
 		//The physical groups except for the last one are the surface mesh (NINT*NINT). 
 		//The last physical group is the volumn mesh (NINT*NINT*NINT)
@@ -514,7 +593,7 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 		std::cout << " " << std::endl;
-
+		
 
 		//duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 
