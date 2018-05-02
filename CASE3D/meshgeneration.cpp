@@ -425,7 +425,10 @@ struct meshgenerationstruct meshgeneration() {
 		int endfile = 0;
 		std::vector<int> phygrp_start; //the starting line number of the physical group
 		int elestart = 0; //the flag denote the start of element connectivity definition
-		/*
+		
+		std::clock_t start;
+		start = std::clock();
+
 		while (getline(infile, csvLine))
 		{
 			ct = ct + 1; //the current line number (starting from 0)
@@ -465,8 +468,9 @@ struct meshgenerationstruct meshgeneration() {
 			}
 			std::cout << ct << std::endl; //output which line is being read
 		}
-		*/
 
+		/*
+		The improvement of computational efficiency is not obvious (4s faster than the previous algorithms (totally 200s))
 		while (getline(infile, csvLine))
 		{
 			ct = ct + 1; //the current line number (starting from 0)
@@ -543,6 +547,9 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 		endfile = ct; 
+		*/
+
+		double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
 
 		//The physical groups except for the last one are the surface mesh (NINT*NINT). 
 		//The last physical group is the volumn mesh (NINT*NINT*NINT)

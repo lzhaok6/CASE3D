@@ -29,7 +29,7 @@ struct LOCAL_NODEstruct LOCAL_NODE(int n) {
 		}
 	}
 
-	if (n == 1) {
+	//if (n == 1) {
 		t.LNA[0][0][0] = 1;
 		t.LNA[n][0][0] = 2;
 		t.LNA[n][n][0] = 3;
@@ -38,7 +38,7 @@ struct LOCAL_NODEstruct LOCAL_NODE(int n) {
 		t.LNA[n][0][n] = 6;
 		t.LNA[n][n][n] = 7;
 		t.LNA[0][n][n] = 8;
-	}
+	//}
 
 	if (internalLNA == 1) {
 		if (n > 1) {

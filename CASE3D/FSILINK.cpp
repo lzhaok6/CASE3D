@@ -275,7 +275,8 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 
 	//if (mappingalgo == 3 || (mappingalgo == 4 && refine > 1)) {
 	//if (mappingalgo == 1 || mappingalgo==2 || mappingalgo == 3 || mappingalgo == 4) {
-		ol[0].GIDN = new int[(N*SXNEL + 1)*(N*SYNEL + 1)]; //total wetted node container 
+	//total wetted node container 	
+		ol[0].GIDN = new int[(N*SXNEL + 1)*(N*SYNEL + 1)]; 
 		ol[1].GIDN = new int[(N*SZNEL + 1)*(N*SYNEL + 1)];
 		ol[2].GIDN = new int[(N*SXNEL + 1)*(N*SZNEL + 1)];
 		ol[3].GIDN = new int[(N*SXNEL + 1)*(N*SYNEL + 1)];
@@ -584,7 +585,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 					}
 				}
 			}
-		}
+		} 
 		if (ele1 != BCNEL && AX > 0 && BZ > 0) {
 			std::cout << "the element count of surface1 is wrong" << std::endl;
 			system("PAUSE ");
@@ -910,6 +911,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 				}
 			}
 		}
+		std::cout << " " << std::endl;
 	}
 	else {
 		for (i = 0; i < BCNODE; i++) {
@@ -935,7 +937,6 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 			myfile << std::endl;
 		}
 	}
-
 
 	//Node weight on base fluid mesh for displacement mapping (algorithm 3 and 4) 
 	if (mappingalgo == 3 || mappingalgo == 4) {
