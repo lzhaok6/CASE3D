@@ -9,9 +9,10 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <Eigen/LU>
+#include <vector>
 
 //construct the link between structure and fluid module A C D separately
-void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int NNODE, double***SHOD) {
+void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int NNODE, double***SHOD, std::vector<std::vector<std::vector<int>>> BCIEN) {
 	int i, j, k, l, m, n;
 	int IC; //counter 
 	extern int owsfnumber;
@@ -506,511 +507,519 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 		//std::cout << " " << std::endl;
 	//}
 
-	//Formulate the model file which will be passed to MpCCI adapter
-	TD_ELE_GENstruct a, b, c, d, e;
-	std::ofstream myfile;
-	myfile.open("model.txt");
-	int BCXNEL = 0;
-	int BCYNEL = 0;
-	/*
-	//surface 1 calculation
-	if (mappingalgo == 1 || (mappingalgo == 4 && N > 1)) {
-		BCXNEL = SXNEL;
-		BCYNEL = SYNEL;
-	}
-	else if (mappingalgo == 2) {
-		BCXNEL = SXNEL*N;
-		BCYNEL = SYNEL*N;
-	}
-	else if (mappingalgo == 3 || (mappingalgo == 4 && refine > 1)) {
-		BCXNEL = SXNEL / refine;
-		BCYNEL = SYNEL / refine;
-	}*/
-	if (mappingalgo == 1 || mappingalgo == 3 || mappingalgo == 4 || mappingalgo == 5) {
-		BCXNEL = SXNEL / refine;
-		BCYNEL = SYNEL / refine;
-	}
-	else if (mappingalgo == 2) {
-		BCXNEL = SXNEL*N;
-		BCYNEL = SYNEL*N;
-	}
-	int BCNEL = BCXNEL*BCYNEL;
-	int BCXNODE = BCXNEL + 1;
-	int BCYNODE = BCYNEL + 1;
-	int BCNODE = BCXNODE*BCYNODE;
-	ol[0].GIDNct_st = BCNODE;
-	a = TD_ELE_GEN(BCNEL, BCXNODE, BCNODE, BCXNEL, BCYNEL, SX, SY);
-	//int NEL, int XNODE, int NNODE, int XNEL, int YNEL, double XL, double YL
-	//build the relationship between the SEM mesh and FEM mesh (associate the FEM node numbering with SEM node numbering) 
-	//get the node coordinate. 
-	int ele1 = 0;
-	int line = 0;
-	if (mappingalgo == 2) {
-		ol[0].IEN_gb = new int*[4];
-		for (i = 0; i < 4; i++) {
-			ol[0].IEN_gb[i] = new int[BCNEL];
-		}
-		for (i = 0; i < 4; i++) {
-			for (j = 0; j < BCNEL; j++) {
-				ol[0].IEN_gb[i][j] = 0;
+	//=================================Formulate the model file which will be passed to MpCCI adapter=================================//
+		if (internalmesh == 1) {
+			TD_ELE_GENstruct a, b, c, d, e;
+			std::ofstream myfile;
+			myfile.open("model.txt");
+			int BCXNEL = 0;
+			int BCYNEL = 0;
+			/*
+			//surface 1 calculation
+			if (mappingalgo == 1 || (mappingalgo == 4 && N > 1)) {
+				BCXNEL = SXNEL;
+				BCYNEL = SYNEL;
 			}
-		}
-
-		ol[0].XYHE_gb = new double*[2];
-		for (i = 0; i < 2; i++) {
-			ol[0].XYHE_gb[i] = new double[BCNEL];
-		}
-		for (i = 0; i < 2; i++) {
-			for (j = 0; j < BCNEL; j++) {
-				ol[0].XYHE_gb[i][j] = 0;
+			else if (mappingalgo == 2) {
+				BCXNEL = SXNEL*N;
+				BCYNEL = SYNEL*N;
 			}
-		}
-
-		for (i = 0; i < ol[0].FSNEL; i++) {
-			for (j = 0; j < NINT - 1; j++) { //line
-				for (k = 0; k < NINT - 1; k++) { //colomn
-					if (k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line > BCNEL - 1) {
-						std::cout << "out of bound!!!" << std::endl;
-						system("PAUSE ");
-					}
-					ol[0].IEN_gb[0][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k][N - 1 - j][N] - 1][ol[0].GIDF[i] - 1];
-					ol[0].IEN_gb[1][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k + 1][N - 1 - j][N] - 1][ol[0].GIDF[i] - 1];
-					ol[0].IEN_gb[2][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k + 1][N - j][N] - 1][ol[0].GIDF[i] - 1];
-					ol[0].IEN_gb[3][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k][N - j][N] - 1][ol[0].GIDF[i] - 1];
-					ol[0].XYHE_gb[0][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = GCOORD[IEN[LNA[k + 1][N - 1 - j][N] - 1][ol[0].GIDF[i] - 1] - 1][0] - GCOORD[IEN[LNA[k][N - 1 - j][N] - 1][ol[0].GIDF[i] - 1] - 1][0];
-					ol[0].XYHE_gb[1][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = GCOORD[IEN[LNA[k][N - j][N] - 1][ol[0].GIDF[i] - 1]][1] - GCOORD[IEN[LNA[k][N - 1 - j][N] - 1][ol[0].GIDF[i] - 1] - 1][1];
-					ele1 += 1;
-					if (ele1 % (BCXNEL*N) == 0) {
-						line += 1;
+			else if (mappingalgo == 3 || (mappingalgo == 4 && refine > 1)) {
+				BCXNEL = SXNEL / refine;
+				BCYNEL = SYNEL / refine;
+			}*/
+			if (mappingalgo == 1 || mappingalgo == 3 || mappingalgo == 4 || mappingalgo == 5) {
+				BCXNEL = SXNEL / refine;
+				BCYNEL = SYNEL / refine;
+			}
+			else if (mappingalgo == 2) {
+				BCXNEL = SXNEL*N;
+				BCYNEL = SYNEL*N;
+			}
+			int BCNEL = BCXNEL*BCYNEL;
+			int BCXNODE = BCXNEL + 1;
+			int BCYNODE = BCYNEL + 1;
+			int BCNODE = BCXNODE*BCYNODE;
+			ol[0].GIDNct_st = BCNODE;
+			a = TD_ELE_GEN(BCNEL, BCXNODE, BCNODE, BCXNEL, BCYNEL, SX, SY);
+			//int NEL, int XNODE, int NNODE, int XNEL, int YNEL, double XL, double YL
+			//build the relationship between the SEM mesh and FEM mesh (associate the FEM node numbering with SEM node numbering) 
+			//get the node coordinate. 
+			int ele1 = 0;
+			int line = 0;
+			if (mappingalgo == 2) {
+				ol[0].IEN_gb = new int*[4];
+				for (i = 0; i < 4; i++) {
+					ol[0].IEN_gb[i] = new int[BCNEL];
+				}
+				for (i = 0; i < 4; i++) {
+					for (j = 0; j < BCNEL; j++) {
+						ol[0].IEN_gb[i][j] = 0;
 					}
 				}
-			}
-		} 
-		if (ele1 != BCNEL && AX > 0 && BZ > 0) {
-			std::cout << "the element count of surface1 is wrong" << std::endl;
-			system("PAUSE ");
-		}
 
-		//change the definition of a.GCOORD to SEM coordinate
-		for (i = 0; i < ele1; i++) {
-			for (j = 0; j < 4; j++) {
-				for (k = 0; k < 2; k++) {
-					a.GCOORD[a.IEN[j][i] - 1][k] = GCOORD[ol[0].IEN_gb[j][i] - 1][k];
+				ol[0].XYHE_gb = new double*[2];
+				for (i = 0; i < 2; i++) {
+					ol[0].XYHE_gb[i] = new double[BCNEL];
 				}
-			}
-		}
-		std::cout << " " << std::endl;
-	}
-	else {
-		for (i = 0; i < BCNODE; i++) {
-			a.GCOORD[i][0] += -SX;
-		}
-	}
-
-	//if (BCNEL > 0) {
-	if (BZ > 0) {
-		//myfile << "EF wetsurface1 3 2" << std::endl;
-		myfile << "EF wetsurface1 3 2" << std::endl;
-		myfile << "NODES " << BCNODE << std::endl;
-		for (i = 0; i < BCNODE; i++) {
-			myfile << i << " " << a.GCOORD[i][0] << " " << a.GCOORD[i][1] << " " << -SZ / 2 << " " << std::endl;
-		}
-		//int BFSNEL = (SX / ol[0].XHE)*(SY / ol[0].YHE);
-		myfile << "ELEMENTS " << BCNEL << std::endl;
-		//output connectivity matrix
-		for (i = 0; i < BCNEL; i++) {
-			myfile << i;
-			for (j = 0; j < 4; j++) {
-				myfile << " " << a.IEN[j][i] - 1; //node numbering starts from 0 in model file
-			}
-			myfile << std::endl;
-		}
-	}
-	//surface 2 calculation
-	//model file output
-	int ACXNEL;
-	int ACYNEL;
-	/*
-	if (mappingalgo==1 || (mappingalgo == 4 && N > 1)) {
-		ACXNEL = SZNEL;
-		ACYNEL = SYNEL;
-	}
-	else if (mappingalgo==2) {
-		ACXNEL = (SZNEL)*N;
-		ACYNEL = SYNEL*N;
-	}
-	else if (mappingalgo == 3 || (mappingalgo == 4 && refine > 1)) {
-		ACXNEL = SZNEL / refine;
-		ACYNEL = SYNEL / refine;
-	}
-	*/
-	if (mappingalgo == 1 || mappingalgo == 3 || mappingalgo == 4 || mappingalgo == 5) {
-		ACXNEL = SZNEL / refine;
-		ACYNEL = SYNEL / refine;
-	}
-	else if (mappingalgo == 2) {
-		ACXNEL = SZNEL*N;
-		ACYNEL = SYNEL*N;
-	}
-	int ACNEL = ACXNEL*ACYNEL;
-	int ACXNODE = ACXNEL + 1;
-	int ACYNODE = ACYNEL + 1;
-	int ACNODE = ACXNODE*ACYNODE;
-	ol[1].GIDNct_st = ACNODE;
-	b = TD_ELE_GEN(ACNEL, ACXNODE, ACNODE, ACXNEL, ACYNEL, SZ, SY);
-	ele1 = 0;
-	line = 0;
-	if (mappingalgo == 2) {
-		ol[1].IEN_gb = new int*[4];
-		for (i = 0; i < 4; i++) {
-			ol[1].IEN_gb[i] = new int[ACNEL];
-		}
-		for (i = 0; i < 4; i++) {
-			for (j = 0; j < ACNEL; j++) {
-				ol[1].IEN_gb[i][j] = 0;
-			}
-		}
-		ol[1].XYHE_gb = new double*[2];
-		for (i = 0; i < 2; i++) {
-			ol[1].XYHE_gb[i] = new double[ACNEL];
-		}
-		for (i = 0; i < 2; i++) {
-			for (j = 0; j < ACNEL; j++) {
-				ol[1].XYHE_gb[i][j] = 0;
-			}
-		}
-		for (i = 0; i < ol[1].FSNEL; i++) {
-			for (j = 0; j < NINT - 1; j++) { //line
-				for (k = 0; k < NINT - 1; k++) { //colomn
-					if (k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line > ACNEL - 1) {
-						std::cout << "out of bound!!!" << std::endl;
-						system("PAUSE ");
-					}
-					ol[1].IEN_gb[0][k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line] = IEN[LNA[N][N - 1 - j][k] - 1][ol[1].GIDF[i] - 1];
-					ol[1].IEN_gb[1][k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line] = IEN[LNA[N][N - 1 - j][k + 1] - 1][ol[1].GIDF[i] - 1];
-					ol[1].IEN_gb[2][k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line] = IEN[LNA[N][N - j][k + 1] - 1][ol[1].GIDF[i] - 1];
-					ol[1].IEN_gb[3][k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line] = IEN[LNA[N][N - j][k] - 1][ol[1].GIDF[i] - 1];
-					ol[1].XYHE_gb[0][k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line] = GCOORD[IEN[LNA[N][N - 1 - j][k + 1] - 1][ol[1].GIDF[i] - 1] - 1][2] - GCOORD[IEN[LNA[N][N - 1 - j][k] - 1][ol[1].GIDF[i] - 1] - 1][2];
-					ol[1].XYHE_gb[1][k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line] = GCOORD[IEN[LNA[N][N - j][k] - 1][ol[1].GIDF[i] - 1] - 1][1] - GCOORD[IEN[LNA[N][N - 1 - j][k] - 1][ol[1].GIDF[i] - 1] - 1][1];
-					ele1 += 1;
-					if (ele1 % (ACXNEL*N) == 0) {
-						line += 1;
+				for (i = 0; i < 2; i++) {
+					for (j = 0; j < BCNEL; j++) {
+						ol[0].XYHE_gb[i][j] = 0;
 					}
 				}
-			}
-			//std::cout << " " << std::endl;
-		}
-		if (ele1 != ACNEL && AX > 0 && BZ > 0) {
-			std::cout << "the element count of surface2 is wrong" << std::endl;
-			system("PAUSE ");
-		}
 
-		//change the definition of a.GCOORD to SEM coordinate
-		for (i = 0; i < ele1; i++) {
-			for (j = 0; j < 4; j++) {
-				b.GCOORD[b.IEN[j][i] - 1][0] = GCOORD[ol[1].IEN_gb[j][i] - 1][2];
-				b.GCOORD[b.IEN[j][i] - 1][1] = GCOORD[ol[1].IEN_gb[j][i] - 1][1];
-			}
-		}
-	}
-	else {
-		for (i = 0; i < ACNODE; i++) {
-			b.GCOORD[i][0] += -SZ / 2;
-		}
-	}
-
-	if (AX > 0) {
-		//myfile << "EF wetsurface2 3 2" << std::endl;
-		myfile << "EF wetsurface2 3 0" << std::endl;
-		myfile << "NODES " << ACNODE << std::endl;
-		for (i = 0; i < ACNODE; i++) {
-			myfile << i << " " << -SX << " " << b.GCOORD[i][1] << " " << b.GCOORD[i][0] << " " << std::endl;
-		}
-		//int BFSNEL = (SX / ol[0].XHE)*(SY / ol[0].YHE);
-		myfile << "ELEMENTS " << ACNEL << std::endl;
-		//output connectivity matrix
-		for (i = 0; i < ACNEL; i++) {
-			myfile << i;
-			for (j = 0; j < 4; j++) {
-				myfile << " " << b.IEN[j][i] - 1; //node numbering starts from 0 in model file
-			}
-			myfile << std::endl;
-		}
-	}
-
-	//surface 3 calculation
-	int DCXNEL = 0;
-	int DCYNEL = 0;
-	/*
-	if (mappingalgo==1 || (mappingalgo == 4 && N > 1)) {
-		DCXNEL = SXNEL;
-		DCYNEL = SZNEL;
-	}
-	else if (mappingalgo==2) {
-		DCXNEL = SXNEL*N;
-		DCYNEL = SZNEL*N;
-	}
-	else if (mappingalgo == 3 || (mappingalgo == 4 && refine > 1)) {
-		DCXNEL = SXNEL / refine;
-		DCYNEL = SZNEL / refine;
-	}
-	*/
-	if (mappingalgo == 1 || mappingalgo == 3 || mappingalgo == 4 || mappingalgo == 5) {
-		DCXNEL = SXNEL / refine;
-		DCYNEL = SZNEL / refine;
-	}
-	else if (mappingalgo == 2) {
-		DCXNEL = SXNEL*N;
-		DCYNEL = SZNEL*N;
-	}
-	int DCNEL = DCXNEL*DCYNEL;
-	int DCXNODE = DCXNEL + 1;
-	int DCYNODE = DCYNEL + 1;
-	int DCNODE = DCXNODE*DCYNODE;
-	ol[2].GIDNct_st = DCNODE;
-	ol[2].IEN_gb = new int*[4];
-	for (i = 0; i < 4; i++) {
-		ol[2].IEN_gb[i] = new int[DCNEL];
-	}
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < DCNEL; j++) {
-			ol[2].IEN_gb[i][j] = 0;
-		}
-	}
-	ol[2].XYHE_gb = new double*[2];
-	for (i = 0; i < 2; i++) {
-		ol[2].XYHE_gb[i] = new double[DCNEL];
-	}
-	for (i = 0; i < 2; i++) {
-		for (j = 0; j < DCNEL; j++) {
-			ol[2].XYHE_gb[i][j] = 0;
-		}
-	}
-	c = TD_ELE_GEN(DCNEL, DCXNODE, DCNODE, DCXNEL, DCYNEL, SX, SZ);
-	//TD_ELE_GEN(int NEL, int XNODE, int NNODE,int XNEL,int YNEL,double XL, double YL)
-	//input value error prone! 
-	ele1 = 0;
-	line = 0;
-	if (mappingalgo == 2) {
-		for (i = 0; i < ol[2].FSNEL; i++) {
-			for (j = 0; j < NINT - 1; j++) { //line
-				for (k = 0; k < NINT - 1; k++) { //colomn
-					if (k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line > DCNEL - 1) {
-						std::cout << "out of bound!!!" << std::endl;
-						system("PAUSE ");
+				for (i = 0; i < ol[0].FSNEL; i++) {
+					for (j = 0; j < NINT - 1; j++) { //line
+						for (k = 0; k < NINT - 1; k++) { //colomn
+							if (k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line > BCNEL - 1) {
+								std::cout << "out of bound!!!" << std::endl;
+								system("PAUSE ");
+							}
+							ol[0].IEN_gb[0][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k][N - 1 - j][N] - 1][ol[0].GIDF[i] - 1];
+							ol[0].IEN_gb[1][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k + 1][N - 1 - j][N] - 1][ol[0].GIDF[i] - 1];
+							ol[0].IEN_gb[2][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k + 1][N - j][N] - 1][ol[0].GIDF[i] - 1];
+							ol[0].IEN_gb[3][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k][N - j][N] - 1][ol[0].GIDF[i] - 1];
+							ol[0].XYHE_gb[0][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = GCOORD[IEN[LNA[k + 1][N - 1 - j][N] - 1][ol[0].GIDF[i] - 1] - 1][0] - GCOORD[IEN[LNA[k][N - 1 - j][N] - 1][ol[0].GIDF[i] - 1] - 1][0];
+							ol[0].XYHE_gb[1][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = GCOORD[IEN[LNA[k][N - j][N] - 1][ol[0].GIDF[i] - 1]][1] - GCOORD[IEN[LNA[k][N - 1 - j][N] - 1][ol[0].GIDF[i] - 1] - 1][1];
+							ele1 += 1;
+							if (ele1 % (BCXNEL*N) == 0) {
+								line += 1;
+							}
+						}
 					}
-					ol[2].IEN_gb[0][k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line] = IEN[LNA[k][N][N - 1 - j] - 1][ol[2].GIDF[i] - 1];
-					ol[2].IEN_gb[1][k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line] = IEN[LNA[k + 1][N][N - 1 - j] - 1][ol[2].GIDF[i] - 1];
-					ol[2].IEN_gb[2][k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line] = IEN[LNA[k + 1][N][N - j] - 1][ol[2].GIDF[i] - 1];
-					ol[2].IEN_gb[3][k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line] = IEN[LNA[k][N][N - j] - 1][ol[2].GIDF[i] - 1];
-					ol[2].XYHE_gb[0][k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line] = GCOORD[IEN[LNA[k + 1][N][N - 1 - j] - 1][ol[2].GIDF[i] - 1] - 1][0] - GCOORD[IEN[LNA[k][N][N - 1 - j] - 1][ol[2].GIDF[i] - 1] - 1][0];
-					ol[2].XYHE_gb[1][k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line] = GCOORD[IEN[LNA[k][N][N - j] - 1][ol[2].GIDF[i] - 1] - 1][2] - GCOORD[IEN[LNA[k][N][N - 1 - j] - 1][ol[2].GIDF[i] - 1] - 1][2];
-					ele1 += 1;
-					if (ele1 % (DCXNEL*N) == 0) {
-						line += 1;
+				}
+				if (ele1 != BCNEL && AX > 0 && BZ > 0) {
+					std::cout << "the element count of surface1 is wrong" << std::endl;
+					system("PAUSE ");
+				}
+
+				//change the definition of a.GCOORD to SEM coordinate
+				for (i = 0; i < ele1; i++) {
+					for (j = 0; j < 4; j++) {
+						for (k = 0; k < 2; k++) {
+							a.GCOORD[a.IEN[j][i] - 1][k] = GCOORD[ol[0].IEN_gb[j][i] - 1][k];
+						}
+					}
+				}
+				std::cout << " " << std::endl;
+			}
+			else {
+				for (i = 0; i < BCNODE; i++) {
+					a.GCOORD[i][0] += -SX;
+				}
+			}
+
+			//if (BCNEL > 0) {
+			if (BZ > 0) {
+				//myfile << "EF wetsurface1 3 2" << std::endl;
+				myfile << "EF wetsurface1 3 2" << std::endl;
+				myfile << "NODES " << BCNODE << std::endl;
+				for (i = 0; i < BCNODE; i++) {
+					myfile << i << " " << a.GCOORD[i][0] << " " << a.GCOORD[i][1] << " " << -SZ / 2 << " " << std::endl;
+				}
+				//int BFSNEL = (SX / ol[0].XHE)*(SY / ol[0].YHE);
+				myfile << "ELEMENTS " << BCNEL << std::endl;
+				//output connectivity matrix
+				for (i = 0; i < BCNEL; i++) {
+					myfile << i;
+					for (j = 0; j < 4; j++) {
+						myfile << " " << a.IEN[j][i] - 1; //node numbering starts from 0 in model file
+					}
+					myfile << std::endl;
+				}
+			}
+			//surface 2 calculation
+			//model file output
+			int ACXNEL;
+			int ACYNEL;
+			/*
+			if (mappingalgo==1 || (mappingalgo == 4 && N > 1)) {
+				ACXNEL = SZNEL;
+				ACYNEL = SYNEL;
+			}
+			else if (mappingalgo==2) {
+				ACXNEL = (SZNEL)*N;
+				ACYNEL = SYNEL*N;
+			}
+			else if (mappingalgo == 3 || (mappingalgo == 4 && refine > 1)) {
+				ACXNEL = SZNEL / refine;
+				ACYNEL = SYNEL / refine;
+			}
+			*/
+			if (mappingalgo == 1 || mappingalgo == 3 || mappingalgo == 4 || mappingalgo == 5) {
+				ACXNEL = SZNEL / refine;
+				ACYNEL = SYNEL / refine;
+			}
+			else if (mappingalgo == 2) {
+				ACXNEL = SZNEL*N;
+				ACYNEL = SYNEL*N;
+			}
+			int ACNEL = ACXNEL*ACYNEL;
+			int ACXNODE = ACXNEL + 1;
+			int ACYNODE = ACYNEL + 1;
+			int ACNODE = ACXNODE*ACYNODE;
+			ol[1].GIDNct_st = ACNODE;
+			b = TD_ELE_GEN(ACNEL, ACXNODE, ACNODE, ACXNEL, ACYNEL, SZ, SY);
+			ele1 = 0;
+			line = 0;
+			if (mappingalgo == 2) {
+				ol[1].IEN_gb = new int*[4];
+				for (i = 0; i < 4; i++) {
+					ol[1].IEN_gb[i] = new int[ACNEL];
+				}
+				for (i = 0; i < 4; i++) {
+					for (j = 0; j < ACNEL; j++) {
+						ol[1].IEN_gb[i][j] = 0;
+					}
+				}
+				ol[1].XYHE_gb = new double*[2];
+				for (i = 0; i < 2; i++) {
+					ol[1].XYHE_gb[i] = new double[ACNEL];
+				}
+				for (i = 0; i < 2; i++) {
+					for (j = 0; j < ACNEL; j++) {
+						ol[1].XYHE_gb[i][j] = 0;
+					}
+				}
+				for (i = 0; i < ol[1].FSNEL; i++) {
+					for (j = 0; j < NINT - 1; j++) { //line
+						for (k = 0; k < NINT - 1; k++) { //colomn
+							if (k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line > ACNEL - 1) {
+								std::cout << "out of bound!!!" << std::endl;
+								system("PAUSE ");
+							}
+							ol[1].IEN_gb[0][k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line] = IEN[LNA[N][N - 1 - j][k] - 1][ol[1].GIDF[i] - 1];
+							ol[1].IEN_gb[1][k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line] = IEN[LNA[N][N - 1 - j][k + 1] - 1][ol[1].GIDF[i] - 1];
+							ol[1].IEN_gb[2][k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line] = IEN[LNA[N][N - j][k + 1] - 1][ol[1].GIDF[i] - 1];
+							ol[1].IEN_gb[3][k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line] = IEN[LNA[N][N - j][k] - 1][ol[1].GIDF[i] - 1];
+							ol[1].XYHE_gb[0][k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line] = GCOORD[IEN[LNA[N][N - 1 - j][k + 1] - 1][ol[1].GIDF[i] - 1] - 1][2] - GCOORD[IEN[LNA[N][N - 1 - j][k] - 1][ol[1].GIDF[i] - 1] - 1][2];
+							ol[1].XYHE_gb[1][k + j*ACXNEL + (i - line*(SZNEL))*N + ACXNEL*N*line] = GCOORD[IEN[LNA[N][N - j][k] - 1][ol[1].GIDF[i] - 1] - 1][1] - GCOORD[IEN[LNA[N][N - 1 - j][k] - 1][ol[1].GIDF[i] - 1] - 1][1];
+							ele1 += 1;
+							if (ele1 % (ACXNEL*N) == 0) {
+								line += 1;
+							}
+						}
+					}
+					//std::cout << " " << std::endl;
+				}
+				if (ele1 != ACNEL && AX > 0 && BZ > 0) {
+					std::cout << "the element count of surface2 is wrong" << std::endl;
+					system("PAUSE ");
+				}
+
+				//change the definition of a.GCOORD to SEM coordinate
+				for (i = 0; i < ele1; i++) {
+					for (j = 0; j < 4; j++) {
+						b.GCOORD[b.IEN[j][i] - 1][0] = GCOORD[ol[1].IEN_gb[j][i] - 1][2];
+						b.GCOORD[b.IEN[j][i] - 1][1] = GCOORD[ol[1].IEN_gb[j][i] - 1][1];
 					}
 				}
 			}
-			//std::cout << " " << std::endl;
-		}
-		if (ele1 != DCNEL) {
-			std::cout << "the element count of surface3 is wrong" << std::endl;
-			system("PAUSE ");
-		}
-
-		//change the definition of a.GCOORD to SEM coordinate
-		for (i = 0; i < ele1; i++) {
-			for (j = 0; j < 4; j++) {
-				c.GCOORD[c.IEN[j][i] - 1][0] = GCOORD[ol[2].IEN_gb[j][i] - 1][0];
-				c.GCOORD[c.IEN[j][i] - 1][1] = GCOORD[ol[2].IEN_gb[j][i] - 1][2];
+			else {
+				for (i = 0; i < ACNODE; i++) {
+					b.GCOORD[i][0] += -SZ / 2;
+				}
 			}
-		}
-	}
-	else {
-		for (i = 0; i < DCNODE; i++) {
-			c.GCOORD[i][0] += -SX;
-			c.GCOORD[i][1] += SZ / 2;
-		}
-	}
-	if (SX > 0 && SZ>0) {
-		//myfile << "EF wetsurface3 3 2" << std::endl;
-		myfile << "EF wetsurface3 3 1" << std::endl;
-		myfile << "NODES " << DCNODE << std::endl;
-		for (i = 0; i < DCNODE; i++) {
-			myfile << i << " " << c.GCOORD[i][0] << " " << -SY << " " << c.GCOORD[i][1] << " " << std::endl;
-		}
-		//int BFSNEL = (SX / ol[0].XHE)*(SY / ol[0].YHE);
-		myfile << "ELEMENTS " << DCNEL << std::endl;
-		//output connectivity matrix
-		for (i = 0; i < DCNEL; i++) {
-			myfile << i;
-			for (j = 0; j < 4; j++) {
-				myfile << " " << c.IEN[j][i] - 1; //node numbering starts from 0 in model file
-			}
-			myfile << std::endl;
-		}
-	}
 
-	//surface 4 calculation (everything same with surface 1 except for coordinate)
-	//a = TD_ELE_GEN(BCNEL, BCXNODE, BCNODE, BCXNEL, BCYNEL, BX, BY - DY);
-	d = TD_ELE_GEN(BCNEL, BCXNODE, BCNODE, BCXNEL, BCYNEL, SX, SY);
-	//int NEL, int XNODE, int NNODE, int XNEL, int YNEL, double XL, double YL
-	//build the relationship between the SEM mesh and FEM mesh (associate the FEM node numbering with SEM node numbering) 
-	//get the node coordinate. 
-	ol[3].IEN_gb = new int*[4];
-	for (i = 0; i < 4; i++) {
-		ol[3].IEN_gb[i] = new int[BCNEL];
-	}
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < BCNEL; j++) {
-			ol[3].IEN_gb[i][j] = 0;
-		}
-	}
-	ol[3].XYHE_gb = new double*[2];
-	for (i = 0; i < 2; i++) {
-		ol[3].XYHE_gb[i] = new double[BCNEL];
-	}
-	for (i = 0; i < 2; i++) {
-		for (j = 0; j < BCNEL; j++) {
-			ol[3].XYHE_gb[i][j] = 0;
-		}
-	}
-	ele1 = 0;
-	line = 0;
-	if (mappingalgo == 2) {
-		for (i = 0; i < ol[3].FSNEL; i++) {
-			for (j = 0; j < NINT - 1; j++) { //line
-				for (k = 0; k < NINT - 1; k++) { //colomn
-					if (k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line > BCNEL - 1) {
-						std::cout << "out of bound!!!" << std::endl;
-						system("PAUSE ");
+			if (AX > 0) {
+				//myfile << "EF wetsurface2 3 2" << std::endl;
+				myfile << "EF wetsurface2 3 0" << std::endl;
+				myfile << "NODES " << ACNODE << std::endl;
+				for (i = 0; i < ACNODE; i++) {
+					myfile << i << " " << -SX << " " << b.GCOORD[i][1] << " " << b.GCOORD[i][0] << " " << std::endl;
+				}
+				//int BFSNEL = (SX / ol[0].XHE)*(SY / ol[0].YHE);
+				myfile << "ELEMENTS " << ACNEL << std::endl;
+				//output connectivity matrix
+				for (i = 0; i < ACNEL; i++) {
+					myfile << i;
+					for (j = 0; j < 4; j++) {
+						myfile << " " << b.IEN[j][i] - 1; //node numbering starts from 0 in model file
 					}
-					ol[3].IEN_gb[0][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k][N - 1 - j][0] - 1][ol[3].GIDF[i] - 1];
-					ol[3].IEN_gb[1][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k + 1][N - 1 - j][0] - 1][ol[3].GIDF[i] - 1];
-					ol[3].IEN_gb[2][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k + 1][N - j][0] - 1][ol[3].GIDF[i] - 1];
-					ol[3].IEN_gb[3][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k][N - j][0] - 1][ol[3].GIDF[i] - 1];
-					ol[3].XYHE_gb[0][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = GCOORD[IEN[LNA[k + 1][N - 1 - j][0] - 1][ol[3].GIDF[i] - 1] - 1][0] - GCOORD[IEN[LNA[k][N - 1 - j][0] - 1][ol[3].GIDF[i] - 1] - 1][0];
-					ol[3].XYHE_gb[1][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = GCOORD[IEN[LNA[k][N - j][0] - 1][ol[3].GIDF[i] - 1] - 1][1] - GCOORD[IEN[LNA[k][N - 1 - j][0] - 1][ol[3].GIDF[i] - 1] - 1][1];
-					ele1 += 1;
-					if (ele1 % (BCXNEL*N) == 0) {
-						line += 1;
+					myfile << std::endl;
+				}
+			}
+
+			//surface 3 calculation
+			int DCXNEL = 0;
+			int DCYNEL = 0;
+			/*
+			if (mappingalgo==1 || (mappingalgo == 4 && N > 1)) {
+				DCXNEL = SXNEL;
+				DCYNEL = SZNEL;
+			}
+			else if (mappingalgo==2) {
+				DCXNEL = SXNEL*N;
+				DCYNEL = SZNEL*N;
+			}
+			else if (mappingalgo == 3 || (mappingalgo == 4 && refine > 1)) {
+				DCXNEL = SXNEL / refine;
+				DCYNEL = SZNEL / refine;
+			}
+			*/
+			if (mappingalgo == 1 || mappingalgo == 3 || mappingalgo == 4 || mappingalgo == 5) {
+				DCXNEL = SXNEL / refine;
+				DCYNEL = SZNEL / refine;
+			}
+			else if (mappingalgo == 2) {
+				DCXNEL = SXNEL*N;
+				DCYNEL = SZNEL*N;
+			}
+			int DCNEL = DCXNEL*DCYNEL;
+			int DCXNODE = DCXNEL + 1;
+			int DCYNODE = DCYNEL + 1;
+			int DCNODE = DCXNODE*DCYNODE;
+			ol[2].GIDNct_st = DCNODE;
+			ol[2].IEN_gb = new int*[4];
+			for (i = 0; i < 4; i++) {
+				ol[2].IEN_gb[i] = new int[DCNEL];
+			}
+			for (i = 0; i < 4; i++) {
+				for (j = 0; j < DCNEL; j++) {
+					ol[2].IEN_gb[i][j] = 0;
+				}
+			}
+			ol[2].XYHE_gb = new double*[2];
+			for (i = 0; i < 2; i++) {
+				ol[2].XYHE_gb[i] = new double[DCNEL];
+			}
+			for (i = 0; i < 2; i++) {
+				for (j = 0; j < DCNEL; j++) {
+					ol[2].XYHE_gb[i][j] = 0;
+				}
+			}
+			c = TD_ELE_GEN(DCNEL, DCXNODE, DCNODE, DCXNEL, DCYNEL, SX, SZ);
+			//TD_ELE_GEN(int NEL, int XNODE, int NNODE,int XNEL,int YNEL,double XL, double YL)
+			//input value error prone! 
+			ele1 = 0;
+			line = 0;
+			if (mappingalgo == 2) {
+				for (i = 0; i < ol[2].FSNEL; i++) {
+					for (j = 0; j < NINT - 1; j++) { //line
+						for (k = 0; k < NINT - 1; k++) { //colomn
+							if (k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line > DCNEL - 1) {
+								std::cout << "out of bound!!!" << std::endl;
+								system("PAUSE ");
+							}
+							ol[2].IEN_gb[0][k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line] = IEN[LNA[k][N][N - 1 - j] - 1][ol[2].GIDF[i] - 1];
+							ol[2].IEN_gb[1][k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line] = IEN[LNA[k + 1][N][N - 1 - j] - 1][ol[2].GIDF[i] - 1];
+							ol[2].IEN_gb[2][k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line] = IEN[LNA[k + 1][N][N - j] - 1][ol[2].GIDF[i] - 1];
+							ol[2].IEN_gb[3][k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line] = IEN[LNA[k][N][N - j] - 1][ol[2].GIDF[i] - 1];
+							ol[2].XYHE_gb[0][k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line] = GCOORD[IEN[LNA[k + 1][N][N - 1 - j] - 1][ol[2].GIDF[i] - 1] - 1][0] - GCOORD[IEN[LNA[k][N][N - 1 - j] - 1][ol[2].GIDF[i] - 1] - 1][0];
+							ol[2].XYHE_gb[1][k + j*DCXNEL + (i - line*(SXNEL))*N + DCXNEL*N*line] = GCOORD[IEN[LNA[k][N][N - j] - 1][ol[2].GIDF[i] - 1] - 1][2] - GCOORD[IEN[LNA[k][N][N - 1 - j] - 1][ol[2].GIDF[i] - 1] - 1][2];
+							ele1 += 1;
+							if (ele1 % (DCXNEL*N) == 0) {
+								line += 1;
+							}
+						}
+					}
+					//std::cout << " " << std::endl;
+				}
+				if (ele1 != DCNEL) {
+					std::cout << "the element count of surface3 is wrong" << std::endl;
+					system("PAUSE ");
+				}
+
+				//change the definition of a.GCOORD to SEM coordinate
+				for (i = 0; i < ele1; i++) {
+					for (j = 0; j < 4; j++) {
+						c.GCOORD[c.IEN[j][i] - 1][0] = GCOORD[ol[2].IEN_gb[j][i] - 1][0];
+						c.GCOORD[c.IEN[j][i] - 1][1] = GCOORD[ol[2].IEN_gb[j][i] - 1][2];
 					}
 				}
 			}
-		}
-		if (ele1 != BCNEL && AX > 0 && BZ > 0) {
-			std::cout << "the element count of surface4 is wrong" << std::endl;
-			system("PAUSE ");
-		}
-
-		//change the definition of a.GCOORD to SEM coordinate
-		for (i = 0; i < ele1; i++) {
-			for (j = 0; j < 4; j++) {
-				for (k = 0; k < 2; k++) {
-					d.GCOORD[d.IEN[j][i] - 1][k] = GCOORD[ol[3].IEN_gb[j][i] - 1][k];
+			else {
+				for (i = 0; i < DCNODE; i++) {
+					c.GCOORD[i][0] += -SX;
+					c.GCOORD[i][1] += SZ / 2;
 				}
 			}
-		}
-		std::cout << " " << std::endl;
-	}
-	else {
-		for (i = 0; i < BCNODE; i++) {
-			d.GCOORD[i][0] += -SX;
-		}
-	}
-	ol[3].GIDNct_st = BCNODE;
-	if (BZ > 0) {
-		//myfile << "EF wetsurface4 3 2" << std::endl;
-		myfile << "EF wetsurface4 3 2" << std::endl;
-		myfile << "NODES " << BCNODE << std::endl;
-		for (i = 0; i < BCNODE; i++) {
-			myfile << i << " " << d.GCOORD[i][0] << " " << d.GCOORD[i][1] << " " << SZ / 2 << " " << std::endl;
-		}
-		//int BFSNEL = (SX / ol[0].XHE)*(SY / ol[0].YHE);
-		myfile << "ELEMENTS " << BCNEL << std::endl;
-		//output connectivity matrix
-		for (i = 0; i < BCNEL; i++) {
-			myfile << i;
-			for (j = 0; j < 4; j++) {
-				myfile << " " << d.IEN[j][i] - 1; //node numbering starts from 0 in model file
-			}
-			myfile << std::endl;
-		}
-	}
-
-	//Node weight on base fluid mesh for displacement mapping (algorithm 3 and 4) 
-	if (mappingalgo == 3 || mappingalgo == 4) {
-		for (i = 0; i < owsfnumber; i++) {
-			ol[i].NW = new double*[(hpref + 1)*(hpref + 1)];
-			for (j = 0; j < (hpref + 1)*(hpref + 1); j++) {
-				ol[i].NW[j] = new double[ol[i].FSNEL / refine / refine];
-			}
-		}
-		for (i = 0; i < owsfnumber; i++) {
-			for (j = 0; j < (hpref + 1)*(hpref + 1); j++) {
-				for (k = 0; k < ol[i].FSNEL / refine / refine; k++) {
-					ol[i].NW[j][k] = 0.0;
+			if (SX > 0 && SZ > 0) {
+				//myfile << "EF wetsurface3 3 2" << std::endl;
+				myfile << "EF wetsurface3 3 1" << std::endl;
+				myfile << "NODES " << DCNODE << std::endl;
+				for (i = 0; i < DCNODE; i++) {
+					myfile << i << " " << c.GCOORD[i][0] << " " << -SY << " " << c.GCOORD[i][1] << " " << std::endl;
+				}
+				//int BFSNEL = (SX / ol[0].XHE)*(SY / ol[0].YHE);
+				myfile << "ELEMENTS " << DCNEL << std::endl;
+				//output connectivity matrix
+				for (i = 0; i < DCNEL; i++) {
+					myfile << i;
+					for (j = 0; j < 4; j++) {
+						myfile << " " << c.IEN[j][i] - 1; //node numbering starts from 0 in model file
+					}
+					myfile << std::endl;
 				}
 			}
-		}
-		int* NWflag = new int[NNODE];
-		for (m = 0; m < owsfnumber; m++) {
-			for (k = 0; k < NNODE; k++) {
-				NWflag[k] = 0;
+
+			//surface 4 calculation (everything same with surface 1 except for coordinate)
+			//a = TD_ELE_GEN(BCNEL, BCXNODE, BCNODE, BCXNEL, BCYNEL, BX, BY - DY);
+			d = TD_ELE_GEN(BCNEL, BCXNODE, BCNODE, BCXNEL, BCYNEL, SX, SY);
+			//int NEL, int XNODE, int NNODE, int XNEL, int YNEL, double XL, double YL
+			//build the relationship between the SEM mesh and FEM mesh (associate the FEM node numbering with SEM node numbering) 
+			//get the node coordinate. 
+			ol[3].IEN_gb = new int*[4];
+			for (i = 0; i < 4; i++) {
+				ol[3].IEN_gb[i] = new int[BCNEL];
 			}
-			for (i = 0; i < ol[m].FSNEL / refine / refine; i++) {
-				for (j = 0; j < (hpref + 1)*(hpref + 1); j++) {
-					NWflag[ol[m].IEN_base[j][i] - 1] += 1;
+			for (i = 0; i < 4; i++) {
+				for (j = 0; j < BCNEL; j++) {
+					ol[3].IEN_gb[i][j] = 0;
 				}
 			}
-			for (i = 0; i < ol[m].FSNEL / refine / refine; i++) {
-				for (j = 0; j < (hpref + 1)*(hpref + 1); j++) {
-					ol[m].NW[j][i] = 1.0 / NWflag[ol[m].IEN_base[j][i] - 1];
+			ol[3].XYHE_gb = new double*[2];
+			for (i = 0; i < 2; i++) {
+				ol[3].XYHE_gb[i] = new double[BCNEL];
+			}
+			for (i = 0; i < 2; i++) {
+				for (j = 0; j < BCNEL; j++) {
+					ol[3].XYHE_gb[i][j] = 0;
 				}
 			}
+			ele1 = 0;
+			line = 0;
+			if (mappingalgo == 2) {
+				for (i = 0; i < ol[3].FSNEL; i++) {
+					for (j = 0; j < NINT - 1; j++) { //line
+						for (k = 0; k < NINT - 1; k++) { //colomn
+							if (k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line > BCNEL - 1) {
+								std::cout << "out of bound!!!" << std::endl;
+								system("PAUSE ");
+							}
+							ol[3].IEN_gb[0][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k][N - 1 - j][0] - 1][ol[3].GIDF[i] - 1];
+							ol[3].IEN_gb[1][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k + 1][N - 1 - j][0] - 1][ol[3].GIDF[i] - 1];
+							ol[3].IEN_gb[2][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k + 1][N - j][0] - 1][ol[3].GIDF[i] - 1];
+							ol[3].IEN_gb[3][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = IEN[LNA[k][N - j][0] - 1][ol[3].GIDF[i] - 1];
+							ol[3].XYHE_gb[0][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = GCOORD[IEN[LNA[k + 1][N - 1 - j][0] - 1][ol[3].GIDF[i] - 1] - 1][0] - GCOORD[IEN[LNA[k][N - 1 - j][0] - 1][ol[3].GIDF[i] - 1] - 1][0];
+							ol[3].XYHE_gb[1][k + j*BCXNEL + (i - line*SXNEL)*N + BCXNEL*N*line] = GCOORD[IEN[LNA[k][N - j][0] - 1][ol[3].GIDF[i] - 1] - 1][1] - GCOORD[IEN[LNA[k][N - 1 - j][0] - 1][ol[3].GIDF[i] - 1] - 1][1];
+							ele1 += 1;
+							if (ele1 % (BCXNEL*N) == 0) {
+								line += 1;
+							}
+						}
+					}
+				}
+				if (ele1 != BCNEL && AX > 0 && BZ > 0) {
+					std::cout << "the element count of surface4 is wrong" << std::endl;
+					system("PAUSE ");
+				}
+
+				//change the definition of a.GCOORD to SEM coordinate
+				for (i = 0; i < ele1; i++) {
+					for (j = 0; j < 4; j++) {
+						for (k = 0; k < 2; k++) {
+							d.GCOORD[d.IEN[j][i] - 1][k] = GCOORD[ol[3].IEN_gb[j][i] - 1][k];
+						}
+					}
+				}
+				std::cout << " " << std::endl;
+			}
+			else {
+				for (i = 0; i < BCNODE; i++) {
+					d.GCOORD[i][0] += -SX;
+				}
+			}
+			ol[3].GIDNct_st = BCNODE;
+			if (BZ > 0) {
+				//myfile << "EF wetsurface4 3 2" << std::endl;
+				myfile << "EF wetsurface4 3 2" << std::endl;
+				myfile << "NODES " << BCNODE << std::endl;
+				for (i = 0; i < BCNODE; i++) {
+					myfile << i << " " << d.GCOORD[i][0] << " " << d.GCOORD[i][1] << " " << SZ / 2 << " " << std::endl;
+				}
+				//int BFSNEL = (SX / ol[0].XHE)*(SY / ol[0].YHE);
+				myfile << "ELEMENTS " << BCNEL << std::endl;
+				//output connectivity matrix
+				for (i = 0; i < BCNEL; i++) {
+					myfile << i;
+					for (j = 0; j < 4; j++) {
+						myfile << " " << d.IEN[j][i] - 1; //node numbering starts from 0 in model file
+					}
+					myfile << std::endl;
+				}
+			}
+
+			//Node weight on base fluid mesh for displacement mapping (algorithm 3 and 4) 
+			if (mappingalgo == 3 || mappingalgo == 4) {
+				for (i = 0; i < owsfnumber; i++) {
+					ol[i].NW = new double*[(hpref + 1)*(hpref + 1)];
+					for (j = 0; j < (hpref + 1)*(hpref + 1); j++) {
+						ol[i].NW[j] = new double[ol[i].FSNEL / refine / refine];
+					}
+				}
+				for (i = 0; i < owsfnumber; i++) {
+					for (j = 0; j < (hpref + 1)*(hpref + 1); j++) {
+						for (k = 0; k < ol[i].FSNEL / refine / refine; k++) {
+							ol[i].NW[j][k] = 0.0;
+						}
+					}
+				}
+				int* NWflag = new int[NNODE];
+				for (m = 0; m < owsfnumber; m++) {
+					for (k = 0; k < NNODE; k++) {
+						NWflag[k] = 0;
+					}
+					for (i = 0; i < ol[m].FSNEL / refine / refine; i++) {
+						for (j = 0; j < (hpref + 1)*(hpref + 1); j++) {
+							NWflag[ol[m].IEN_base[j][i] - 1] += 1;
+						}
+					}
+					for (i = 0; i < ol[m].FSNEL / refine / refine; i++) {
+						for (j = 0; j < (hpref + 1)*(hpref + 1); j++) {
+							ol[m].NW[j][i] = 1.0 / NWflag[ol[m].IEN_base[j][i] - 1];
+						}
+					}
+				}
+				//std::cout << " " << std::endl;
+
+				//===========================end of the definition of SF==========================//
+				delete[] NWflag;
+			}
+
+			for (i = 0; i < BCNODE; i++) {
+				delete[] a.GCOORD[i];
+			}
+			delete[] a.GCOORD;
+			for (i = 0; i < (NC + 1)*(NC + 1); i++) {
+				delete[] a.IEN[i];
+			}
+			delete[] a.IEN;
+
+			for (i = 0; i < BCNODE; i++) {
+				delete[] d.GCOORD[i];
+			}
+			delete[] d.GCOORD;
+			for (i = 0; i < (NC + 1)*(NC + 1); i++) {
+				delete[] d.IEN[i];
+			}
+			delete[] d.IEN;
+
+			for (i = 0; i < ACNODE; i++) {
+				delete[] b.GCOORD[i];
+			}
+			delete[] b.GCOORD;
+			for (i = 0; i < (NC + 1)*(NC + 1); i++) {
+				delete[] b.IEN[i];
+			}
+			delete[] b.IEN;
+
+			for (i = 0; i < DCNODE; i++) {
+				delete[] c.GCOORD[i];
+			}
+			delete[] c.GCOORD;
+			for (i = 0; i < (NC + 1)*(NC + 1); i++) {
+				delete[] c.IEN[i];
+			}
+			delete[] c.IEN;
 		}
-		//std::cout << " " << std::endl;
+		else { //if mesh is imported from outside
+			std::cout << " " << std::endl;
 
-		//===========================end of the definition of SF==========================//
-		delete[] NWflag;
-	}
+		}
 
-	for (i = 0; i < BCNODE; i++) {
-		delete[] a.GCOORD[i];
-	}
-	delete[] a.GCOORD;
-	for (i = 0; i < (NC + 1)*(NC + 1);i++) {
-		delete[] a.IEN[i];
-	}
-	delete[] a.IEN;
 
-	for (i = 0; i < BCNODE; i++) {
-		delete[] d.GCOORD[i];
-	}
-	delete[] d.GCOORD;
-	for (i = 0; i < (NC + 1)*(NC + 1); i++) {
-		delete[] d.IEN[i];
-	}
-	delete[] d.IEN;
 
-	for (i = 0; i < ACNODE; i++) {
-		delete[] b.GCOORD[i];
-	}
-	delete[] b.GCOORD;
-	for (i = 0; i < (NC + 1)*(NC + 1); i++) {
-		delete[] b.IEN[i];
-	}
-	delete[] b.IEN;
-
-	for (i = 0; i < DCNODE; i++) {
-		delete[] c.GCOORD[i];
-	}
-	delete[] c.GCOORD;
-	for (i = 0; i < (NC + 1)*(NC + 1); i++) {
-		delete[] c.IEN[i];
-	}
-	delete[] c.IEN;
-	
 	std::cout << " " << std::endl;
 	return;
 }

@@ -232,7 +232,7 @@ struct meshgenerationstruct meshgeneration() {
 				}
 			}
 		}
-
+		
 		//renumber the positive element in array PN 
 		ct = 0;
 		for (i = 0; i < NNODEP; i++) {
@@ -332,7 +332,7 @@ struct meshgenerationstruct meshgeneration() {
 	}
 
 	else {   //external mesh from Gmsh
-		int i, j, k;
+		int i, j, k, l, m, n;
 		double ptholder[1 + NINT*NINT*NINT];
 		for (i = 0; i < 1 + NINT*NINT*NINT; i++) {
 			ptholder[i] = 0.0;
@@ -549,7 +549,7 @@ struct meshgenerationstruct meshgeneration() {
 		endfile = ct; 
 		*/
 
-		double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
+		//double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
 
 		//The physical groups except for the last one are the surface mesh (NINT*NINT). 
 		//The last physical group is the volumn mesh (NINT*NINT*NINT)
@@ -574,7 +574,7 @@ struct meshgenerationstruct meshgeneration() {
 		}
 
 		//Define the rest of surface boundaries (for boundary condition definition)
-		std::vector<std::vector<std::vector<int>>> BCIEN;
+		//std::vector<std::vector<std::vector<int>>> BCIEN;
 		for (i = 0; i < physicalgroups - 1; i++) {
 			std::vector<std::vector<int>>iens;
 			for (j = phygrp_start[i]; j < phygrp_start[i + 1]; j++) {
@@ -585,7 +585,7 @@ struct meshgenerationstruct meshgeneration() {
 				}
 				iens.push_back(local);
 			}
-			BCIEN.push_back(iens); 
+			t.BCIEN.push_back(iens); 
 		}
 
 		//Define node coordinates
@@ -599,14 +599,34 @@ struct meshgenerationstruct meshgeneration() {
 				t.GCOORD[i - nodestart][j] = stod(output[i][1 + j]);
 			}
 		}
-		std::cout << " " << std::endl;
+		//std::cout << " " << std::endl;
 		
+		int localnode[4];
+		std::vector<std::vector<int>>global3d;
+		for (i = 0; i < physicalgroups - 1; i++) {
+			std::vector<int>local3d;
+			for (j = 0; j < phygrp_start[i + 1] - phygrp_start[i]; j++) { //element number in one physical group (might have to set it as an individual variable)
+				std::cout << j << std::endl;
+				for (k = 0; k < t.NEL;k++) { 
+					ct = 0;
+					for (l = 0; l < NINT*NINT; l++) {
+						for (m = 0; m < 8; m++) {
+							if (t.BCIEN[i][j][l] == t.IEN[m][k]) {
+								localnode[ct] = m; //store the corresponding local node in global element connectivity matrix
+								ct += 1;
+							}
+						}
+					}
+					if (ct==4) { //found the corresponding 3D element! 
+						local3d.push_back(k);
+						break; 
+					}
+				}
+			}
+			global3d.push_back(local3d);
+		}
 
-		//duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-
-		//std::cout << "printf: " << duration << '\n';
-
-	
+		std::cout << " " << std::endl; 
 	}
 
 	return t;

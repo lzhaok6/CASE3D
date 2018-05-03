@@ -186,7 +186,7 @@ int main()
 	//std::cout << "MATRIX done" << std::endl;
 	//DETERMINE MAXIMUM MESH EIGENVALUE TO FIND CFL TIMESTEP
 	LMAX = EIGENMAX(o.QMASTER, o.HMASTER, a.NEL);
-	FSILINK(f.W, c.LNA, a.IEN, g.SHL, a.GCOORD, a.NNODE, g.SHOD);
+	FSILINK(f.W, c.LNA, a.IEN, g.SHL, a.GCOORD, a.NNODE, g.SHOD, a.BCIEN);
 
 	//read the model file to MpCCI adapter
 	char* modelfile = "model.txt";

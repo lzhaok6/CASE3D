@@ -66,6 +66,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 	}
 	else {
 		for (e = 0; e < NEL; e++) {
+			std::cout << e << std::endl;
 			for (u = 0; u < NINT*NINT*NINT; u++) {
 				for (v = 0; v < NINT*NINT*NINT; v++) {
 					t.QMASTER[u][v] = 0.0;
@@ -94,6 +95,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 
 	//t.HMASTER[u][v] = 0.0;
 	for (e = 0; e < NEL; e++) {
+		std::cout << e << std::endl;
 		for (i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element 
 			for (j = 0; j < NINT*NINT*NINT; j++) { //the transpose of shape function
 				for (k = 0; k < NINT; k++) {       //k l m are for four points
@@ -231,6 +233,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 	int ct;
 
 	for (e = 0; e < NEL; e++) {
+		std::cout << e << std::endl;
 		ct = 0; 
 		for (i = 0; i < NINT; i++) {
 			for (j = 0; j < NINT; j++) {
