@@ -631,6 +631,7 @@ struct meshgenerationstruct meshgeneration() {
 	endloop: 
 
 		//=================extract the 2D local distribution of the local nodes LNA2D===================//
+		/*
 		int node2d[NINT*NINT][3];
 		int LNA_2D[NINT][NINT];
 		for (i = 0; i < NINT*NINT; i++) { //loop through all the surface nodes
@@ -646,47 +647,6 @@ struct meshgenerationstruct meshgeneration() {
 				}
 			}
 		}
-		/*
-		ct = 0;
-		for (i = 0; i < NINT*NINT; i++) {
-			if (node2d[i][0] == 0 || node2d[i][0] == N) {
-				ct += 1;
-			}
-		}
-		if (ct == NINT*NINT) {
-			for (k = 0; k < NINT; k++) {
-				for (l = 0; l < NINT; l++) {
-					LNA_2D[k][l] = c.LNA[node2d[0][0]][k][l];
-				}
-			}
-		}
-		ct = 0;
-		for (i = 0; i < NINT*NINT; i++) {
-			if (node2d[i][1] == 0 || node2d[i][1] == N) {
-				ct += 1;
-			}
-		}
-		if (ct == NINT*NINT) {
-			for (j = 0; j < NINT; j++) {
-				for (l = 0; l < NINT; l++) {
-					LNA_2D[j][l] = c.LNA[j][node2d[0][1]][l];
-				}
-			}
-		}
-		ct = 0;
-		for (i = 0; i < NINT*NINT; i++) {
-			if (node2d[i][2] == 0 || node2d[i][2] == N) {
-				ct += 1;
-			}
-		}
-		if (ct == NINT*NINT) {
-			for (j = 0; j < NINT; j++) {
-				for (k = 0; k < NINT; k++) {
-					LNA_2D[j][k] = c.LNA[j][k][node2d[0][2]];
-				}
-			}
-		}
-		*/
 		int A; int B; int C; 
 		A = node2d[0][0]; 
 		B = node2d[0][1];
@@ -739,23 +699,128 @@ struct meshgenerationstruct meshgeneration() {
 				}
 			}
 		}
+		*/
 
-		//================================end extraction===================================//
-		
-		//separate the high-order element into linear elements and obtain the normal direction
-		if (mappingalgo == 2) {
-			int wetsurfnum = 5; //the physical group number that corresponds to the wet surface
-			int** IEN_wt; //the element connectivity matrix of wetted surface elements
-			int elenum = phygrp_start[wetsurfnum + 1] - phygrp_start[wetsurfnum]; //high-order element number on the wet surface 
-			IEN_wt = new int*[4];
-			for (i = 0; i < 4; i++) {
-				IEN_wt[i] = new int[elenum];
+		int flag; 
+		int LNA_2D[NINT][NINT];
+		//left face (i.e., i=0)
+		ct = 0; 
+		for (j = 0; j < NINT; j++) {
+			for (k = 0; k < NINT; k++) {
+				for (l = 0; l < NINT*NINT; l++) {
+					if (localnode[l] == c.LNA[0][j][k]) {
+						LNA_2D[j][k] = l;
+						ct += 1;
+					}
+				}
 			}
+		}
+		if (ct == NINT*NINT) {
+			flag = 0;
+			goto endextraction; 
+		}
+		//right face (i.e. i=N)
+		ct = 0;
+		for (j = 0; j < NINT; j++) {
+			for (k = 0; k < NINT; k++) {
+				for (l = 0; l < NINT*NINT; l++) {
+					if (localnode[l] == c.LNA[N][j][k]) {
+						LNA_2D[j][k] = l;
+						ct += 1;
+					}
+				}
+			}
+		}
+		if (ct == NINT*NINT) {
+			flag = N;
+			goto endextraction;
+		}
+		//back face (k=0)
+		ct = 0;
+		for (i = 0; i < NINT; i++) {
+			for (j = 0; j < NINT; j++) {
+				for (l = 0; l < NINT*NINT; l++) {
+					if (localnode[l] == c.LNA[i][j][0]) {
+						LNA_2D[i][j] = l;
+						ct += 1;
+					}
+				}
+			}
+		}
+		if (ct == NINT*NINT) {
+			flag = 0;
+			goto endextraction;
+		}
+		//front face (k=N)
+		ct = 0;
+		for (i = 0; i < NINT; i++) {
+			for (j = 0; j < NINT; j++) {
+				for (l = 0; l < NINT*NINT; l++) {
+					if (localnode[l] == c.LNA[i][j][N]) {
+						LNA_2D[i][j] = l;
+						ct += 1;
+					}
+				}
+			}
+		}
+		if (ct == NINT*NINT) {
+			flag = N;
+			goto endextraction;
+		}
+		//bottom face (j=0)
+		ct = 0;
+		for (i = 0; i < NINT; i++) {
+			for (k = 0; k < NINT; k++) {
+				for (l = 0; l < NINT*NINT; l++) {
+					if (localnode[l] == c.LNA[i][0][k]) {
+						LNA_2D[i][k] = l;
+						ct += 1;
+					}
+				}
+			}
+		}
+		if (ct == NINT*NINT) {
+			flag = 0;
+			goto endextraction;
+		}
+		//top face (j=N)
+		ct = 0;
+		for (i = 0; i < NINT; i++) {
+			for (k = 0; k < NINT; k++) {
+				for (l = 0; l < NINT*NINT; l++) {
+					if (localnode[l] == c.LNA[i][N][k]) {
+						LNA_2D[i][k] = l;
+						ct += 1;
+					}
+				}
+			}
+		}
+		if (ct == NINT*NINT) {
+			flag = N;
+			goto endextraction;
+		}
+	endextraction:
+		//================================end extraction===================================//
+	
+		//=============separate the high-order element into linear elements and obtain the normal direction================//
+		int wetsurfnum = 5; //the physical group number that corresponds to the wet surface
+		int elenum = phygrp_start[wetsurfnum + 1] - phygrp_start[wetsurfnum]; //high-order element number on the wet surface 
+		int** IEN_wt; //the element connectivity matrix of wetted surface elements
+		IEN_wt = new int*[4];
+		for (i = 0; i < 4; i++) {
+			IEN_wt[i] = new int[elenum];
+		}
+		double** norm;
+		norm = new double*[elenum];
+		for (i = 0; i < elenum; i++) {
+			norm[i] = new double[3];
+		}
+		if (mappingalgo == 2) {
 			ct = 0;
 			for (e = 0; e < elenum; e++) {
 				if (flag == N) { //clock-wise
 					for (i = 0; i < N; i++) {
-						for (j = 0; j < N; j++) { 
+						for (j = 0; j < N; j++) {
 							IEN_wt[0][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j]]; //oriente the nodes so that the normal direction is out of the element
 							IEN_wt[1][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j]];
 							IEN_wt[2][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j + 1]];
@@ -766,7 +831,7 @@ struct meshgenerationstruct meshgeneration() {
 				}
 				else if (flag == 0) { //counter-clockwise
 					for (i = 0; i < N; i++) {
-						for (j = 0; j < N; j++) { 
+						for (j = 0; j < N; j++) {
 							IEN_wt[0][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j]]; //oriente the nodes so that the normal direction is out of the element
 							IEN_wt[1][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j + 1]];
 							IEN_wt[2][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j + 1]];
@@ -779,15 +844,10 @@ struct meshgenerationstruct meshgeneration() {
 			if (ct != elenum) {
 				std::cout << "Not all elements are separated." << std::endl;
 			}
-
+			
 			//obtain the normal direction unit vector of the newly separated elements (numbering from 0 to elenum)
-			double** norm;
-			norm = new double*[elenum];
-			for (i = 0; i < elenum; i++) {
-				norm[i] = new double[3];
-			}
 			double ax, ay, az; double bx, by, bz;
-			double n1, n2, n3; double absn; 
+			double n1, n2, n3; double absn;
 			for (i = 0; i < elenum; i++) {
 				ax = t.GCOORD[IEN_wt[1][i] - 1][0] - t.GCOORD[IEN_wt[0][i] - 1][0];
 				ay = t.GCOORD[IEN_wt[1][i] - 1][1] - t.GCOORD[IEN_wt[0][i] - 1][1];
@@ -795,12 +855,11 @@ struct meshgenerationstruct meshgeneration() {
 				bx = t.GCOORD[IEN_wt[2][i] - 1][0] - t.GCOORD[IEN_wt[1][i] - 1][0];
 				by = t.GCOORD[IEN_wt[2][i] - 1][1] - t.GCOORD[IEN_wt[1][i] - 1][1];
 				bz = t.GCOORD[IEN_wt[2][i] - 1][2] - t.GCOORD[IEN_wt[1][i] - 1][2];
-				n1 = ay*bz - az*by; n2 = az*bx - ax*bz; n3 = ax*by - ay*bx; 
-				absn = sqrt(pow(n1, 2) + pow(n2, 2) + pow(n3, 2)); 
-				norm[i][0] = n1 / absn; norm[i][1] = n2 / absn; norm[i][2]=n3 = n3 / absn; 
+				n1 = ay*bz - az*by; n2 = az*bx - ax*bz; n3 = ax*by - ay*bx;
+				absn = sqrt(pow(n1, 2) + pow(n2, 2) + pow(n3, 2));
+				norm[i][0] = n1 / absn; norm[i][1] = n2 / absn; norm[i][2] = n3 = n3 / absn;
 			}
 		}
-
 
 		std::cout << " " << std::endl; 
 	}
