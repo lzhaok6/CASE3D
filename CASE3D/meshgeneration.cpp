@@ -333,7 +333,7 @@ struct meshgenerationstruct meshgeneration() {
 		delete[] PN; delete[] PE;
 	}
 
-	else {   //external mesh from Gmsh
+	else {   //Import external mesh from Gmsh
 		int i, j, k, l, m, n, e;
 		double ptholder[1 + NINT*NINT*NINT];
 		for (i = 0; i < 1 + NINT*NINT*NINT; i++) {
@@ -423,20 +423,20 @@ struct meshgenerationstruct meshgeneration() {
 		std::vector<std::vector<std::string>> output;
 		int ct = -1;
 		std::string csvLine;
-		int physicalgroups = 1;
+		int physicalgroups = 1; //starting from the first physical group
 		int endfile = 0;
 		std::vector<int> phygrp_start; //the starting line number of the physical group
 		int elestart = 0; //the flag denote the start of element connectivity definition
 		
 		std::clock_t start;
 		start = std::clock();
-
+		std::string csvElement;
 		while (getline(infile, csvLine))
 		{
 			ct = ct + 1; //the current line number (starting from 0)
 			std::istringstream csvStream(csvLine);
 			std::vector<std::string> csvColumn;
-			std::string csvElement;
+			//std::string csvElement;
 			while (getline(csvStream, csvElement, ' '))
 			{
 				csvColumn.push_back(csvElement);
@@ -468,7 +468,9 @@ struct meshgenerationstruct meshgeneration() {
 					phygrp_start.push_back(ct);
 				}
 			}
-			std::cout << ct << std::endl; //output which line is being read
+			if (ct % 20000 == 0) {
+				std::cout << ct << std::endl; //output which line is being read
+			}
 		}
 
 		/*
@@ -605,32 +607,31 @@ struct meshgenerationstruct meshgeneration() {
 		
 		int localnode[NINT*NINT];
 		std::vector<std::vector<int>>global3d;
+		//The following loop only attempts to extract the pattern of localnode[] from one corresponding global element since the assumption here is that all the wetted surface elements
+		//follow the same pattern.  
 		for (i = 0; i < physicalgroups - 1; i++) {
-			std::vector<int>local3d;
-			for (j = 0; j < phygrp_start[i + 1] - phygrp_start[i]; j++) { //element number in one physical group (might have to set it as an individual variable)
-				std::cout << j << std::endl;
+			for (j = 0; j < phygrp_start[i + 1] - phygrp_start[i]; j++) { //phygrp_start[i + 1] - phygrp_start[i] is the element number in the ith physical group
 				for (k = 0; k < t.NEL;k++) { 
 					ct = 0;
 					for (l = 0; l < NINT*NINT; l++) {
 						for (m = 0; m < NINT*NINT*NINT; m++) {
 							if (t.BCIEN[i][j][l] == t.IEN[m][k]) {
-								//localnode[ct] = m + 1; //store the corresponding local node in global element connectivity matrix
-								localnode[l] = m + 1;
+								localnode[l] = m + 1; //store the corresponding local node in BCIEN in global element connectivity matrix
 								ct += 1;
 							}
 						}
 					}
 					if (ct==NINT*NINT) { //found the corresponding 3D element! 
-						local3d.push_back(k);
 						goto endloop; 
 					}
 				}
 			}
-			global3d.push_back(local3d); 
 		}
 	endloop: 
 
 		//=================extract the 2D local distribution of the local nodes LNA2D===================//
+		//The section below trys to associate the relationship between localnode and wet surface local node distribution called LNA_2D which is later used to separate high-order element to linear element
+		//The assumption here is that all the wet surface corresponds to the same face in its corresponding local element (Check out Evernote: How to determine the wet elements on the fluid side). 
 		/*
 		int node2d[NINT*NINT][3];
 		int LNA_2D[NINT][NINT];
@@ -703,13 +704,13 @@ struct meshgenerationstruct meshgeneration() {
 
 		int flag; 
 		int LNA_2D[NINT][NINT];
-		//left face (i.e., i=0)
+		//If the wet surface is the left face of the local element (i.e., i=0). 
 		ct = 0; 
 		for (j = 0; j < NINT; j++) {
 			for (k = 0; k < NINT; k++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[0][j][k]) {
-						LNA_2D[j][k] = l;
+						LNA_2D[j][k] = l; 
 						ct += 1;
 					}
 				}
@@ -717,7 +718,7 @@ struct meshgenerationstruct meshgeneration() {
 		}
 		if (ct == NINT*NINT) {
 			flag = 0;
-			goto endextraction; 
+			goto endextraction; //If the face is found, jump to the end of process
 		}
 		//right face (i.e. i=N)
 		ct = 0;
@@ -803,14 +804,14 @@ struct meshgenerationstruct meshgeneration() {
 		//================================end extraction===================================//
 	
 		//=============separate the high-order element into linear elements and obtain the normal direction================//
-		int wetsurfnum = 5; //the physical group number that corresponds to the wet surface
-		int elenum = phygrp_start[wetsurfnum + 1] - phygrp_start[wetsurfnum]; //high-order element number on the wet surface 
+		int wetsurfnum = 5; //the physical group number that corresponds to the wet surface! s
+		int elenum = phygrp_start[wetsurfnum + 1] - phygrp_start[wetsurfnum]; //number of high-order on the wet surface 
 		int** IEN_wt; //the element connectivity matrix of wetted surface elements
 		IEN_wt = new int*[4];
 		for (i = 0; i < 4; i++) {
 			IEN_wt[i] = new int[elenum];
 		}
-		double** norm;
+		double** norm; //store the normal direction of linear elements 
 		norm = new double*[elenum];
 		for (i = 0; i < elenum; i++) {
 			norm[i] = new double[3];
@@ -821,7 +822,7 @@ struct meshgenerationstruct meshgeneration() {
 				if (flag == N) { //clock-wise
 					for (i = 0; i < N; i++) {
 						for (j = 0; j < N; j++) {
-							IEN_wt[0][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j]]; //oriente the nodes so that the normal direction is out of the element
+							IEN_wt[0][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j]]; //oriente the nodes so that the normal direction is pointing out of the element
 							IEN_wt[1][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j]];
 							IEN_wt[2][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j + 1]];
 							IEN_wt[3][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j + 1]];
@@ -844,7 +845,7 @@ struct meshgenerationstruct meshgeneration() {
 			if (ct != elenum) {
 				std::cout << "Not all elements are separated." << std::endl;
 			}
-			
+
 			//obtain the normal direction unit vector of the newly separated elements (numbering from 0 to elenum)
 			double ax, ay, az; double bx, by, bz;
 			double n1, n2, n3; double absn;
@@ -857,7 +858,7 @@ struct meshgenerationstruct meshgeneration() {
 				bz = t.GCOORD[IEN_wt[2][i] - 1][2] - t.GCOORD[IEN_wt[1][i] - 1][2];
 				n1 = ay*bz - az*by; n2 = az*bx - ax*bz; n3 = ax*by - ay*bx;
 				absn = sqrt(pow(n1, 2) + pow(n2, 2) + pow(n3, 2));
-				norm[i][0] = n1 / absn; norm[i][1] = n2 / absn; norm[i][2] = n3 = n3 / absn;
+				norm[i][0] = n1 / absn; norm[i][1] = n2 / absn; norm[i][2] = n3 / absn;
 			}
 		}
 
