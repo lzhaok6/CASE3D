@@ -614,7 +614,8 @@ struct meshgenerationstruct meshgeneration() {
 					for (l = 0; l < NINT*NINT; l++) {
 						for (m = 0; m < NINT*NINT*NINT; m++) {
 							if (t.BCIEN[i][j][l] == t.IEN[m][k]) {
-								localnode[ct] = m + 1; //store the corresponding local node in global element connectivity matrix
+								//localnode[ct] = m + 1; //store the corresponding local node in global element connectivity matrix
+								localnode[l] = m + 1;
 								ct += 1;
 							}
 						}
@@ -729,6 +730,16 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 
+		for (j = 0; j < NINT; j++) {
+			for (k = 0; k < NINT; k++) {
+				for (l = 0; l < NINT*NINT; l++) {
+					if (localnode[l] == LNA_2D[j][k]) {
+						LNA_2D[j][k] = l;
+					}
+				}
+			}
+		}
+
 		//================================end extraction===================================//
 		
 		//separate the high-order element into linear elements and obtain the normal direction
@@ -742,24 +753,24 @@ struct meshgenerationstruct meshgeneration() {
 			}
 			ct = 0;
 			for (e = 0; e < elenum; e++) {
-				if (flag == 0) {
+				if (flag == N) { //clock-wise
 					for (i = 0; i < N; i++) {
-						for (j = 0; j < N; j++) { //Need to fix the normal direction stuff!!! 
-							IEN_wt[0][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j] - 1]; //oriente the nodes so that the normal direction is out of the element
-							IEN_wt[1][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j] - 1];
-							IEN_wt[2][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j + 1] - 1];
-							IEN_wt[3][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j + 1] - 1];
+						for (j = 0; j < N; j++) { 
+							IEN_wt[0][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j]]; //oriente the nodes so that the normal direction is out of the element
+							IEN_wt[1][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j]];
+							IEN_wt[2][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j + 1]];
+							IEN_wt[3][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j + 1]];
 							ct += 1;
 						}
 					}
 				}
-				else if (flag == N) { //counter-clockwise
+				else if (flag == 0) { //counter-clockwise
 					for (i = 0; i < N; i++) {
-						for (j = 0; j < N; j++) { //Need to fix the normal direction stuff!!! 
-							IEN_wt[0][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j] - 1]; //oriente the nodes so that the normal direction is out of the element
-							IEN_wt[1][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j + 1] - 1];
-							IEN_wt[2][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j + 1] - 1];
-							IEN_wt[3][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j] - 1];
+						for (j = 0; j < N; j++) { 
+							IEN_wt[0][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j]]; //oriente the nodes so that the normal direction is out of the element
+							IEN_wt[1][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i][j + 1]];
+							IEN_wt[2][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j + 1]];
+							IEN_wt[3][ct] = t.BCIEN[wetsurfnum][e][LNA_2D[i + 1][j]];
 							ct += 1;
 						}
 					}
