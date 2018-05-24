@@ -17,7 +17,7 @@ struct GLLQUADstruct GLLQUAD(double* Z, double* WL, int n, int SEM);
 struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int NQUAD);
 struct LEGENDREstruct LEGENDRE(int N);
 struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA);
-struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **IEN, int***LNA);
+struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double****GSHL_2D, double **GCOORD, int **IEN, int***LNA);
 struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double****XS, double**JACOB);
 struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double****XS, double****SHG, double**JACOB);
 double EIGENMAX(double** QMASTER, double*** HMASTER, int NEL);
@@ -76,6 +76,7 @@ typedef struct owetsurf {
 	double* nodecoord_mpcci;
 	double** norm; //store the normal direction of linear elements 
 	double** Jacob_2D; //the jacobian value of 2D element on wetted surface
+	int NEL; 
 } OWETSURF;
 
 struct LOBATTOstruct {
@@ -129,10 +130,12 @@ struct LOCAL_SHAPEstruct {
 
 struct LOCAL_GSHAPEstruct {
 	double***** GSHL;
+	double****GSHL_2D; 
 };
 
 struct JACOBIANstruct {
 	double****XS;
+	double****XS_2D; //for the 2D elements on wetted surface
 	double**JACOB; 
 };
 

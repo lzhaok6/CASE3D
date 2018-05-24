@@ -717,6 +717,8 @@ struct meshgenerationstruct meshgeneration() {
 				myfile << std::endl;
 			}
 			std::cout << " " << std::endl;
+
+			ol[0].NEL = ele_num.size(); 
 		}
 
 		//end loop for if (mappingalgo == 2) {

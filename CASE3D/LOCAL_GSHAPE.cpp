@@ -19,7 +19,7 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA) {
 			t.GSHL[i][j] = new double**[NINT];
 			for (k = 0; k < NINT; k++) {
 				t.GSHL[i][j][k] = new double*[NINT];
-				for (l = 0; l < NINT;l++) {
+				for (l = 0; l < NINT; l++) {
 					t.GSHL[i][j][k][l] = new double[NINT];
 				}
 			}
@@ -38,10 +38,30 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA) {
 		}
 	}
 
+	t.GSHL_2D = new double***[3];
+	for (i = 0; i < 4; i++) {
+		t.GSHL_2D[i] = new double**[4]; //4 points
+		for (j = 0; j < NINT; j++) {
+			t.GSHL_2D[i][j] = new double*[NINT];
+			for (k = 0; k < NINT; k++) {
+				t.GSHL_2D[i][j][k] = new double[NINT];
+			}
+		}
+	}
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 4; j++) {
+			for (k = 0; k < NINT; k++) {
+				for (l = 0; l < NINT; l++) {
+					t.GSHL_2D[i][j][k][l] = 0.0;
+				}
+			}
+		}
+	}
+
 	//----------BEGIN COMPUT----------//
 	//DEFINE LOCAL ELEMENT COORDINATES
 	//LOCAL COORDINATE [-1,1]
-	
+
 	//X DIRECTION
 	MCOORD[0][0] = -1.0; //good
 	MCOORD[1][0] = 1.0; //good
@@ -69,16 +89,16 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA) {
 	MCOORD[5][2] = 1.0;
 	MCOORD[6][2] = 1.0;
 	MCOORD[7][2] = 1.0;
-	
+
 	/*
 	//X DIRECTION
 	MCOORD[LNA[0][0][0]-1][0] = -1.0; //good
 	MCOORD[LNA[N][0][0]-1][0] = 1.0; //good
 	MCOORD[LNA[N][N][0]-1][0] = 1.0; //good
-	MCOORD[LNA[0][N][0]-1][0] = -1.0; //good 
+	MCOORD[LNA[0][N][0]-1][0] = -1.0; //good
 	MCOORD[LNA[0][0][N]-1][0] = -1.0; //good
-	MCOORD[LNA[N][0][N]-1][0] = 1.0; //good 
-	MCOORD[LNA[N][N][N]-1][0] = 1.0; //good 
+	MCOORD[LNA[N][0][N]-1][0] = 1.0; //good
+	MCOORD[LNA[N][N][N]-1][0] = 1.0; //good
 	MCOORD[LNA[0][N][N]-1][0] = -1.0; //good
 	//Y DIRECTION
 	MCOORD[LNA[0][0][0] - 1][1] = -1.0;
@@ -102,8 +122,8 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA) {
 	//EVALUATE LOCAL SHAPE FUNCTION AND LOCAL SHAPE FUNCTION DERIVATIVES AT QUAD POINTS 
 	for (i = 0; i < 8; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
 		for (j = 0; j < NINT; j++) { // j k l are integration point where discrete value of shape function is derived
-			for (k = 0; k < NINT; k++) {	
-				for (l = 0; l < NINT;l++) {
+			for (k = 0; k < NINT; k++) {
+				for (l = 0; l < NINT; l++) {
 					t.GSHL[3][i][j][k][l] = (1.0 / 8.0)*(1 + MCOORD[i][0] * S[j])*(1 + MCOORD[i][1] * S[k])*(1 + MCOORD[i][2] * S[l]);
 					//not derivative
 					t.GSHL[0][i][j][k][l] = (1.0 / 8.0)*MCOORD[i][0] * (1 + MCOORD[i][1] * S[k])*(1 + MCOORD[i][2] * S[l]);
@@ -116,10 +136,24 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA) {
 			}
 		}
 	}
-
 	//check point: the shape function is zero at the corresponding point:
 	//std::cout <<"Global shape function value: "<<t.GSHL[3][0][0][0][0] << std::endl; 
 	//t.GSHL[3][0][0][0][0]=1
+
+	for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
+		for (j = 0; j < NINT; j++) { // j k l are integration point where discrete value of shape function is derived
+			for (k = 0; k < NINT; k++) {
+				t.GSHL_2D[2][i][j][k] = (1.0 / 4.0)*(1 + MCOORD[i][0] * S[j])*(1 + MCOORD[i][1] * S[k]);
+				//not derivative
+				t.GSHL_2D[0][i][j][k] = (1.0 / 4.0)*MCOORD[i][0] * (1 + MCOORD[i][1] * S[k]);
+				//X direction derivative
+				t.GSHL_2D[1][i][j][k] = (1.0 / 4.0)*MCOORD[i][1] * (1 + MCOORD[i][0] * S[j]);
+				//Y direction derivative
+			}
+		}
+	}
+
+
 	std::cout << " " << std::endl;
 	return t;
 }

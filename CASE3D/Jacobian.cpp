@@ -7,10 +7,10 @@
 #include <Eigen/Dense>
 #include <Eigen/LU>
 
-struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **IEN, int*** LNA) {
+struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double****GSHL_2D, double **GCOORD, int **IEN, int*** LNA) {
 	int i, j, k, l, m, n;
 	JACOBIANstruct t;
-
+	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	//initialize t.XS
 	t.XS = new double***[NEL];
 	for (i = 0; i < NEL; i++) {
@@ -28,6 +28,17 @@ struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **
 				for (l = 0; l < NINT*NINT*NINT; l++) {
 					t.XS[i][j][k][l] = 0.0;
 				}
+			}
+		}
+	}
+
+	t.XS_2D = new double***[ol[0].NEL];
+	for (i = 0; i < ol[0].NEL; i++) {
+		t.XS_2D[i] = new double**[2];
+		for (j = 0; j < 2; j++) {
+			t.XS_2D[i][j] = new double*[2];
+			for (k = 0; k < 2; k++) {
+				t.XS_2D[i][j][k] = new double[NINT*NINT];
 			}
 		}
 	}
@@ -81,8 +92,25 @@ struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **
 			}
 		}
 	}
+	//Initialize Jacob_2D!!!!!!!!!!!!!!!!!!!1
+	ol[0].Jacob_2D = new double*[ol[0].NEL];
+	for (i = 0; i < ol[0].NEL; i++) {
+		ol[0].Jacob_2D[i] = new double[NINT*NINT];
+	}
 	//We can determine the 2D Jacobian determinant for boundary condition here. 
-
+	for (m = 0; m < ol[0].NEL; m++) { //loop through each element on wetted surface
+		for (i = 0; i < NINT; i++) {
+			for (j = 0; j < NINT; j++) {
+				for (l = 0; l < 4; l++) {
+					t.XS_2D[m][0][0][i*NINT + j] = t.XS_2D[m][0][0][i*NINT + j] + GSHL_2D[0][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][0]; //dx/dxi
+					t.XS_2D[m][1][0][i*NINT + j] = t.XS_2D[m][1][0][i*NINT + j] + GSHL_2D[0][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][1]; //dy/dxi
+					t.XS_2D[m][0][1][i*NINT + j] = t.XS_2D[m][0][1][i*NINT + j] + GSHL_2D[1][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][0]; //dx/deta
+					t.XS_2D[m][1][1][i*NINT + j] = t.XS_2D[m][1][1][i*NINT + j] + GSHL_2D[1][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][1]; //dy/deta
+				}
+				ol[0].Jacob_2D[m][i*NINT + j] = t.XS_2D[m][0][0][i*NINT + j] * t.XS_2D[m][1][1][i*NINT + j] - t.XS_2D[m][1][0][i*NINT + j] * t.XS_2D[m][0][1][i*NINT + j];
+			}
+		}
+	}
 
 	std::cout << " " << std::endl;
 	return t;

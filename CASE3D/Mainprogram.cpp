@@ -116,7 +116,7 @@ int main()
 	//std::cout << "LOCAL_GSHAPE done" << std::endl;
 	//DETERMINE JACOBIAN MATRIX 
 	JACOBIANstruct m;
-	m = JACOBIAN(a.NEL, l.GSHL, a.GCOORD, a.IEN, c.LNA);
+	m = JACOBIAN(a.NEL, l.GSHL, l.GSHL_2D, a.GCOORD, a.IEN, c.LNA);
 
 	for (i = 0; i < 4; i++) {
 		for (j = 0; j < 8; j++) {
