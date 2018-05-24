@@ -12,11 +12,11 @@
 #include <vector>
 
 //construct the link between structure and fluid module A C D separately
-void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int NNODE, double***SHOD, std::vector<std::vector<std::vector<int>>> BCIEN) {
+void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int NNODE, double***SHOD) {
 	int i, j, k, l, m, n;
 	int IC; //counter 
-	extern int owsfnumber;
-	extern OWETSURF ol[4]; //defined in FSILINK 
+	//extern int owsfnumber;
+	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 
 	//weighted integrator
 	for (i = 0; i < owsfnumber; i++) {
@@ -819,7 +819,6 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 					std::cout << "the element count of surface3 is wrong" << std::endl;
 					system("PAUSE ");
 				}
-
 				//change the definition of a.GCOORD to SEM coordinate
 				for (i = 0; i < ele1; i++) {
 					for (j = 0; j < 4; j++) {
@@ -1014,7 +1013,17 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 			delete[] c.IEN;
 		}
 		else { //if mesh is imported from outside
+			//We need IEN_gb[][]  the connectivity matrix on the local wet surface mesh (gb means global node numbering). Done 
+			//We also need the IEN_2D to write the model file. Done
+			//We also need to know the Jacobian determinant of each individual 2D element to do the integration to get the nodal force.
+			//We also need to write the model file to be read by MpCCI. 
+			
+
+
+
+
 			std::cout << " " << std::endl;
+
 
 		}
 

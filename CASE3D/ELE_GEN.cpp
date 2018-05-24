@@ -9,7 +9,7 @@ void ELE_GEN(int NEL, double **GCOORD, int**IEN, int ***LNA ,double*Z) {
 	int i, j, k, l, m;
 
     //Get information of wet surfaces
-	extern int owsfnumber;
+	//extern int owsfnumber;
 	extern OWETSURF ol[5]; //defined in FSILINK 
 	
 	for (i = 0; i < owsfnumber; i++) {

@@ -24,7 +24,7 @@ double EIGENMAX(double** QMASTER, double*** HMASTER, int NEL);
 struct TIMINTstruct TIMINT(double LMAX);
 struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN, int NEL, double***SHL, double***SHOD);
 double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, int *NRBA, int NRBNODE, double*timer, double*ampt, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO);
-void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int NNODE, double***SHOD, std::vector<std::vector<std::vector<int>>> BCIEN);
+void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int NNODE, double***SHOD);
 struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int**LNA_base, int**LNA_basealgo5, double *Z, int TIME, double** GCOORD, double ***phi_fem, double *W, double ***phi_femg, double*** phi_fem2);
 void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, int**IEN, int NEL, double* S, double***SHL, int TIME, double *T, double DT, int NDT, double* Z,
 	double** AYIN, double*** HMASTER, double* Q, double*** phi_fem, double* timer, double* ampt, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
@@ -58,10 +58,10 @@ typedef struct owetsurf {
 	double** ADMASTER; //global integration weight matrix assembled from FPMASTER
 	int *SP; //2D node count in one 3D element on NRB  
 	int **IEN_2D; //wet surface connectivity matrix (used in interface mapping)
+	int **IEN_gb; //connectivity matrix on 2D surface pointing to global points.
 	int dir; //the direction of displacement and force on a specific wet surface (0 means x direction; 1 means y and 2 means z)
 	double location; //the constant coordinate component of wet surface points. (used to calculate displacement from node coordinate)  
 	double OBF_val; //The total force on wet surface before interface_mapping (used to check if the interface force mapping is conservative)
-	int **IEN_gb; //connectivity matrix on 2D surface pointing to global points. 
 	double **XYHE_gb; 
 	int FSNEL_fem; //element number on SEM made FEM coupling surface 
 	int *GIDN; //wet nodes on coupling surfaces
@@ -74,6 +74,7 @@ typedef struct owetsurf {
 	int YNEL;
 	int* DP; //2D local node numbering of NRB elements (the surface sequence is different from the structural wet surface). 
 	double* nodecoord_mpcci;
+	double** norm; //store the normal direction of linear elements 
 } OWETSURF;
 
 struct LOBATTOstruct {
@@ -103,6 +104,7 @@ struct meshgenerationstruct {
 	//int wetnodenum;
 	//int*wetnode;
 	std::vector<std::vector<std::vector<int>>> BCIEN;
+	int** IEN_wt; ////connecvitity matrix of wetted surface (after removing the free surface elements)
 };
 
 struct interface_mappingstruct {
@@ -569,3 +571,4 @@ const int TNT = 1;
 const int output = 0; 
 const int FEM = 0; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
+const int owsfnumber = 1; //For the FSP case, we defined 4 wetted surfaces. 

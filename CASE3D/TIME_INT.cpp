@@ -19,8 +19,8 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 	double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO, double ***SHOD, double ****gamma, double****gamma_t, double*****G,
 	double** gamman, double** gamma_tn, double****Gn, double*** phi_femg, double*** phi_fem2) {
 	int h, i, j, k, q, z, ii, jj, m;
-	extern int owsfnumber;
-	extern OWETSURF ol[4]; //defined in FSILINK 
+	//extern int owsfnumber;
+	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	//extern int output;
 	/*
 	int*** counter = new int**[NINT];

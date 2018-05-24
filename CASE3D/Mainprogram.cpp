@@ -43,26 +43,20 @@ add another comment here
 
 double time_step_size;
 double current_time;
-OWETSURF ol[4]; //declear the data structure globally
-int owsfnumber = 4;
-//int output;
+OWETSURF ol[owsfnumber]; //declear the data structure globally
 int main()
 {
 	double LMAX;
 	int h, i, j, k, q, z, ii, jj; //error prone: cannot be the same with data structure type (z is the same as Z)
 	int TIME = 0;     //CONTROL TIME
-	//output = 1;
-	
 	/*
-	//ask the user if file output is needed
-	std::cout << "Do you want to output the pressure profile? (Y/N): " << std::endl;
-	std::string outholder;
-	std::getline(std::cin, outholder, '\n');
-	if (outholder.compare("Y") != 0) {
-		output = 0;
+	if (internalmesh == 1) {
+		owsfnumber = 4; //This is used for FSP case
+	}
+	else {
+		owsfnumber = 1; //Assume the mesh imported into the current code has only one wet surface
 	}
 	*/
-
 	if (FEM == 1 && N != 1) {
 		std::cout << "the current code doesn't support high-order FEM" << std::endl;
 		system("PAUSE ");
@@ -104,9 +98,9 @@ int main()
 	//observation: LNA is identical with the Gmsh user manual 
 	TD_LOCAL_NODEstruct ct;
 	ct = TD_LOCAL_NODE(NC);
-
-	ELE_GEN(a.NEL, a.GCOORD, a.IEN, c.LNA, b.Z);
-
+	if (internalmesh == 1) {
+		ELE_GEN(a.NEL, a.GCOORD, a.IEN, c.LNA, b.Z);
+	}
 	std::cout << "ELE_GENstruct done" << std::endl;
 	//---------------SHAPE FUNCTION ROUTINE------------------------------//
 	//DETERMINE GLL QUADRATURE POINTS AND WEIGHTS
@@ -186,7 +180,7 @@ int main()
 	//std::cout << "MATRIX done" << std::endl;
 	//DETERMINE MAXIMUM MESH EIGENVALUE TO FIND CFL TIMESTEP
 	LMAX = EIGENMAX(o.QMASTER, o.HMASTER, a.NEL);
-	FSILINK(f.W, c.LNA, a.IEN, g.SHL, a.GCOORD, a.NNODE, g.SHOD, a.BCIEN);
+	FSILINK(f.W, c.LNA, a.IEN, g.SHL, a.GCOORD, a.NNODE, g.SHOD);
 
 	//read the model file to MpCCI adapter
 	char* modelfile = "model.txt";

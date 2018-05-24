@@ -9,7 +9,7 @@
 
 struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **IEN, int*** LNA) {
 	int i, j, k, l, m, n;
-	JACOBIANstruct t; 
+	JACOBIANstruct t;
 
 	//initialize t.XS
 	t.XS = new double***[NEL];
@@ -81,6 +81,8 @@ struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double **GCOORD, int **
 			}
 		}
 	}
+	//We can determine the 2D Jacobian determinant for boundary condition here. 
+
 
 	std::cout << " " << std::endl;
 	return t;

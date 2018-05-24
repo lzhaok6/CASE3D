@@ -16,8 +16,8 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 	//int NRBELE;
 	//int NRBELE1 = 0; int NRBELE2 = 0; int NRBELE3 = 0; int NRBELE4 = 0;
 	//int *NRBELE_ARR; //the NRB element numbering
-	extern int owsfnumber;
-	extern OWETSURF ol[4]; //defined in FSILINK 
+	//extern int owsfnumber;
+	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	t.NRBNODE_loc = new int[owsfnumber];
 	for (i = 0; i < owsfnumber + 1; i++) {
 		t.NRBNODE_loc[i] = 0;

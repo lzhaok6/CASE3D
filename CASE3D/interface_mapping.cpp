@@ -28,8 +28,8 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3
 	interface_mappingstruct t;
 	int i, j, k, l, m, h;
 	int u, v;
-	extern int owsfnumber;
-	extern OWETSURF ol[4];
+	//extern int owsfnumber;
+	extern OWETSURF ol[owsfnumber];
 	double accu = 0.0;
 	int ct = 0;
 	t.energy_rec = 0.0;
