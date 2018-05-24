@@ -655,7 +655,8 @@ struct meshgenerationstruct meshgeneration() {
 			for (i = 0; i < 4; i++) {
 				ol[0].IEN_2D[i] = new int[ele_num.size()];
 			}
-			ct = 0; 
+			ct = 0; //count the node number assigned
+			std::vector<int>node_num;
 			for (i = 0; i < ele_num.size(); i++) { //loop through each element
 				for (j = 0; j < 4; j++) { //the nodes in current element
 					flag = 1; //Initiate the flag to 1 
@@ -671,8 +672,9 @@ struct meshgenerationstruct meshgeneration() {
 						}
 					}
 					if (flag == 1) {
-						ol[0].IEN_2D[j][i] = ct;
 						ct += 1;
+						ol[0].IEN_2D[j][i] = ct;
+						node_num.push_back(ol[0].IEN_gb[j][i]); //associate the local 2D node with the global node numbering 
 					}
 				}
 			}
@@ -696,8 +698,27 @@ struct meshgenerationstruct meshgeneration() {
 				ol[0].norm[i][0] = n1 / absn; ol[0].norm[i][1] = n2 / absn; ol[0].norm[i][2] = n3 / absn;
 			}
 			//check if the separated element has the same normal direction as the original mesh (N=1)
-			std::cout << " " << std::endl; 
+			
+			//write the model file for MpCCI here
+			std::ofstream myfile;
+			myfile.open("model.txt");
+			myfile << "EF wetsurface 3 1" << std::endl;
+			myfile << "NODES " << node_num.size() << std::endl;
+			for (i = 0; i < node_num.size(); i++) {
+				myfile << i << " " << t.GCOORD[node_num[i] - 1][0] << " " << t.GCOORD[node_num[i] - 1][1] << " " << t.GCOORD[node_num[i] - 1][2] << " " << std::endl;
+			}
+			myfile << "ELEMENTS " << ele_num.size() << std::endl;
+			//output connectivity matrix
+			for (i = 0; i < ele_num.size(); i++) {
+				myfile << i;
+				for (j = 0; j < 4; j++) {
+					myfile << " " << ol[0].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
+				}
+				myfile << std::endl;
+			}
+			std::cout << " " << std::endl;
 		}
+
 		//end loop for if (mappingalgo == 2) {
 	}
 

@@ -75,6 +75,7 @@ typedef struct owetsurf {
 	int* DP; //2D local node numbering of NRB elements (the surface sequence is different from the structural wet surface). 
 	double* nodecoord_mpcci;
 	double** norm; //store the normal direction of linear elements 
+	double** Jacob_2D; //the jacobian value of 2D element on wetted surface
 } OWETSURF;
 
 struct LOBATTOstruct {

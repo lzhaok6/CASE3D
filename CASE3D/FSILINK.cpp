@@ -506,12 +506,11 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 		}
 		//std::cout << " " << std::endl;
 	//}
-
+		std::ofstream myfile;
+		myfile.open("model.txt");
 	//=================================Formulate the model file which will be passed to MpCCI adapter=================================//
 		if (internalmesh == 1) {
 			TD_ELE_GENstruct a, b, c, d, e;
-			std::ofstream myfile;
-			myfile.open("model.txt");
 			int BCXNEL = 0;
 			int BCYNEL = 0;
 			/*
@@ -1018,10 +1017,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 			//We also need to know the Jacobian determinant of each individual 2D element to do the integration to get the nodal force.
 			//We also need to write the model file to be read by MpCCI. 
 			
-
-
-
-
+		
 			std::cout << " " << std::endl;
 
 
