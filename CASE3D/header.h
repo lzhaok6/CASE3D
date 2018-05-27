@@ -16,19 +16,19 @@ struct TD_ELE_GENstruct TD_ELE_GEN(int NEL, int XNODE, int NNODE, int XNEL, int 
 struct GLLQUADstruct GLLQUAD(double* Z, double* WL, int n, int SEM);
 struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int NQUAD);
 struct LEGENDREstruct LEGENDRE(int N);
-struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA);
-struct JACOBIANstruct JACOBIAN(int NEL, double*****GSHL, double****GSHL_2D, double **GCOORD, int **IEN, int***LNA);
+struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT);
+struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA);
 struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double****XS, double**JACOB);
 struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double****XS, double****SHG, double**JACOB);
 double EIGENMAX(double** QMASTER, double*** HMASTER, int NEL);
 struct TIMINTstruct TIMINT(double LMAX);
 struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN, int NEL, double***SHL, double***SHOD);
-double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, int *NRBA, int NRBNODE, double*timer, double*ampt, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO);
+double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO);
 void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int NNODE, double***SHOD);
-struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int**LNA_base, int**LNA_basealgo5, double *Z, int TIME, double** GCOORD, double ***phi_fem, double *W, double ***phi_femg, double*** phi_fem2);
+struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int**LNA_base, int**LNA_basealgo5, double *Z, int TIME, double** GCOORD, double ***phi_fem, double *W, double ***phi_femg, double*** phi_sem2);
 void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, int**IEN, int NEL, double* S, double***SHL, int TIME, double *T, double DT, int NDT, double* Z,
 	double** AYIN, double*** HMASTER, double* Q, double*** phi_fem, double* timer, double* ampt, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
-	double XO, double YO, double ZO, double ***SHOD, double ****gamma, double****gamma_t, double*****G, double** gamman, double** gamma_tn, double****Gn, double*** phi_femg, double*** phi_fem2);
+	double XO, double YO, double ZO, double ***SHOD, double ****gamma, double****gamma_t, double*****G, double** gamman, double** gamma_tn, double****Gn, double*** phi_femg, double*** phi_sem2);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
 
@@ -45,7 +45,8 @@ typedef struct owetsurf {
 	double *PSI; //integrated incident pressure 
 	double *DI;  //displacement predictor 
 	double **DISPI; //incident displacement
-	double ***DISP; //total (actual) displacement (the combination of incident displacement and dynamic displacement)
+	double **DISP; //total (actual) displacement (the combination of incident displacement and dynamic displacement)
+	double **DISP_norm; //normal displacement out of fluid domain for two concecutive time steps
 	double**BF1;    //For mapping algorithm1, 3 and 4
 	double*BF2;     //For mapping algorithm2
 	double**BF3;    //For mapping algorithm3
@@ -54,8 +55,8 @@ typedef struct owetsurf {
 	double *WP; //wet surface pressure, representing AP, CP, DP previously
 	double *WPIN; //wet surface incident pressure, APIN, ...
 	int *FP; //2D node count in one 3D element on wet surfaces. (Does not exist in non_MpCCI code)
-	double** FPMASTER;
-	double** ADMASTER; //global integration weight matrix assembled from FPMASTER
+	double*** FPMASTER;
+	double*** FPMASTER_2D; 
 	int *SP; //2D node count in one 3D element on NRB  
 	int **IEN_2D; //wet surface connectivity matrix (used in interface mapping)
 	int **IEN_gb; //connectivity matrix on 2D surface pointing to global points.
@@ -75,9 +76,23 @@ typedef struct owetsurf {
 	int* DP; //2D local node numbering of NRB elements (the surface sequence is different from the structural wet surface). 
 	double* nodecoord_mpcci;
 	double** norm; //store the normal direction of linear elements 
-	double** Jacob_2D; //the jacobian value of 2D element on wetted surface
-	int NEL; 
+	double** Jacob_2D; //the Jacobian value of 2D element on wetted surface
+	int LNA_2D[NINT][NINT];
+	int FP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of FPMASTER
+	double** JACOB;
 } OWETSURF;
+
+//Store the properties on NRB surface (currently just one)
+//Different from the wetted surface, the element on the NRB surface is high-order
+typedef struct nrbsurf {
+	double*** ADMASTER; //The boundary force integration weight for each element on NRB surface
+	double** JACOB; //3D Jacobian determinant with one additional quadrature point (Dedicated for boundary force integration on boundaries). 
+	int** IEN_gb; //connectivity matrix on 2D surface pointing to global points. (From the physical group definition of the mesh file)
+	int NEL_nrb; //the element number of the 2D element 
+	int NNODE_nrb; //The total number of node on NRBC
+	int LNA_2D[NINT][NINT]; 
+	int DP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of ADMASTER
+} NRBSURF; 
 
 struct LOBATTOstruct {
 	double* Z;
@@ -163,7 +178,7 @@ struct NRBstruct {
 	int **nloc; //local node numbering on NRB surfaces (sequentially)
 	int NRBNODE;
 	int* NRBNODE_loc;
-	double **ADMASTER;
+	//double **ADMASTER;
 	int NRBELE;
 	int **NRBELE_ARR;
 	int *nrbele;
@@ -576,3 +591,4 @@ const int output = 0;
 const int FEM = 0; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
 const int owsfnumber = 1; //For the FSP case, we defined 4 wetted surfaces. 
+const int nrbsurfnumber = 1; //The number of NRB surface. 

@@ -10,7 +10,7 @@
 struct GLLQUADstruct GLLQUAD(double* Z, double* WL, int n, int SEM) {
 	int i;
 	GLLQUADstruct t;
-
+	
 	t.S = new double[n + 1];
 	t.W = new double[n + 1];
 	for (i = 0; i < n + 1; i++) {

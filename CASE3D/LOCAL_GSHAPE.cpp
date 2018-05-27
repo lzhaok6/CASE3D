@@ -8,7 +8,7 @@
 //LOCAL_GSHAPE determines the local shape function and its derivatives of the geometry nodes 
 //at the GLL quadrature points 
 
-struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA) {
+struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT) {
 	double MCOORD[8][3]; //MATRIX OF LOCAL ELEMENT COORDINATES
 	int i, j, k, l, m;
 	LOCAL_GSHAPEstruct t;
@@ -152,8 +152,6 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA) {
 			}
 		}
 	}
-
-
 	std::cout << " " << std::endl;
 	return t;
 }

@@ -10,14 +10,11 @@
 struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN, int NEL, double***SHL, double***SHOD) {
 	NRBstruct t;
 	//int* NRBA;
-	int i, j, k, l, m;
+	int i, j, k, l, m, e;
 	int count;
 	double DUNC;
-	//int NRBELE;
-	//int NRBELE1 = 0; int NRBELE2 = 0; int NRBELE3 = 0; int NRBELE4 = 0;
-	//int *NRBELE_ARR; //the NRB element numbering
-	//extern int owsfnumber;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
+	extern NRBSURF nr[nrbsurfnumber]; 
 	t.NRBNODE_loc = new int[owsfnumber];
 	for (i = 0; i < owsfnumber + 1; i++) {
 		t.NRBNODE_loc[i] = 0;
@@ -26,7 +23,6 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 	int XNNODE = N*round((AX + SX) / XHE) + 1; int XNEL = round((AX + SX) / XHE);
 	int ZNNODE = N*round((2 * BZ + SZ) / ZHE) + 1; int ZNEL = round((2 * BZ + SZ) / ZHE);
 	int YNNODE = N*round((SY + DY) / YHE) + 1; int YNEL = round((SY + DY) / YHE);
-
 
 	if (WAVE == 1) { //plane wave
 		t.NRBNODE = XNNODE*ZNNODE;
@@ -69,7 +65,6 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 	for (i = 0; i < owsfnumber; i++) {
 		t.nrbele[i] = 0;
 	}
-	
 	
 	for (i = 0; i < owsfnumber; i++) {
 		ol[i].DP = new int[NINT*NINT];
@@ -184,6 +179,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 	}
 
 	else { //WAVE==2
+		//nloc stores the nodes on different NRBC
 		t.nloc = new int*[t.NRBNODE];
 		for (i = 0; i < t.NRBNODE;i++) {
 			t.nloc[i] = new int[owsfnumber];
@@ -268,6 +264,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 		int ele = 0;
 		//NRBELE1 = (AXNEL + BXNEL + CXNEL)*AZNEL;
 		//Note that the numbering scheme is different from wet surface, in which the back surface is the first one, and then the left, bottom, front, right
+		
 		//bottom (without adjacent point with L V R) 
 		for (i = 0; i < NEL; i++) {
 			if (abs(GCOORD[IEN[LNA[0][0][0] - 1][i] - 1][1] + (DY + SY)) < 1e-5) {
@@ -439,6 +436,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 	
 	}
 
+	//ADMASTERG
 	t.ADMASTERG = new double[NNODE];
 	for (i = 0; i < NNODE; i++) {
 		t.ADMASTERG[i] = 0.0;
@@ -452,6 +450,40 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN
 				}
 			}
 		}
+	}
+
+	if (internalmesh == 0) {
+		//Construct the ADMASTER for the integration (insert one additional GLL quadrature point)
+		//Can we use just one surface for NRBC? I think so  
+		//We need to combine the physical group corresponding to NRBC first
+		//Do we need to individual points on the NRBC? 
+		//ADMASTER is for each element. 
+		//We need NRBA to store all the nodes on NRB
+		//We also need the total number of node in each NRB surface
+		//We need to lump ADMASTER to get ADMASTERG 
+		for (i = 0; i < NINT; i++) {
+			for (j = 0; j < NINT; j++) {
+				nr[0].DP[i*NINT + j] = nr[0].LNA_2D[i][j];
+			}
+		}
+		double DUNC;
+		//Check out Evernote "Some thoughts on boundary force integration" 
+		for (e = 0; e < nr[0].NEL_nrb; e++) {
+			for (m = 0; m < NINT*NINT; m++) {
+				for (l = 0; l < NINT*NINT; l++) {
+					DUNC = 0.0; //accumulator 
+					for (i = 0; i < NqINT; i++) {
+						for (j = 0; j < NqINT; j++) {
+							for (k = 0; k < NqINT; k++) {
+								DUNC += gq.W[i] * gq.W[j] * gq.W[k] * ls.SHL[3][nr[0].DP[m] - 1][i*NqINT*NqINT + j * NqINT + k] * ls.SHL[3][nr[0].DP[l] - 1][i*NqINT*NqINT + j * NqINT + k] * nr[0].JACOB[e][i*NqINT*NqINT + j*NqINT + k];
+							}
+						}
+					}
+					nr[0].ADMASTER[e][m][l] += DUNC;
+				}
+			}
+		}
+
 	}
 
 	return t;

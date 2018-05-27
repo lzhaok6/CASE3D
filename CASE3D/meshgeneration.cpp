@@ -22,6 +22,7 @@ struct meshgenerationstruct meshgeneration() {
 	LOBATTOstruct b;
 	LOCAL_NODEstruct c;
 	extern OWETSURF ol[owsfnumber];
+	extern NRBSURF nr[nrbsurfnumber]; 
 	c = LOCAL_NODE(N);
 
 	if (internalmesh == 1) {
@@ -466,8 +467,8 @@ struct meshgenerationstruct meshgeneration() {
 
 		int localnode[NINT*NINT];
 		std::vector<std::vector<int>>global3d;
-		//The following loop only attempts to extract the pattern of localnode[] from one corresponding global element since the assumption here is that all the wetted surface elements
-		//follow the same pattern.  
+		//The following loop only attempts to extract the pattern of localnode[] from one corresponding global element since the assumption here is that all the elements in all physical groups
+		//follow the same pattern. However, that is not rigorous enough since the corresponding local node for all 2D element in physical group do not necessary be the same. 
 		for (i = 0; i < physicalgroups - 1; i++) {
 			for (j = 0; j < phygrp_start[i + 1] - phygrp_start[i]; j++) { //phygrp_start[i + 1] - phygrp_start[i] is the element number in the ith physical group
 				for (k = 0; k < t.NEL;k++) { 
@@ -489,17 +490,20 @@ struct meshgenerationstruct meshgeneration() {
 	endloop: 
 
 		//=================extract the 2D local distribution of the local nodes LNA2D===================//
-		//The section below trys to associate the relationship between localnode and wet surface local node distribution called LNA_2D which is later used to separate high-order element to linear element
+		//The section below trys to associate the relationship between localnode and wet surface local node distribution called nr[0].LNA_2D which is later used to separate high-order element to linear element
+		//The local surface (left/right/front/behind/top/bottom) could be identified.
 		//The assumption here is that all the wet surface corresponds to the same face in its corresponding local element (Check out Evernote: How to determine the wet elements on the fluid side). 
 		int flag; 
-		int LNA_2D[NINT][NINT];
+		//int LNA_2D[NINT][NINT];
+
 		//If the wet surface is the left face of the local element (i.e., i=0). 
 		ct = 0; 
 		for (j = 0; j < NINT; j++) {
 			for (k = 0; k < NINT; k++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[0][j][k]) {
-						LNA_2D[j][k] = l; 
+						nr[0].LNA_2D[j][k] = l; 
+						ol[0].LNA_2D[j][k] = l;
 						ct += 1;
 					}
 				}
@@ -515,7 +519,8 @@ struct meshgenerationstruct meshgeneration() {
 			for (k = 0; k < NINT; k++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[N][j][k]) {
-						LNA_2D[j][k] = l;
+						nr[0].LNA_2D[j][k] = l;
+						ol[0].LNA_2D[j][k] = l;
 						ct += 1;
 					}
 				}
@@ -531,7 +536,8 @@ struct meshgenerationstruct meshgeneration() {
 			for (j = 0; j < NINT; j++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[i][j][0]) {
-						LNA_2D[i][j] = l;
+						nr[0].LNA_2D[i][j] = l;
+						ol[0].LNA_2D[i][j] = l;
 						ct += 1;
 					}
 				}
@@ -547,7 +553,8 @@ struct meshgenerationstruct meshgeneration() {
 			for (j = 0; j < NINT; j++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[i][j][N]) {
-						LNA_2D[i][j] = l;
+						nr[0].LNA_2D[i][j] = l;
+						ol[0].LNA_2D[i][j] = l;
 						ct += 1;
 					}
 				}
@@ -563,7 +570,8 @@ struct meshgenerationstruct meshgeneration() {
 			for (k = 0; k < NINT; k++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[i][0][k]) {
-						LNA_2D[i][k] = l;
+						nr[0].LNA_2D[i][k] = l;
+						ol[0].LNA_2D[i][k] = l;
 						ct += 1;
 					}
 				}
@@ -579,7 +587,8 @@ struct meshgenerationstruct meshgeneration() {
 			for (k = 0; k < NINT; k++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[i][N][k]) {
-						LNA_2D[i][k] = l;
+						nr[0].LNA_2D[i][k] = l;
+						ol[0].LNA_2D[i][k] = l;
 						ct += 1;
 					}
 				}
@@ -589,10 +598,11 @@ struct meshgenerationstruct meshgeneration() {
 			flag = N;
 			goto endextraction;
 		}
+
 	endextraction:
 		//================================end extraction===================================//
 		//=============separate the high-order element into linear elements and obtain the normal direction================//
-		int pys_num = 2; //the physical group number that corresponds to the wet surface! (error prone)
+		int pys_num = 2; //the physical group number that corresponds to the wet surface
 		int elenum = phygrp_start[pys_num + 1] - phygrp_start[pys_num]; //number of high-order on the wet surface 
 		int** IEN_py; //the linear element connectivity matrix of 2D physical groups (boundaries) separated from the original 2D high-order elements
 		IEN_py = new int*[4];
@@ -605,10 +615,10 @@ struct meshgenerationstruct meshgeneration() {
 				if (flag == N) { //counter-clockwise
 					for (i = 0; i < N; i++) {
 						for (j = 0; j < N; j++) {
-							IEN_py[0][ct] = t.BCIEN[pys_num][e][LNA_2D[i][j]]; //oriente the nodes so that the normal direction is pointing out of the element
-							IEN_py[1][ct] = t.BCIEN[pys_num][e][LNA_2D[i + 1][j]];
-							IEN_py[2][ct] = t.BCIEN[pys_num][e][LNA_2D[i + 1][j + 1]];
-							IEN_py[3][ct] = t.BCIEN[pys_num][e][LNA_2D[i][j + 1]];
+							IEN_py[0][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i][j]]; //oriente the nodes so that the normal direction is pointing out of the element
+							IEN_py[1][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i + 1][j]];
+							IEN_py[2][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i + 1][j + 1]];
+							IEN_py[3][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i][j + 1]];
 							ct += 1;
 						}
 					}
@@ -616,10 +626,10 @@ struct meshgenerationstruct meshgeneration() {
 				else if (flag == 0) { //clockwise
 					for (i = 0; i < N; i++) {
 						for (j = 0; j < N; j++) {
-							IEN_py[0][ct] = t.BCIEN[pys_num][e][LNA_2D[i][j]]; //oriente the nodes so that the normal direction is out of the element
-							IEN_py[1][ct] = t.BCIEN[pys_num][e][LNA_2D[i][j + 1]];
-							IEN_py[2][ct] = t.BCIEN[pys_num][e][LNA_2D[i + 1][j + 1]];
-							IEN_py[3][ct] = t.BCIEN[pys_num][e][LNA_2D[i + 1][j]];
+							IEN_py[0][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i][j]]; //oriente the nodes so that the normal direction is out of the element
+							IEN_py[1][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i][j + 1]];
+							IEN_py[2][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i + 1][j + 1]];
+							IEN_py[3][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i + 1][j]];
 							ct += 1;
 						}
 					}
@@ -716,12 +726,37 @@ struct meshgenerationstruct meshgeneration() {
 				}
 				myfile << std::endl;
 			}
-			std::cout << " " << std::endl;
-
-			ol[0].NEL = ele_num.size(); 
+			//Store the total number of element on wetted surface in FSNEL
+			ol[0].FSNEL = ele_num.size(); 
 		}
 
-		//end loop for if (mappingalgo == 2) {
+		//Extract the connectivity matrix on NRB surface (glue all physical groups corresponding to the NRB together)
+		//All physical groups except for 3
+		nr[0].NEL_nrb = (phygrp_start[physicalgroups - 1] - phygrp_start[0]) - elenum; //total element number. 
+		//Please note that elenum here is for the physical group 3 which includes both free surface and wetted surface. 
+		nr[0].IEN_gb = new int*[NINT*NINT]; //NRBELE_ARR
+		for (i = 0; i < NINT*NINT; i++) {
+			nr[0].IEN_gb[i] = new int[nr[0].NEL_nrb]; 
+		}
+		ct = 0; 
+		for (i = 0; i < physicalgroups; i++) {
+			if (i != pys_num) { //pys_num is the physical group number corresponding to the wetted surface
+				for (e = 0; e < phygrp_start[i + 1] - phygrp_start[i]; e++) {
+					for (j = 0; j < NINT*NINT; j++) {
+						nr[0].IEN_gb[j][ct] = t.BCIEN[i][e][j];
+					}
+					ct += 1; 
+				}
+			}
+		}
+		if (ct!=nr[0].NEL_nrb) {
+			std::cout << "The NRB element storage is wrong" << std::endl;
+			system("PAUSE ");
+		}
+
+		//Obtain NRBA to store all the nodes on NRB surfaces
+
+
 	}
 
 	return t;

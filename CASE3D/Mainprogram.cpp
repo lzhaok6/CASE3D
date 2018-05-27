@@ -14,31 +14,7 @@
 #include <stdlib.h>
 
 /*
-**the mesh is for half-symmetric fluid domain (four fluid modules)
-this version of code has SEM mesh generation capability. More information could be found in the stand-alone version: mesh_generation_sym.cpp
-**This code may not be used to simulate a Bleich-Sandler style 3D barge. The function is redirected to the code "3Dbarge_TFM_BS_Abaqus_EI" in the same folder
-**A tabular shock wave is programmed in this code for comparing with Abaqus solution.
-Currently, the code only support the standoff point at NRB (xo=AY) for Abaqus wave profile (tabulated).
-**This code has fixed the problem of emergence. The free surface in this code is set to be the Y=0 plane,
-structure in the Abaqus input file should be moved downward depending on where is the waterline.
-For instance, if the waterline in MAESTRO is 0.203, then the structure should be shifted 0.203 downward.
-The input file should still be those with _0.203wl token since the wetted surface is changed with waterline location.
-**Two mapping algorithms are provided in this code.
-The first one uses Farhat's conservative mapping to map the value from SEM mesh
-to FEM coupling mesh which is supposedly identical to the structural mesh
-The second method breaks the high order SEM mesh into individual 1st order FEM mesh. This method does not generate identical mesh
-when order is higher than 2 since the internal SEM nodes are not evenly distributed.
-The first and second algorithm should behave the same when N=1.
-**The mapping algorithm for Bleich-Sandler case is deleted, please use the code for BS case individually (i.e. 3Dbarge_TFM_BS_Abaqus_EI)
-Both TFM and SFM are included in this code as two sub-functions.
-Shock properties are automatically calculated in the code based on the stand-off distance and depth of the charge. (Previously, we've been direcly specifying the peak pressure, decay rate, stand-off point and so forth)
-11/14/2017 Added the structural displacement predictor for fluid solver. Zhaokuan Lu
-(need to fix the displacement predictor in SFM)
-11/17/2017 Added the definition for HBX-1 in addition to TNT. Zhaokuan Lu
-1/17/2018 Integrate the pure FEM element into the code. Zhaokuan Lu
-3/30/2018 Modify the code to take nonuniform element size (Jacobian determinant, Matrix calculation are affected). 
-add a comment here
-add another comment here
+This code dedicated for frigate currently only support mapping algorithm 2.  
 */
 
 double time_step_size;
@@ -112,12 +88,12 @@ int main()
 	//std::cout << "LOCAL_SHAPE done" << std::endl;
 	//DETERMINE LOCAL GEOMETERY SHAPE FUNCTION AT ELEMENT NODES
 	LOCAL_GSHAPEstruct l;
-	l = LOCAL_GSHAPE(f.S, c.LNA);
+	l = LOCAL_GSHAPE(f.S, c.LNA, NINT);
 	//std::cout << "LOCAL_GSHAPE done" << std::endl;
 	//DETERMINE JACOBIAN MATRIX 
 	JACOBIANstruct m;
-	m = JACOBIAN(a.NEL, l.GSHL, l.GSHL_2D, a.GCOORD, a.IEN, c.LNA);
-
+	//m = JACOBIAN(a.NEL, a.GCOORD, a.IEN, c.LNA, NINT, f.S);
+	m = JACOBIAN(a.NEL, a.GCOORD, a.IEN, c.LNA);
 	for (i = 0; i < 4; i++) {
 		for (j = 0; j < 8; j++) {
 			for (k = 0; k < NINT; k++) {
@@ -140,42 +116,6 @@ int main()
 	o = MATRIX(a.NEL, a.NNODE, g.SHL, f.W, a.IEN, c.LNA, m.XS, n.SHG, m.JACOB);
 	//duration_int = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 	//std::cout << "time lapse for until this point: " << duration_int << std::endl;
-
-	/*
-	for (i = 0; i < 3; i++) {
-		for (j = 0; j < 3; j++) {
-			for (k = 0; k < NINT; k++) {
-				for (h = 0; h < NINT; h++) {
-					delete[] m.XS[i][j][k][h];
-				}
-				delete[] m.XS[i][j][k];
-			}
-			delete[] m.XS[i][j];
-		}
-		delete[] m.XS[i];
-	}
-	delete[] m.XS;
-	for (i = 0; i < NINT; i++) {
-		for (j = 0; j < NINT; j++) {
-			delete[] m.JACOB[i][j];
-		}
-		delete[] m.JACOB[i];
-	}
-	delete[] m.JACOB;
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < NINT*NINT*NINT; j++) {
-			for (k = 0; k < NINT; k++) {
-				for (h = 0; h < NINT; h++) {
-					delete[] n.SHG[i][j][k][h];
-				}
-				delete[] n.SHG[i][j][k];
-			}
-			delete[] n.SHG[i][j];
-		}
-		delete[] n.SHG[i];
-	}
-	delete[] n.SHG;
-	*/
 
 	//std::cout << "MATRIX done" << std::endl;
 	//DETERMINE MAXIMUM MESH EIGENVALUE TO FIND CFL TIMESTEP
@@ -275,7 +215,7 @@ int main()
 		}
 	}
 	
-	//Define the shape function value at Gauss-Lobatto points on base fluid/structure mesh
+	//Define the shape function value at Gauss-Legendre points on base fluid/structure mesh
 	//phi_femg
 	double ***phi_femg;
 	phi_femg = new double**[NCINT*NCINT];
@@ -322,31 +262,33 @@ int main()
 		}
 	}
 
-	//define the linear lagrange shape function defined on Gauss-Legendre points
-	double ***phi_fem2;
-	phi_fem2 = new double**[NCINT*NCINT];
+	//Define the linear lagrange shape function defined on 2nd order GLL points for mapping algorithm 2
+	double ***phi_sem2;
+	phi_sem2 = new double**[NCINT*NCINT];
 	for (i = 0; i < NCINT*NCINT; i++) { //for all the points in that element
-		phi_fem2[i] = new double*[2];
-		for (j = 0; j < 2; j++) {
-			phi_fem2[i][j] = new double[2];
+		phi_sem2[i] = new double*[3];
+		for (j = 0; j < 3; j++) {
+			phi_sem2[i][j] = new double[3];
 		}
 	}
 	for (i = 0; i < NCINT*NCINT; i++) {
-		for (j = 0; j < 2; j++) {
-			for (k = 0; k < 2; k++) {
-				phi_fem2[i][j][k] = 0.0;
+		for (j = 0; j < 3; j++) {
+			for (k = 0; k < 3; k++) {
+				phi_sem2[i][j][k] = 0.0;
 			}
 		}
 	}
 	//use f.S
+	int Nq2 = 2; 
+	int Nq2INT = Nq + 1; 
 	LOBATTOstruct bbb;
-	bbb = LOBATTO(1);
+	bbb = LOBATTO(Nq2);
 	GLLQUADstruct fff;
-	fff = GLLQUAD(bbb.Z, bbb.WL, 1, 0);
+	fff = GLLQUAD(bbb.Z, bbb.WL, Nq2, !FEM);
 	for (h = 0; h < NCINT; h++) { //stands for every fem point, LNA[u][v][w](shape function is based on those points)
 		for (k = 0; k < NCINT; k++) {
-			for (i = 0; i < 2; i++) {  //i j k are the independent variable in basis function(sem points)
-				for (j = 0; j < 2; j++) {
+			for (i = 0; i < Nq2INT; i++) {  //i j k are the independent variable in basis function(sem points)
+				for (j = 0; j < Nq2INT; j++) {
 					nomx = 1.0; nomy = 1.0; //multiplier initialization
 					denomx = 1.0; denomy = 1.0; //multiplier initialization
 					for (z = 0; z < NCINT; z++) { //loop through nominator and denominator in basis function expression
@@ -359,7 +301,7 @@ int main()
 							denomy *= (basep[k] - basep[z]);
 						}
 					}
-					phi_fem2[ct.LNA[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
+					phi_sem2[ct.LNA[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
 					//the coordinate definition dof u,v is the same with i,j
 				}
 			}
@@ -459,7 +401,7 @@ int main()
 	}
 	
 	TIME_INT(a.NNODE, a.GCOORD, f.W, ct.LNA, c.LNA, a.IEN, a.NEL, f.S, g.SHL, TIME, T, t.DT, t.NDT, b.Z,
-		a.AYIN, o.HMASTER, o.Q, phi_fem, timer, ampt, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamma, o.gamma_t, o.G, o.gamman, o.gamma_tn, o.Gn, phi_femg, phi_fem2);
+		a.AYIN, o.HMASTER, o.Q, phi_fem, timer, ampt, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamma, o.gamma_t, o.G, o.gamman, o.gamma_tn, o.Gn, phi_femg, phi_sem2);
 
 	printf("Cleaning up...\n");
 	/* clean up */
