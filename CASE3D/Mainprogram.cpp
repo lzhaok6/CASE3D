@@ -19,9 +19,11 @@ This code dedicated for frigate currently only support mapping algorithm 2.
 
 double time_step_size;
 double current_time;
-OWETSURF ol[owsfnumber]; //declear the data structure globally
+//OWETSURF ol[owsfnumber]; //declear the data structure globally
 int main()
 {
+	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
+	extern NRBSURF nr[owsfnumber];
 	double LMAX;
 	int h, i, j, k, q, z, ii, jj; //error prone: cannot be the same with data structure type (z is the same as Z)
 	int TIME = 0;     //CONTROL TIME
@@ -65,7 +67,7 @@ int main()
 	f = GLLQUAD(b.Z, b.WL, N, !FEM);
 	//std::cout << "GLLQUAD done" << std::endl;
 	LOCAL_SHAPEstruct g;
-	g = LOCAL_SHAPE(c.LNA, N); 
+	g = LOCAL_SHAPE(c.LNA, N, N);
 	//std::cout << "LOCAL_SHAPE done" << std::endl;
 	//DETERMINE LOCAL GEOMETERY SHAPE FUNCTION AT ELEMENT NODES
 	LOCAL_GSHAPEstruct l;
@@ -159,27 +161,27 @@ int main()
 			origp[i*N + j] = origp[i*N] + (2.0 / refine)*((b.Z[j - 1] + 1) / 2);
 		}
 	}
-	phi_fem = new double**[NCINT*NCINT];
-	for (i = 0; i < NCINT*NCINT; i++) { //for all the points in that element
-		phi_fem[i] = new double*[hpref + 1];
-		for (j = 0; j < hpref + 1; j++) {
-			phi_fem[i][j] = new double[hpref + 1];
+	phi_fem = new double**[4];
+	for (i = 0; i < 4; i++) { //for all the points in that element
+		phi_fem[i] = new double*[NINT];
+		for (j = 0; j < NINT; j++) {
+			phi_fem[i][j] = new double[NINT];
 		}
 	}
-	for (i = 0; i < NCINT*NCINT; i++) {
-		for (j = 0; j < hpref + 1; j++) {
-			for (k = 0; k < hpref + 1; k++) {
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < NINT; j++) {
+			for (k = 0; k < NINT; k++) {
 				phi_fem[i][j][k] = 0.0;
 			}
 		}
 	}
-	for (h = 0; h < NCINT; h++) { //stands for every fem point, LNA[u][v][w](shape function is based on those points)
-		for (k = 0; k < NCINT; k++) {
-			for (i = 0; i < hpref + 1; i++) {  //i j k are the independent variable in basis function(sem points)
-				for (j = 0; j < hpref + 1; j++) {
+	for (h = 0; h < 2; h++) { //stands for every fem point, LNA[u][v][w](shape function is based on those points)
+		for (k = 0; k < 2; k++) {
+			for (i = 0; i < NINT; i++) {  //i j k are the independent variable in basis function(sem points)
+				for (j = 0; j < NINT; j++) {
 					nomx = 1.0; nomy = 1.0; //multiplier initialization
 					denomx = 1.0; denomy = 1.0; //multiplier initialization
-					for (z = 0; z < NCINT; z++) { //loop through nominator and denominator in basis function expression
+					for (z = 0; z < 2; z++) { //loop through nominator and denominator in basis function expression
 						if (z != h) {
 							nomx *= (origp[i] - basep[z]);
 							denomx *= (basep[h] - basep[z]);
@@ -189,7 +191,7 @@ int main()
 							denomy *= (basep[k] - basep[z]);
 						}
 					}
-					phi_fem[ct.LNA[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
+					phi_fem[ol[0].LNA_algo2[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
 					//the coordinate definition dof u,v is the same with i,j
 				}
 			}

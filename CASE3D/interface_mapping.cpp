@@ -36,7 +36,6 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3
 	switch (fluid2structure) //sem points to fem points
 	{
 	case 1: 
-		ct = 0;
 		if (mappingalgo == 2) {
 			//In this code, we use the 2nd order GLL integration instead of 1st order GL integration in FSP case since we have to include a 2D Jacobian determinate to accommodate the geometric mapping
 			LOBATTOstruct b;
@@ -49,9 +48,9 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3
 					for (l = 0; l < ol[k].FSNEL; l++) { //loop through each element
 						for (i = 0; i < 2; i++) {
 							for (j = 0; j < 2; j++) {
-								wsflist[ct]->nodeforce[3 * (ol[k].IEN_2D[LNA_2D[i][j] - 1][l] - 1) + 0] = 0.0;
-								wsflist[ct]->nodeforce[3 * (ol[k].IEN_2D[LNA_2D[i][j] - 1][l] - 1) + 1] = 0.0;
-								wsflist[ct]->nodeforce[3 * (ol[k].IEN_2D[LNA_2D[i][j] - 1][l] - 1) + 2] = 0.0;
+								wsflist[ct]->nodeforce[3 * (ol[k].IEN_algo2[ol[k].LNA_algo2[i][j] - 1][l] - 1) + 0] = 0.0;
+								wsflist[ct]->nodeforce[3 * (ol[k].IEN_algo2[ol[k].LNA_algo2[i][j] - 1][l] - 1) + 1] = 0.0;
+								wsflist[ct]->nodeforce[3 * (ol[k].IEN_algo2[ol[k].LNA_algo2[i][j] - 1][l] - 1) + 2] = 0.0;
 							}
 						}
 					}
@@ -66,11 +65,11 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3
 					for (l = 0; l < ol[k].FSNEL; l++) {
 						for (i = 0; i < 2; i++) {
 							for (j = 0; j < 2; j++) {
-								for (u = 0; u < 3; u++) { //u v stands for y x
-									for (v = 0; v < 3; v++) {
+								for (u = 0; u < NINT; u++) { //u v stands for y x
+									for (v = 0; v < NINT; v++) {
 										for (n = 0; n < 3; n++) {
-											wsflist[ct]->nodeforce[3 * (ol[k].IEN_2D[LNA_2D[i][j] - 1][l] - 1) + n] //force in z direction
-												+= ol[k].norm[l][n] * f.W[u] * f.W[v] * ol[k].WP[ol[k].IEN_gb[LNA_2D[u][v] - 1][l] - 1] * phi_sem2[LNA_2D[i][j] - 1][v][u] * ol[k].Jacob_2D[l][u * 3 + v];
+											wsflist[ct]->nodeforce[3 * (ol[k].IEN_algo2[ol[k].LNA_algo2[i][j] - 1][l] - 1) + n] //force in z direction
+												+= ol[k].norm[l][n] * ol[k].WP[ol[k].IEN_gb[ol[k].LNA_2D[u][v] - 1][l] - 1] * ol[k].FPMASTER_2D[l][ol[k].LNA_algo2[i][j] - 1][ol[k].LNA_2D[u][v] - 1];
 										}
 									}
 								}
@@ -81,30 +80,38 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3
 				}
 			}
 		}
-		
 		std::cout << " " << std::endl;
 		break;
 
 	case 0: //map disp from coupling mesh(fem mesh) to user defined mesh(sem mesh)
-		double DISPTEMP;
-		
+		//The displacement is mapped from the linear element to the corresponding high-order element
 		if (mappingalgo == 2) {
+			double DISPTEMP = 0.0;
 			ct = 0;
 			for (m = 0; m < owsfnumber; m++) {
-				if (ol[m].FSNEL_fem > 0) {
-					for (l = 0; l < ol[m].FSNEL_fem; l++) {  //loop through each element
-						for (u = 0; u < 2; u++) {
-							for (v = 0; v < 2; v++) {
-								for (n = 0; n < 3; n++) {
-									ol[m].DISP[ol[m].IEN_gb[LNA_2D[u][v] - 1][l] - 1][n]
-										= wsflist[ct]->nodecoord[3 * (ol[m].IEN_2D[LNA_2D[u][v] - 1][l] - 1) + n] - GCOORD[ol[m].IEN_gb[LNA_2D[u][v] - 1][l] - 1][n];
+				if (ol[m].FSNEL > 0) {
+					for (l = 0; l < ol[m].FSNEL; l++) {  //loop through each element first
+						for (i = 0; i < NINT; i++) { //loop through each point on element surface 
+							for (j = 0; j < NINT; j++) {
+								ol[m].DISP[ol[m].IEN_gb[ol[m].LNA_2D[i][j] - 1][l] - 1][0] = 0.0;
+								ol[m].DISP[ol[m].IEN_gb[ol[m].LNA_2D[i][j] - 1][l] - 1][1] = 0.0;
+								ol[m].DISP[ol[m].IEN_gb[ol[m].LNA_2D[i][j] - 1][l] - 1][2] = 0.0;
+								for (u = 0; u < 2; u++) { //u,v stands for fem points 
+									for (v = 0; v < 2; v++) {
+										for (n = 0; n < 3; n++) {
+											DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[m].IEN_2D[ol[m].LNA_2D[u][v] - 1][l] - 1) + n] - GCOORD[ol[m].IEN_gb[ol[m].LNA_2D[u][v] - 1][l] - 1][n];
+											ol[m].DISP[ol[m].IEN_gb[ol[m].LNA_2D[i][j] - 1][l] - 1][n]
+												+= DISPTEMP * phi_fem[ol[m].LNA_algo2[u][v] - 1][i][j];
+										}
+									}
 								}
 							}
 						}
 					}
 					ct += 1;
 				}
-			}
+			}	
+			std::cout << " " << std::endl; 
 		}
 
 		break;

@@ -13,7 +13,7 @@ struct TD_LOCAL_NODEstruct TD_LOCAL_NODE(int n);
 struct TD_ELE_GENstruct TD_ELE_GEN(int NEL, int XNODE, int NNODE, int XNEL, int YNEL, double XL, double YL);
 //used to generate mesh on wet surface (identical with the model file read by data.c)
 struct GLLQUADstruct GLLQUAD(double* Z, double* WL, int n, int SEM);
-struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int NQUAD);
+struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD);
 struct LEGENDREstruct LEGENDRE(int N);
 struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT);
 struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA);
@@ -37,7 +37,6 @@ const int NINT = N + 1; //NINT=N+1;
 typedef struct owetsurf {
 	double **SF; //weighted integration factor: the previous AF, CF, DF... 
 	int *GIDF;   //Coupled fluid element array (numbering)
-	int FSNEL_algo2;   //element number on wet surface 
 	double NORM; //if the inward normal direction of a surface is identical with the axis, NROM=1, vice versa (used to get dynamic displacement on wet surfaces)
 	double NORM_BF; //the direction of fluid force to structure (If the force is positive x then NORM_BF=1.0, vice versa)
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
@@ -79,6 +78,7 @@ typedef struct owetsurf {
 	double** norm; //store the normal direction of linear elements 
 	double** Jacob_2D; //the Jacobian value of 2D element on wetted surface
 	int LNA_2D[NINT][NINT];
+	int LNA_algo2[2][2]; //The local node orientation of the linear element in algorithm2
 	int FP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of FPMASTER
 	double** JACOB;
 	int* GIDN;

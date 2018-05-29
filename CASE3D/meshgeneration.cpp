@@ -602,7 +602,7 @@ struct meshgenerationstruct meshgeneration() {
 	endextraction:
 		//================================end extraction===================================//
 		//=============separate the high-order element into linear elements and obtain the normal direction================//
-		int pys_num = 2; //the physical group number that corresponds to the wet surface
+		int pys_num = 2; //the physical group number that corresponds to the wet surface (physical group 3)
 		int elenum = phygrp_start[pys_num + 1] - phygrp_start[pys_num]; //number of high-order on the wet surface 
 		int** IEN_py; //the linear element connectivity matrix of 2D physical groups (boundaries) separated from the original 2D high-order elements
 		IEN_py = new int*[4];
@@ -610,76 +610,54 @@ struct meshgenerationstruct meshgeneration() {
 			IEN_py[i] = new int[elenum];
 		}
 		if (mappingalgo == 2) {
-			//Break the high-order 2D element in physical group 3 into linear 2D elements (Both free surface elements and wetted surface elements exist)
-			//The connectivity matrix is stored in IEN_py
-			//We also need a vector to store the correlation between seperated element and and original high-order 2D element
+			//Originally, we break the high-order element into linear elements. However, that would induce a lot of extra computation
+			//Thus, we changed our plan to use the linear element contructed by the four corner nodes of the high-order element
 			ct = 0;
 			for (e = 0; e < elenum; e++) {
 				if (flag == N) { //counter-clockwise
-					for (i = 0; i < N; i++) {
-						for (j = 0; j < N; j++) {
-							IEN_py[0][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i][j] - 1]; //oriente the nodes so that the normal direction is pointing out of the element
-							IEN_py[1][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i + 1][j] - 1];
-							IEN_py[2][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i + 1][j + 1] - 1];
-							IEN_py[3][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i][j + 1] - 1];
-							ct += 1;
-						}
-					}
+					IEN_py[0][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[0][0] - 1]; //oriente the nodes so that the normal direction is pointing out of the element
+					ol[0].LNA_algo2[0][0] = 1;
+					IEN_py[1][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[N][0] - 1];
+					ol[0].LNA_algo2[1][0] = 2;
+					IEN_py[2][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[N][N] - 1];
+					ol[0].LNA_algo2[1][1] = 3;
+					IEN_py[3][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[0][N] - 1];
+					ol[0].LNA_algo2[0][1] = 4;
+					ct += 1;
 				}
 				else if (flag == 0) { //clockwise
-					for (i = 0; i < N; i++) {
-						for (j = 0; j < N; j++) {
-							IEN_py[0][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i][j] - 1]; //oriente the nodes so that the normal direction is out of the element
-							IEN_py[1][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i][j + 1] - 1];
-							IEN_py[2][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i + 1][j + 1] - 1];
-							IEN_py[3][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i + 1][j] - 1];
-							ct += 1;
-						}
-					}
+					IEN_py[0][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[0][0] - 1]; //oriente the nodes so that the normal direction is out of the element
+					ol[0].LNA_algo2[0][0] = 1;
+					IEN_py[1][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[0][N] - 1];
+					ol[0].LNA_algo2[0][1] = 2;
+					IEN_py[2][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[N][N] - 1];
+					ol[0].LNA_algo2[1][1] = 3;
+					IEN_py[3][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[N][0] - 1];
+					ol[0].LNA_algo2[1][0] = 4;
+					ct += 1;
 				}
 			}
-			if (ct != N*N*elenum) {
-				std::cout << "Not all high-order elements are separated and stored in IEN_py (connectivity)" << std::endl;
+			if (ct != elenum) {
+				std::cout << "Not all high-order elements are turned into wrapping linear IEN_py (connectivity)" << std::endl;
 				system("PAUSE ");
 			}
-
-			//Extract the connectivity for wetted surface (delete the elements on free surface)
-			/*
-			for (i = 0; i < N*N*elenum; i++) {
-				//the point recognize criteria need to be changed if the mesh becomes finer
-				if (abs(t.GCOORD[IEN_py[0][i] - 1][1]) < 1e-1 || abs(t.GCOORD[IEN_py[1][i] - 1][1]) < 1e-1 || abs(t.GCOORD[IEN_py[2][i] - 1][1]) < 1e-1 || abs(t.GCOORD[IEN_py[3][i] - 1][1]) < 1e-1) {
-					//If any of the nodes of the element is on the free surface, then this element is on free surface and needs to be removed 
-				}
-				else { //If this element is not on the free surface, we can save it in ele_num 
-					ele_num.push_back(i);
-				}
-			}
-			*/
+			
 			std::vector<int>ele_num; //track the element number of the wetted surface elements
-			std::vector<int>ele_num2; //for linear 2D elements
 			for (e = 0; e < elenum; e++) {
 				flag = 1;
-				for (i = 0; i < NINT*NINT; i++) {
-					if (abs(t.GCOORD[t.BCIEN[pys_num][e][i] - 1][1]) < 1e-1) {
+				for (i = 0; i < 4; i++) {
+					if (abs(t.GCOORD[IEN_py[i][e] - 1][1]) < 1e-1) {
 						flag = 0;
 					}
 				}
 				if (flag == 1) { //Then this element could be included the wetted surface element list
 					ele_num.push_back(e);
-					for (i = 0; i < N*N; i++) {
-						ele_num2.push_back(e*N*N + i);
-					}
 				}
 			}
 			//ele_num is the elements for high-order element, we need to extract the corresponding linear elements from that. 
 
-			//Store the total number of element on wetted surface in FSNEL and FSNEL_algo2
-			ol[0].FSNEL = ele_num.size(); 
-			ol[0].FSNEL_algo2 = ele_num2.size();
-			if (ol[0].FSNEL != N*N*ol[0].FSNEL_algo2) {
-				std::cout << "FSNEL_algo2 is wrong" << std::endl;
-				system("PAUSE ");
-			}
+			//Store the total number of element on wetted surface in FSNEL
+			ol[0].FSNEL = ele_num.size();
 
 			ol[0].IEN_gb = new int*[NINT*NINT]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
 			for (i = 0; i < NINT*NINT; i++) {
@@ -693,22 +671,22 @@ struct meshgenerationstruct meshgeneration() {
 
 			ol[0].IEN_algo2 = new int*[4]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
 			for (i = 0; i < 4; i++) {
-				ol[0].IEN_algo2[i] = new int[ol[0].FSNEL_algo2];
+				ol[0].IEN_algo2[i] = new int[ol[0].FSNEL];
 			}
-			for (i = 0; i < ol[0].FSNEL_algo2; i++) {
+			for (i = 0; i < ol[0].FSNEL; i++) {
 				for (j = 0; j < 4; j++) {
-					ol[0].IEN_algo2[j][i] = IEN_py[j][ele_num2[i]];
+					ol[0].IEN_algo2[j][i] = IEN_py[j][ele_num[i]];
 				}
 			}
 
 			//Derive the IEN_2D to write the MpCCI model file (basically renumbering the node in IEN_algo2 to be recognized by MpCCI)
 			ol[0].IEN_2D = new int*[4]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
 			for (i = 0; i < 4; i++) {
-				ol[0].IEN_2D[i] = new int[ol[0].FSNEL_algo2];
+				ol[0].IEN_2D[i] = new int[ol[0].FSNEL];
 			}
 			ct = 0; //count the node number assigned
 			std::vector<int>dummy;
-			for (i = 0; i < ol[0].FSNEL_algo2; i++) { //loop through each element
+			for (i = 0; i < ol[0].FSNEL; i++) { //loop through each element
 				for (j = 0; j < 4; j++) { //the nodes in current element
 					flag = 1; //Initiate the flag to 1 
 					for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
@@ -729,21 +707,21 @@ struct meshgenerationstruct meshgeneration() {
 					}
 				}
 			}
-			ol[0].GIDNct = dummy.size(); 
+			ol[0].GIDNct = dummy.size();
 			ol[0].GIDN = new int[ol[0].GIDNct];
 			for (i = 0; i < ol[0].GIDNct; i++) {
 				ol[0].GIDN[i] = dummy[i];
 			}
 
-			ol[0].norm = new double*[ol[0].FSNEL_algo2]; //store the normal direction of linear elements on the wetted surface
-			for (i = 0; i < ol[0].FSNEL_algo2; i++) {
+			ol[0].norm = new double*[ol[0].FSNEL]; //store the normal direction of linear elements on the wetted surface
+			for (i = 0; i < ol[0].FSNEL; i++) {
 				ol[0].norm[i] = new double[3];
 			}
 			//Obtain the normal direction unit vector of the newly separated elements (numbering from 0 to elenum)
 			//The normal direction calculation might be wrong. We need to validate it using a FSP mesh generated by BOLT.
 			double ax, ay, az; double bx, by, bz;
 			double n1, n2, n3; double absn;
-			for (i = 0; i < ol[0].FSNEL_algo2; i++) {
+			for (i = 0; i < ol[0].FSNEL; i++) {
 				ax = t.GCOORD[ol[0].IEN_algo2[1][i] - 1][0] - t.GCOORD[ol[0].IEN_algo2[0][i] - 1][0];
 				ay = t.GCOORD[ol[0].IEN_algo2[1][i] - 1][1] - t.GCOORD[ol[0].IEN_algo2[0][i] - 1][1];
 				az = t.GCOORD[ol[0].IEN_algo2[1][i] - 1][2] - t.GCOORD[ol[0].IEN_algo2[0][i] - 1][2];
@@ -755,25 +733,24 @@ struct meshgenerationstruct meshgeneration() {
 				ol[0].norm[i][0] = n1 / absn; ol[0].norm[i][1] = n2 / absn; ol[0].norm[i][2] = n3 / absn;
 			}
 			//check if the separated element has the same normal direction as the original mesh (N=1)
-			/*
+
 			//write the model file for MpCCI here
 			std::ofstream myfile;
 			myfile.open("model.txt");
 			myfile << "EF wetsurface 3 1" << std::endl;
-			myfile << "NODES " << ol[0].GIDN.size() << std::endl;
-			for (i = 0; i < ol[0].GIDN.size(); i++) {
+			myfile << "NODES " << ol[0].GIDNct << std::endl;
+			for (i = 0; i < ol[0].GIDNct; i++) {
 				myfile << i << " " << t.GCOORD[ol[0].GIDN[i] - 1][0] << " " << t.GCOORD[ol[0].GIDN[i] - 1][1] << " " << t.GCOORD[ol[0].GIDN[i] - 1][2] << " " << std::endl;
 			}
-			myfile << "ELEMENTS " << ol[0].FSNEL_algo2 << std::endl;
+			myfile << "ELEMENTS " << ol[0].FSNEL << std::endl;
 			//output connectivity matrix
-			for (i = 0; i < ol[0].FSNEL_algo2; i++) {
+			for (i = 0; i < ol[0].FSNEL; i++) {
 				myfile << i;
 				for (j = 0; j < 4; j++) {
 					myfile << " " << ol[0].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
 				}
 				myfile << std::endl;
 			}
-			*/
 		}
 
 		//==============Extract the connectivity matrix on NRB surface (glue all physical groups corresponding to the NRB together)==============//
