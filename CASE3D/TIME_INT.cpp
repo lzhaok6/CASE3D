@@ -5,7 +5,7 @@
 #include "data.h"
 #include "adapter.h"
 #include "mpcci.h"
-#include "vector"
+#include <vector>
 #include <string>
 #include <sstream>
 #include <ctime>
@@ -135,8 +135,8 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 		}
 	}
 
-	NRBstruct u;
-	u = NRB(NNODE, GCOORD, W, LNA_3D, IEN, NEL, SHL, SHOD);
+	NRB(NNODE, GCOORD, W, LNA_3D, IEN, NEL, SHL, SHOD);
+
 	//time history record
 	std::clock_t start;
 	double duration;
@@ -559,7 +559,7 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 			PH[i] = abs(GCOORD[i][1]) * RHO * grav + PATM; //absolute pressure
 		}
 	}
-	PIN = WAVE_IN(NNODE, GCOORD, T, TIME, PIN, u.NRBA, u.NRBNODE, timer, ampt, DT, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO);
+	PIN = WAVE_IN(NNODE, GCOORD, T, TIME, PIN, DT, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO);
 	
 	if (tfm == 1) {
 		for (j = 0; j < NNODE; j++) {
@@ -585,75 +585,39 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 	
 	if (tfm == 1) {
 		double rd = 0.0; double ro = 0.0;
-		if (WAVE == 1 && Abaquswaveform == 0) {
-			for (i = 0; i < NNODE; i++) {
-				if (-(2 * xo - 2 * abs(GCOORD[i][1]) + C*DT) / (2 * C) >= 0.0) {
-					FEEDOT[i][0] = -PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[i][1])) / C) / TAU) - 1);
-				}
-				else {
-					FEEDOT[i][0] = -PPEAK*TAU*0.0*(exp((DT / 2 + (xo - abs(GCOORD[i][1])) / C) / TAU) - 1);
-				}
-			}
-			//prototype: -PPEAK*TAU*heaviside(-(2*xo - 2*x + C*dt)/(2*C))*(exp((dt/2 + (xo - x)/C)/TAU) - 1)
-
-			//initialize FEE (initialized to 0)
-			for (i = 0; i < NNODE; i++) {
-				if (-(xo - abs(GCOORD[i][1])) / C >= 0.0) {
-					FEE[i][0] = -(PPEAK*TAU*exp(-abs(GCOORD[i][1]) / (C*TAU))*1.0*(xo*exp(abs(GCOORD[i][1]) / (C*TAU)) - abs(GCOORD[i][1])*exp(abs(GCOORD[i][1]) / (C*TAU)) - C*TAU*exp(xo / (C*TAU)) + C*TAU*exp(abs(GCOORD[i][1]) / (C*TAU)))) / C;
-				}
-				else {
-					FEE[i][0] = -(PPEAK*TAU*exp(-abs(GCOORD[i][1]) / (C*TAU))*0.0*(xo*exp(abs(GCOORD[i][1]) / (C*TAU)) - abs(GCOORD[i][1])*exp(abs(GCOORD[i][1]) / (C*TAU)) - C*TAU*exp(xo / (C*TAU)) + C*TAU*exp(abs(GCOORD[i][1]) / (C*TAU)))) / C;
-				}
-			}
-			//prototype: -(PPEAK*TAU*exp(-x/(C*TAU))*heaviside(-(XO - x)/C)*(XO*exp(x/(C*TAU)) - x*exp(x/(C*TAU)) - C*TAU*exp(XO/(C*TAU)) + C*TAU*exp(x/(C*TAU))))/C
-
-			//initialize XNBORG (initialize to 0)
-			for (j = 0; j < u.NRBNODE; j++) {
-				if (-(2 * xo - 2 * abs(GCOORD[u.NRBA[j] - 1][1]) + C*DT) / (2 * C) >= 0.0) {
-					XNRBORG[u.NRBA[j] - 1] = -(PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[u.NRBA[j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
-					//XNRBORG[j] = -(PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[u.NRBA[j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
-				}
-				else {
-					XNRBORG[u.NRBA[j] - 1] = -(PPEAK*TAU*0.0*(exp((DT / 2 + (xo - abs(GCOORD[u.NRBA[j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
-					//XNRBORG[j] = -(PPEAK*TAU*0.0*(exp((DT / 2 + (xo - abs(GCOORD[u.NRBA[j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
-				}
-
-			}
-			//prototype: -(PPEAK*TAU*heaviside(-(2*XO - 2*x + C*dt)/(2*C))*(exp((dt/2 + (XO - x)/C)/TAU) - 1))/(C*RHO)
-		}
 		//spherical wave
-		if (WAVE == 2 && Abaquswaveform == 0) {
-			for (i = 0; i < NNODE; i++) {
-				rd = pow((pow((GCOORD[i][0] - XC), 2) + pow((GCOORD[i][1] - YC), 2) + pow((GCOORD[i][2] - ZC), 2)), 0.5);
-				ro = pow((pow((XC - XO), 2) + pow((YC - YO), 2) + pow((ZC - ZO), 2)), 0.5);
-				if (-(2 * rd - 2 * ro + C*DT) / (2 * C) >= 0) {
-					FEEDOT[i][0] = -(PPEAK*TAU*ro*1.0*(exp((DT / 2 + (rd - ro) / C) / TAU) - 1)) / rd;
-					FEEDOT_inc[i][0] = FEEDOT[i][0];
-				}
-				else {
-					FEEDOT[i][0] = -(PPEAK*TAU*ro*0.0*(exp((DT / 2 + (rd - ro) / C) / TAU) - 1)) / rd;
-					FEEDOT_inc[i][0] = FEEDOT[i][0];
-				}
-				//-(PPEAK*TAU*ro*heaviside(-(2 * rd - 2 * ro + C*dt) / (2 * C))*(exp((dt / 2 + (rd - ro) / C) / TAU) - 1)) / rd
-				if (-(rd - ro) / C >= 0) {
-					FEE[i][0] = -(PPEAK*TAU*ro*1.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*rd);
-				}
-				else {
-					FEE[i][0] = -(PPEAK*TAU*ro*0.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*rd);
-				}
-				//-(PPEAK*TAU*ro*heaviside(-(rd - ro) / C)*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*rd)
+		for (i = 0; i < NNODE; i++) {
+			rd = pow((pow((GCOORD[i][0] - XC), 2) + pow((GCOORD[i][1] - YC), 2) + pow((GCOORD[i][2] - ZC), 2)), 0.5);
+			ro = pow((pow((XC - XO), 2) + pow((YC - YO), 2) + pow((ZC - ZO), 2)), 0.5);
+			if (-(2 * rd - 2 * ro + C*DT) / (2 * C) >= 0) {
+				FEEDOT[i][0] = -(PPEAK*TAU*ro*1.0*(exp((DT / 2 + (rd - ro) / C) / TAU) - 1)) / rd;
+				FEEDOT_inc[i][0] = FEEDOT[i][0];
 			}
-			for (j = 0; j < u.NRBNODE; j++) {
-				rd = pow((pow((GCOORD[u.NRBA[j] - 1][0] - XC), 2) + pow((GCOORD[u.NRBA[j] - 1][1] - YC), 2) + pow((GCOORD[u.NRBA[j] - 1][2] - ZC), 2)), 0.5);
+			else {
+				FEEDOT[i][0] = -(PPEAK*TAU*ro*0.0*(exp((DT / 2 + (rd - ro) / C) / TAU) - 1)) / rd;
+				FEEDOT_inc[i][0] = FEEDOT[i][0];
+			}
+			//-(PPEAK*TAU*ro*heaviside(-(2 * rd - 2 * ro + C*dt) / (2 * C))*(exp((dt / 2 + (rd - ro) / C) / TAU) - 1)) / rd
+			if (-(rd - ro) / C >= 0) {
+				FEE[i][0] = -(PPEAK*TAU*ro*1.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*rd);
+			}
+			else {
+				FEE[i][0] = -(PPEAK*TAU*ro*0.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*rd);
+			}
+			//-(PPEAK*TAU*ro*heaviside(-(rd - ro) / C)*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*rd)
+		}
+		for (j = 0; j < nr[0].NRBNODE; j++) {
+			for (k = 0; k < nrbsurfnumber; k++) {
+				rd = pow((pow((GCOORD[nr[k].NRBA[j] - 1][0] - XC), 2) + pow((GCOORD[nr[k].NRBA[j] - 1][1] - YC), 2) + pow((GCOORD[nr[k].NRBA[j] - 1][2] - ZC), 2)), 0.5);
 				ro = pow((pow((XC - XO), 2) + pow((YC - YO), 2) + pow((ZC - ZO), 2)), 0.5);
 				//initialize to 0 
 				if (-(rd - ro) / C >= 0) {
 					//XNRBORG[j] = -(PPEAK*TAU*ro*1.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*1.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
-					XNRBORG[u.NRBA[j] - 1] = -(PPEAK*TAU*ro*1.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*1.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
+					XNRBORG[nr[k].NRBA[j] - 1] = -(PPEAK*TAU*ro*1.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*1.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
 				}
 				else {
 					//XNRBORG[j] = -(PPEAK*TAU*ro*0.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*0.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
-					XNRBORG[u.NRBA[j] - 1] = -(PPEAK*TAU*ro*0.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*0.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
+					XNRBORG[nr[k].NRBA[j] - 1] = -(PPEAK*TAU*ro*0.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*0.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
 				}
 				// - (PPEAK*TAU*ro*heaviside(-(rd - ro)/C)*(rd - ro + C*TAU - C*TAU*exp(rd/(C*TAU) - ro/(C*TAU))))/(C*RHO*rd^2) - (PPEAK*TAU*ro*heaviside(-(rd - ro)/C)*(exp((rd - ro)/(C*TAU)) - 1))/(C*RHO*rd)
 			}
@@ -1004,7 +968,6 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 			}
 		}
 
-
 		//start = std::clock();
 		//=======================define double* nodeforce in fluid code==========================//
 		//mapping the fluid force ABF from user defined mesh to MpCCI defined mesh on coupling surface using interpolation
@@ -1027,31 +990,17 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 				angle = 0.0;
 				for (j = 0; j < ol[z].FSNEL; j++) {  //FOR STRUCTURE ELEMENT ON THE FSI BOUNDARY
 					for (k = 0; k < NINT*NINT; k++) {
-						if (WAVE == 1) {  //Able to handle Bleich-Sandler case
-							angle = wetnorm[z][0] * wavdirc[0] + wetnorm[z][1] * wavdirc[1] + wetnorm[z][2] * wavdirc[2];
-							ol[z].PSI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]
-								= (DT / 2.0)*(ol[z].WPIN[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]); //INCIDENT DISP. PREDICTOR by time integration	
-							ol[z].DI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]
-								= ol[z].PSI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1] / (RHO*C);     //trapezoidal integration of the double integrator
-							ol[z].DISPI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1]
-								= ol[z].DISPI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] + angle*ol[z].DI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1];
-							if (abs(GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][ol[z].dir] - ol[z].location) > 1e-5) {
-								std::cout << "initial displacement DISPI is given to wrong points on fluid surface: " << z << std::endl;
-							}
-						}
-						if (WAVE == 2) {
-							r = sqrt(pow((GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] - XC), 2) + pow((GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] - YC), 2) + pow((GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][2] - ZC), 2));
-							ol[z].PSI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]
-								= (DT / 2.0)*(ol[z].WPIN[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]); //INCIDENT DISP. PREDICTOR by time integration	
-							PSI_inc[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] = ol[z].PSI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1];
-							angle = (wetnorm[z][0] * (GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] - XC) / r + wetnorm[z][1] * (GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] - YC) / r + wetnorm[z][2] * (GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][2] - ZC) / r);
-							ol[z].DI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]
-								= ol[z].PSI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1] / (RHO*C) + (PSI_inc[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] + PSI_inc[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1]) * (DT / 2) / (RHO * r);  //trapezoidal integration of the double integrator
-							ol[z].DISPI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1]
-								= ol[z].DISPI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] + angle*ol[z].DI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]; //UPDATED INCIDENT STRUCUTRE DISPLACEMENT 
-							if (abs(GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][ol[z].dir] - ol[z].location) > 1e-5) {
-								std::cout << "initial displacement DISPI is given to wrong points on fluid surface: " << z << std::endl;
-							}
+						r = sqrt(pow((GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] - XC), 2) + pow((GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] - YC), 2) + pow((GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][2] - ZC), 2));
+						ol[z].PSI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]
+							= (DT / 2.0)*(ol[z].WPIN[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]); //INCIDENT DISP. PREDICTOR by time integration	
+						PSI_inc[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] = ol[z].PSI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1];
+						angle = (wetnorm[z][0] * (GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] - XC) / r + wetnorm[z][1] * (GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] - YC) / r + wetnorm[z][2] * (GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][2] - ZC) / r);
+						ol[z].DI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]
+							= ol[z].PSI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1] / (RHO*C) + (PSI_inc[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] + PSI_inc[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1]) * (DT / 2) / (RHO * r);  //trapezoidal integration of the double integrator
+						ol[z].DISPI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1]
+							= ol[z].DISPI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] + angle*ol[z].DI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]; //UPDATED INCIDENT STRUCUTRE DISPLACEMENT 
+						if (abs(GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][ol[z].dir] - ol[z].location) > 1e-5) {
+							std::cout << "initial displacement DISPI is given to wrong points on fluid surface: " << z << std::endl;
 						}
 					}
 				}
@@ -1102,19 +1051,18 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 			BNRB[j] = 0.0;
 		}
 
-
-
 		//NRB PREDICTOR
 		//NRBA was originally designed to store all the NRB nodes on all NRB surfaces in FSP code
 		//We want to make NRBA local within each NRB surface in the current code 
+		//IEN_gb is a 2D connectivity matrix
 		if (tfm == 1) {
 			for (k = 0; k < nrbsurfnumber; k++) { //from bottom to front surface (k=0 means all node case) 
-				for (j = 0; j < u.NRBNODE; j++) {
+				for (j = 0; j < nr[0].NRBNODE; j++) {
 					FEEDOT_inc[nr[k].NRBA[j] - 1][1] = FEEDOT_inc[nr[k].NRBA[j] - 1][0] + (0.5 * DT)*(PIN[nr[k].NRBA[j] - 1][0] + PIN[nr[k].NRBA[j] - 1][1]);
 					//prototype: FEEDOT_inc[u.NRBA[j][0] - 1][1] = (PPEAK*TAU - PPEAK*TAU*exp(pow((pow(XC, 2) - 2 * XC*d.GCOORD[u.NRBA[j][0] - 1][0] + pow(YC, 2) - 2 * YC*d.GCOORD[u.NRBA[j][0] - 1][1] + pow(ZC, 2) - 2 * ZC*d.GCOORD[u.NRBA[j][0] - 1][2] + pow(d.GCOORD[u.NRBA[j][0] - 1][0], 2) + pow(d.GCOORD[u.NRBA[j][0] - 1][1], 2) + pow(d.GCOORD[u.NRBA[j][0] - 1][2], 2)), 0.5) / (C*TAU))*exp(-(DT*i) / TAU)*exp(-pow((pow(XC, 2) - 2 * XC*XO + pow(XO, 2) + pow(YC, 2) - 2 * YC*YO + pow(YO, 2) + pow(ZC, 2) - 2 * ZC*ZO + pow(ZO, 2)), 0.5) / (C*TAU))*exp(-DT / TAU))*(sign((C*DT - pow((pow(XC, 2) - 2 * XC*d.GCOORD[u.NRBA[j][0] - 1][0] + pow(YC, 2) - 2 * YC*d.GCOORD[u.NRBA[j][0] - 1][1] + pow(ZC, 2) - 2 * ZC*d.GCOORD[u.NRBA[j][0] - 1][2] + pow(d.GCOORD[u.NRBA[j][0] - 1][0], 2) + pow(d.GCOORD[u.NRBA[j][0] - 1][1], 2) + pow(d.GCOORD[u.NRBA[j][0] - 1][2], 2)), 0.5) + pow((pow(XC, 2) - 2 * XC*XO + pow(XO, 2) + pow(YC, 2) - 2 * YC*YO + pow(YO, 2) + pow(ZC, 2) - 2 * ZC*ZO + pow(ZO, 2)), 0.5) + C*DT*i) / C) / 2.0 + 0.5);
 				}
 				count = 0;
-				for (j = 0; j < u.NRBNODE_loc[k]; j++) {
+				for (j = 0; j < nr[k].NRBNODE; j++) {
 					R = pow(pow(GCOORD[nr[k].NRBA[j] - 1][0] - XC, 2) + pow(GCOORD[nr[k].NRBA[j] - 1][1] - YC, 2) + pow(GCOORD[nr[k].NRBA[j] - 1][2] - ZC, 2), 0.5);
 					angle = (norm[k][0] * (GCOORD[nr[k].NRBA[j] - 1][0] - XC) + norm[k][1] * (GCOORD[nr[k].NRBA[j] - 1][1] - YC) + norm[k][2] * (GCOORD[nr[k].NRBA[j] - 1][2] - ZC)) / R;
 					XEST_kn[nr[k].NRBA[j] - 1] = angle*((0.5 * DT / (RHO*C))*(PIN[nr[k].NRBA[j] - 1][0] + PIN[nr[k].NRBA[j] - 1][1]) +
@@ -1124,7 +1072,7 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 					XNRBORG2[nr[k].NRBA[j] - 1] = angle*XNRBORG[nr[k].NRBA[j] - 1];
 					count += 1;
 				}
-				for (j = 0; j < u.NRBNODE_loc[k]; j++) {
+				for (j = 0; j < nr[k].NRBNODE; j++) {
 					XNRB_kn[nr[k].NRBA[j] - 1][1] = XNRB_kn[nr[k].NRBA[j] - 1][0] + XEST_kn[nr[k].NRBA[j] - 1];
 					XNRB_ukn[nr[k].NRBA[j] - 1][1] = XNRB_ukn[nr[k].NRBA[j] - 1][0] + XEST_ukn[nr[k].NRBA[j] - 1];
 				}
@@ -1144,10 +1092,10 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 		else {
 			for (k = 0; k < nrbsurfnumber; k++) { //from bottom to front surface (k=0 means all node case)
 				//NRB PREDICTOR
-				for (j = 0; j < u.NRBNODE; j++) {
+				for (j = 0; j < nr[0].NRBNODE; j++) {
 					XEST[nr[k].NRBA[j] - 1] = (DT / (RHO*C))*P[nr[k].NRBA[j] - 1][0];  //SOLUTION ARRAY FOR NRB (DX)
 				}
-				for (j = 0; j < u.NRBNODE; j++) {
+				for (j = 0; j < nr[0].NRBNODE; j++) {
 					XNRB[nr[k].NRBA[j] - 1][1] = XNRB[nr[k].NRBA[j] - 1][0] + XEST[nr[k].NRBA[j] - 1]; //0 IS BEFORE MODIFICATION, 1 IS AFTER MODIFICATION
 				}
 				//XNRB is the predicted displacement normal to the structure (since P is normal to the surface)
@@ -1268,7 +1216,7 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 		}
 
 		for (k = 0; k < nrbsurfnumber; k++) {
-			for (j = 0; j < u.NRBNODE; j++) {
+			for (j = 0; j < nr[0].NRBNODE; j++) {
 				FFORCE[nr[k].NRBA[j] - 1] += BNRB[nr[k].NRBA[j] - 1];
 			}
 		}
@@ -1284,8 +1232,8 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 
 		//PRESSURE CORRECTION ON NRB NODES
 		for (k = 0; k < nrbsurfnumber; k++) {
-			for (j = 0; j < u.NRBNODE; j++) { //UPDATE CONDENSATION AT TIME T=0
-				KAPPA = (DT*C*u.ADMASTERG[nr[k].NRBA[j] - 1]) / (2 * Q[nr[k].NRBA[j] - 1]);
+			for (j = 0; j < nr[0].NRBNODE; j++) { //UPDATE CONDENSATION AT TIME T=0
+				KAPPA = (DT*C*nr[k].ADMASTERG[nr[k].NRBA[j] - 1]) / (2 * Q[nr[k].NRBA[j] - 1]);
 				//PRESSURE CORRECTION FACTOR
 				ds[nr[k].NRBA[j] - 1][2] = ds[nr[k].NRBA[j] - 1][1] + ((ds[nr[k].NRBA[j] - 1][2] - ds[nr[k].NRBA[j] - 1][1]) / (1 + KAPPA));
 			} //after ds is updated, P can be updated.
@@ -1330,13 +1278,13 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 		if (tfm == 1) {
 			for (k = 0; k < nrbsurfnumber; k++) {
 				//XNRB corrector
-				for (j = 0; j < u.NRBNODE; j++) {
+				for (j = 0; j < nr[0].NRBNODE; j++) {
 					DPS_ukn[nr[k].NRBA[j] - 1] = 0.5*DT*(P[nr[k].NRBA[j] - 1][1] + P[nr[k].NRBA[j] - 1][0]);
 					XCOR_ukn[nr[k].NRBA[j] - 1] = DPS_ukn[nr[k].NRBA[j] - 1] / (RHO*C);
 					XNRB_ukn[nr[k].NRBA[j] - 1][1] = XNRB_ukn[nr[k].NRBA[j] - 1][0] + XCOR_ukn[nr[k].NRBA[j] - 1];
 				}
 
-				for (j = 0; j < u.NRBNODE; j++) {
+				for (j = 0; j < nr[0].NRBNODE; j++) {
 					XNRB_kn[nr[k].NRBA[j] - 1][0] = XNRB_kn[nr[k].NRBA[j] - 1][1];
 					XNRB_ukn[nr[k].NRBA[j] - 1][0] = XNRB_ukn[nr[k].NRBA[j] - 1][1];
 				}
@@ -1344,15 +1292,15 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 		}
 		else {
 			for (k = 0; k < nrbsurfnumber; k++) {
-				for (j = 0; j < u.NRBNODE; j++) {
+				for (j = 0; j < nr[0].NRBNODE; j++) {
 					DPS[nr[k].NRBA[j] - 1] = 0.5*DT*(P[nr[k].NRBA[j] - 1][1] + P[nr[k].NRBA[j] - 1][0]); // PRESSURE CORRECTOR FOR NRB
 				}
 
-				for (j = 0; j < u.NRBNODE; j++) {
+				for (j = 0; j < nr[0].NRBNODE; j++) {
 					XCOR[nr[k].NRBA[j] - 1] = DPS[nr[k].NRBA[j] - 1] / (RHO*C);  //DISPLACEMENT CORRECTOR
 				}
 
-				for (j = 0; j < u.NRBNODE; j++) {
+				for (j = 0; j < nr[0].NRBNODE; j++) {
 					XNRB[nr[k].NRBA[j] - 1][1] = XNRB[nr[k].NRBA[j] - 1][0] + XCOR[nr[k].NRBA[j] - 1]; //CORRECTED DISPLACEMENT ON NRB
 				}
 			}
@@ -1381,7 +1329,7 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 
 		if (tfm == 0) {
 			for (k = 0; k < nrbsurfnumber; k++) {
-				for (j = 0; j < u.NRBNODE; j++) {
+				for (j = 0; j < nr[0].NRBNODE; j++) {
 					XNRB[nr[k].NRBA[j] - 1][0] = XNRB[nr[k].NRBA[j] - 1][1];
 				}
 			}

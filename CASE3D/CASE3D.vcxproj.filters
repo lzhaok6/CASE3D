@@ -89,9 +89,6 @@
     <ClCompile Include="EIGENMAX.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ELE_GEN.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FSILINK.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

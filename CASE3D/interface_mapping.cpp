@@ -96,7 +96,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3
 						for (u = 0; u < 2; u++) {
 							for (v = 0; v < 2; v++) {
 								for (n = 0; n < 3; n++) {
-									ol[m].DISP[ol[m].IEN_gb[LNA_2D[u][v] - 1][l] - 1][n][1]
+									ol[m].DISP[ol[m].IEN_gb[LNA_2D[u][v] - 1][l] - 1][n]
 										= wsflist[ct]->nodecoord[3 * (ol[m].IEN_2D[LNA_2D[u][v] - 1][l] - 1) + n] - GCOORD[ol[m].IEN_gb[LNA_2D[u][v] - 1][l] - 1][n];
 								}
 							}

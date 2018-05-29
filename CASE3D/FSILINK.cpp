@@ -1048,8 +1048,6 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 		std::cout << " " << std::endl;
 	}
 
-
-
 	std::cout << " " << std::endl;
 	return;
 }

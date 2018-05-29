@@ -502,8 +502,8 @@ struct meshgenerationstruct meshgeneration() {
 			for (k = 0; k < NINT; k++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[0][j][k]) {
-						nr[0].LNA_2D[j][k] = l; 
-						ol[0].LNA_2D[j][k] = l;
+						nr[0].LNA_2D[j][k] = l + 1;
+						ol[0].LNA_2D[j][k] = l + 1;
 						ct += 1;
 					}
 				}
@@ -519,8 +519,8 @@ struct meshgenerationstruct meshgeneration() {
 			for (k = 0; k < NINT; k++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[N][j][k]) {
-						nr[0].LNA_2D[j][k] = l;
-						ol[0].LNA_2D[j][k] = l;
+						nr[0].LNA_2D[j][k] = l + 1;
+						ol[0].LNA_2D[j][k] = l + 1;
 						ct += 1;
 					}
 				}
@@ -536,8 +536,8 @@ struct meshgenerationstruct meshgeneration() {
 			for (j = 0; j < NINT; j++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[i][j][0]) {
-						nr[0].LNA_2D[i][j] = l;
-						ol[0].LNA_2D[i][j] = l;
+						nr[0].LNA_2D[i][j] = l + 1;
+						ol[0].LNA_2D[i][j] = l + 1;
 						ct += 1;
 					}
 				}
@@ -553,8 +553,8 @@ struct meshgenerationstruct meshgeneration() {
 			for (j = 0; j < NINT; j++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[i][j][N]) {
-						nr[0].LNA_2D[i][j] = l;
-						ol[0].LNA_2D[i][j] = l;
+						nr[0].LNA_2D[i][j] = l + 1;
+						ol[0].LNA_2D[i][j] = l + 1;
 						ct += 1;
 					}
 				}
@@ -570,8 +570,8 @@ struct meshgenerationstruct meshgeneration() {
 			for (k = 0; k < NINT; k++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[i][0][k]) {
-						nr[0].LNA_2D[i][k] = l;
-						ol[0].LNA_2D[i][k] = l;
+						nr[0].LNA_2D[i][k] = l + 1;
+						ol[0].LNA_2D[i][k] = l + 1;
 						ct += 1;
 					}
 				}
@@ -587,8 +587,8 @@ struct meshgenerationstruct meshgeneration() {
 			for (k = 0; k < NINT; k++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					if (localnode[l] == c.LNA[i][N][k]) {
-						nr[0].LNA_2D[i][k] = l;
-						ol[0].LNA_2D[i][k] = l;
+						nr[0].LNA_2D[i][k] = l + 1;
+						ol[0].LNA_2D[i][k] = l + 1;
 						ct += 1;
 					}
 				}
@@ -610,15 +610,18 @@ struct meshgenerationstruct meshgeneration() {
 			IEN_py[i] = new int[elenum];
 		}
 		if (mappingalgo == 2) {
+			//Break the high-order 2D element in physical group 3 into linear 2D elements (Both free surface elements and wetted surface elements exist)
+			//The connectivity matrix is stored in IEN_py
+			//We also need a vector to store the correlation between seperated element and and original high-order 2D element
 			ct = 0;
 			for (e = 0; e < elenum; e++) {
 				if (flag == N) { //counter-clockwise
 					for (i = 0; i < N; i++) {
 						for (j = 0; j < N; j++) {
-							IEN_py[0][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i][j]]; //oriente the nodes so that the normal direction is pointing out of the element
-							IEN_py[1][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i + 1][j]];
-							IEN_py[2][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i + 1][j + 1]];
-							IEN_py[3][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i][j + 1]];
+							IEN_py[0][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i][j] - 1]; //oriente the nodes so that the normal direction is pointing out of the element
+							IEN_py[1][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i + 1][j] - 1];
+							IEN_py[2][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i + 1][j + 1] - 1];
+							IEN_py[3][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i][j + 1] - 1];
 							ct += 1;
 						}
 					}
@@ -626,53 +629,91 @@ struct meshgenerationstruct meshgeneration() {
 				else if (flag == 0) { //clockwise
 					for (i = 0; i < N; i++) {
 						for (j = 0; j < N; j++) {
-							IEN_py[0][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i][j]]; //oriente the nodes so that the normal direction is out of the element
-							IEN_py[1][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i][j + 1]];
-							IEN_py[2][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i + 1][j + 1]];
-							IEN_py[3][ct] = t.BCIEN[pys_num][e][nr[0].LNA_2D[i + 1][j]];
+							IEN_py[0][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i][j] - 1]; //oriente the nodes so that the normal direction is out of the element
+							IEN_py[1][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i][j + 1] - 1];
+							IEN_py[2][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i + 1][j + 1] - 1];
+							IEN_py[3][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[i + 1][j] - 1];
 							ct += 1;
 						}
 					}
 				}
 			}
 			if (ct != N*N*elenum) {
-				std::cout << "Not all elements are separated." << std::endl;
+				std::cout << "Not all high-order elements are separated and stored in IEN_py (connectivity)" << std::endl;
+				system("PAUSE ");
 			}
 
 			//Extract the connectivity for wetted surface (delete the elements on free surface)
-			std::vector<int>ele_num; //track the element number of the wetted surface elements
+			/*
 			for (i = 0; i < N*N*elenum; i++) {
 				//the point recognize criteria need to be changed if the mesh becomes finer
 				if (abs(t.GCOORD[IEN_py[0][i] - 1][1]) < 1e-1 || abs(t.GCOORD[IEN_py[1][i] - 1][1]) < 1e-1 || abs(t.GCOORD[IEN_py[2][i] - 1][1]) < 1e-1 || abs(t.GCOORD[IEN_py[3][i] - 1][1]) < 1e-1) {
-					//then this element is on free surface and needs to be removed 
+					//If any of the nodes of the element is on the free surface, then this element is on free surface and needs to be removed 
 				}
 				else { //If this element is not on the free surface, we can save it in ele_num 
 					ele_num.push_back(i);
 				}
 			}
-			ol[0].IEN_gb = new int*[4]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
-			for (i = 0; i < 4; i++) {
-				ol[0].IEN_gb[i] = new int[ele_num.size()];
+			*/
+			std::vector<int>ele_num; //track the element number of the wetted surface elements
+			std::vector<int>ele_num2; //for linear 2D elements
+			for (e = 0; e < elenum; e++) {
+				flag = 1;
+				for (i = 0; i < NINT*NINT; i++) {
+					if (abs(t.GCOORD[t.BCIEN[pys_num][e][i] - 1][1]) < 1e-1) {
+						flag = 0;
+					}
+				}
+				if (flag == 1) { //Then this element could be included the wetted surface element list
+					ele_num.push_back(e);
+					for (i = 0; i < N*N; i++) {
+						ele_num2.push_back(e*N*N + i);
+					}
+				}
 			}
-			for (i = 0; i < ele_num.size(); i++) {
-				for (j = 0; j < 4; j++) {
-					ol[0].IEN_gb[j][i] = IEN_py[j][ele_num[i]];
+			//ele_num is the elements for high-order element, we need to extract the corresponding linear elements from that. 
+
+			//Store the total number of element on wetted surface in FSNEL and FSNEL_algo2
+			ol[0].FSNEL = ele_num.size(); 
+			ol[0].FSNEL_algo2 = ele_num2.size();
+			if (ol[0].FSNEL != N*N*ol[0].FSNEL_algo2) {
+				std::cout << "FSNEL_algo2 is wrong" << std::endl;
+				system("PAUSE ");
+			}
+
+			ol[0].IEN_gb = new int*[NINT*NINT]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
+			for (i = 0; i < NINT*NINT; i++) {
+				ol[0].IEN_gb[i] = new int[ol[0].FSNEL];
+			}
+			for (i = 0; i < ol[0].FSNEL; i++) {
+				for (j = 0; j < NINT*NINT; j++) {
+					ol[0].IEN_gb[j][i] = t.BCIEN[pys_num][ele_num[i]][j];
 				}
 			}
 
-			//Derive the IEN_2D to write the MpCCI model file (basically renumbering the node in IEN_gb)
+			ol[0].IEN_algo2 = new int*[4]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
+			for (i = 0; i < 4; i++) {
+				ol[0].IEN_algo2[i] = new int[ol[0].FSNEL_algo2];
+			}
+			for (i = 0; i < ol[0].FSNEL_algo2; i++) {
+				for (j = 0; j < 4; j++) {
+					ol[0].IEN_algo2[j][i] = IEN_py[j][ele_num2[i]];
+				}
+			}
+
+			//Derive the IEN_2D to write the MpCCI model file (basically renumbering the node in IEN_algo2 to be recognized by MpCCI)
 			ol[0].IEN_2D = new int*[4]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
 			for (i = 0; i < 4; i++) {
-				ol[0].IEN_2D[i] = new int[ele_num.size()];
+				ol[0].IEN_2D[i] = new int[ol[0].FSNEL_algo2];
 			}
 			ct = 0; //count the node number assigned
-			std::vector<int>node_num;
-			for (i = 0; i < ele_num.size(); i++) { //loop through each element
+			std::vector<int>dummy;
+			for (i = 0; i < ol[0].FSNEL_algo2; i++) { //loop through each element
 				for (j = 0; j < 4; j++) { //the nodes in current element
 					flag = 1; //Initiate the flag to 1 
 					for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
 						for (l = 0; l < 4; l++) {
-							if (ol[0].IEN_gb[l][k] == ol[0].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
+							if (ol[0].IEN_algo2[l][k] == ol[0].IEN_algo2[j][i]) { //If this node has already been assigned, use the same numbering
 								ol[0].IEN_2D[j][i] = ol[0].IEN_2D[l][k];
 								flag = 0; //turn off the flag to assgin new number
 							}
@@ -683,54 +724,59 @@ struct meshgenerationstruct meshgeneration() {
 					}
 					if (flag == 1) {
 						ct += 1;
+						dummy.push_back(ol[0].IEN_algo2[j][i]); //associate the local 2D node with the global node numbering 
 						ol[0].IEN_2D[j][i] = ct;
-						node_num.push_back(ol[0].IEN_gb[j][i]); //associate the local 2D node with the global node numbering 
 					}
 				}
 			}
-			ol[0].norm = new double*[ele_num.size()]; //store the normal direction of linear elements on the wetted surface
-			for (i = 0; i < ele_num.size(); i++) {
+			ol[0].GIDNct = dummy.size(); 
+			ol[0].GIDN = new int[ol[0].GIDNct];
+			for (i = 0; i < ol[0].GIDNct; i++) {
+				ol[0].GIDN[i] = dummy[i];
+			}
+
+			ol[0].norm = new double*[ol[0].FSNEL_algo2]; //store the normal direction of linear elements on the wetted surface
+			for (i = 0; i < ol[0].FSNEL_algo2; i++) {
 				ol[0].norm[i] = new double[3];
 			}
 			//Obtain the normal direction unit vector of the newly separated elements (numbering from 0 to elenum)
 			//The normal direction calculation might be wrong. We need to validate it using a FSP mesh generated by BOLT.
 			double ax, ay, az; double bx, by, bz;
 			double n1, n2, n3; double absn;
-			for (i = 0; i < ele_num.size(); i++) {
-				ax = t.GCOORD[ol[0].IEN_gb[1][i] - 1][0] - t.GCOORD[ol[0].IEN_gb[0][i] - 1][0];
-				ay = t.GCOORD[ol[0].IEN_gb[1][i] - 1][1] - t.GCOORD[ol[0].IEN_gb[0][i] - 1][1];
-				az = t.GCOORD[ol[0].IEN_gb[1][i] - 1][2] - t.GCOORD[ol[0].IEN_gb[0][i] - 1][2];
-				bx = t.GCOORD[ol[0].IEN_gb[2][i] - 1][0] - t.GCOORD[ol[0].IEN_gb[1][i] - 1][0];
-				by = t.GCOORD[ol[0].IEN_gb[2][i] - 1][1] - t.GCOORD[ol[0].IEN_gb[1][i] - 1][1];
-				bz = t.GCOORD[ol[0].IEN_gb[2][i] - 1][2] - t.GCOORD[ol[0].IEN_gb[1][i] - 1][2];
+			for (i = 0; i < ol[0].FSNEL_algo2; i++) {
+				ax = t.GCOORD[ol[0].IEN_algo2[1][i] - 1][0] - t.GCOORD[ol[0].IEN_algo2[0][i] - 1][0];
+				ay = t.GCOORD[ol[0].IEN_algo2[1][i] - 1][1] - t.GCOORD[ol[0].IEN_algo2[0][i] - 1][1];
+				az = t.GCOORD[ol[0].IEN_algo2[1][i] - 1][2] - t.GCOORD[ol[0].IEN_algo2[0][i] - 1][2];
+				bx = t.GCOORD[ol[0].IEN_algo2[2][i] - 1][0] - t.GCOORD[ol[0].IEN_algo2[1][i] - 1][0];
+				by = t.GCOORD[ol[0].IEN_algo2[2][i] - 1][1] - t.GCOORD[ol[0].IEN_algo2[1][i] - 1][1];
+				bz = t.GCOORD[ol[0].IEN_algo2[2][i] - 1][2] - t.GCOORD[ol[0].IEN_algo2[1][i] - 1][2];
 				n1 = ay*bz - az*by; n2 = az*bx - ax*bz; n3 = ax*by - ay*bx;
 				absn = sqrt(pow(n1, 2) + pow(n2, 2) + pow(n3, 2));
 				ol[0].norm[i][0] = n1 / absn; ol[0].norm[i][1] = n2 / absn; ol[0].norm[i][2] = n3 / absn;
 			}
 			//check if the separated element has the same normal direction as the original mesh (N=1)
-			
+			/*
 			//write the model file for MpCCI here
 			std::ofstream myfile;
 			myfile.open("model.txt");
 			myfile << "EF wetsurface 3 1" << std::endl;
-			myfile << "NODES " << node_num.size() << std::endl;
-			for (i = 0; i < node_num.size(); i++) {
-				myfile << i << " " << t.GCOORD[node_num[i] - 1][0] << " " << t.GCOORD[node_num[i] - 1][1] << " " << t.GCOORD[node_num[i] - 1][2] << " " << std::endl;
+			myfile << "NODES " << ol[0].GIDN.size() << std::endl;
+			for (i = 0; i < ol[0].GIDN.size(); i++) {
+				myfile << i << " " << t.GCOORD[ol[0].GIDN[i] - 1][0] << " " << t.GCOORD[ol[0].GIDN[i] - 1][1] << " " << t.GCOORD[ol[0].GIDN[i] - 1][2] << " " << std::endl;
 			}
-			myfile << "ELEMENTS " << ele_num.size() << std::endl;
+			myfile << "ELEMENTS " << ol[0].FSNEL_algo2 << std::endl;
 			//output connectivity matrix
-			for (i = 0; i < ele_num.size(); i++) {
+			for (i = 0; i < ol[0].FSNEL_algo2; i++) {
 				myfile << i;
 				for (j = 0; j < 4; j++) {
 					myfile << " " << ol[0].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
 				}
 				myfile << std::endl;
 			}
-			//Store the total number of element on wetted surface in FSNEL
-			ol[0].FSNEL = ele_num.size(); 
+			*/
 		}
 
-		//Extract the connectivity matrix on NRB surface (glue all physical groups corresponding to the NRB together)
+		//==============Extract the connectivity matrix on NRB surface (glue all physical groups corresponding to the NRB together)==============//
 		//All physical groups except for 3
 		nr[0].NEL_nrb = (phygrp_start[physicalgroups - 1] - phygrp_start[0]) - elenum; //total element number. 
 		//Please note that elenum here is for the physical group 3 which includes both free surface and wetted surface. 
@@ -754,10 +800,35 @@ struct meshgenerationstruct meshgeneration() {
 			system("PAUSE ");
 		}
 
-		//Obtain NRBA to store all the nodes on NRB surfaces
-
-
+		//Obtain NRBA to store all the nodes on NRB surfaces by looping through all the NRB elements and filter out the points
+		ct = 0; //count the node number assigned
+		std::vector<int>dummy2;
+		for (i = 0; i < nr[0].NEL_nrb; i++) { //loop through each element
+			for (j = 0; j < NINT*NINT; j++) { //the nodes in current element
+				flag = 1; //Initiate the flag to 1 
+				for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
+					for (l = 0; l < NINT*NINT; l++) {
+						if (nr[0].IEN_gb[l][k] == nr[0].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
+							flag = 0; //turn off the flag to assgin new number
+						}
+						else {
+							//If the number has not assigned yet the flag is still 1, thus a new number could be assigned. 
+						}
+					}
+				}
+				if (flag == 1) {
+					ct += 1;
+					dummy2.push_back(nr[0].IEN_gb[j][i]); //associate the local 2D node with the global node numbering 
+				}
+			}
+		}
+		nr[0].NRBNODE = dummy2.size();
+		nr[0].NRBA = new int[nr[0].NRBNODE];
+		for (i = 0; i < nr[0].NRBNODE; i++) {
+			nr[0].NRBA[i] = dummy2[i];
+		}
 	}
 
+	
 	return t;
 }

@@ -170,7 +170,6 @@
     <ClCompile Include="adapter.c" />
     <ClCompile Include="data.c" />
     <ClCompile Include="EIGENMAX.cpp" />
-    <ClCompile Include="ELE_GEN.cpp" />
     <ClCompile Include="FSILINK.cpp" />
     <ClCompile Include="GLLQUAD.cpp" />
     <ClCompile Include="GLOBAL_SHAPE.cpp" />

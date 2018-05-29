@@ -25,14 +25,6 @@ int main()
 	double LMAX;
 	int h, i, j, k, q, z, ii, jj; //error prone: cannot be the same with data structure type (z is the same as Z)
 	int TIME = 0;     //CONTROL TIME
-	/*
-	if (internalmesh == 1) {
-		owsfnumber = 4; //This is used for FSP case
-	}
-	else {
-		owsfnumber = 1; //Assume the mesh imported into the current code has only one wet surface
-	}
-	*/
 	if (FEM == 1 && N != 1) {
 		std::cout << "the current code doesn't support high-order FEM" << std::endl;
 		system("PAUSE ");
@@ -49,34 +41,23 @@ int main()
 		std::cout << "the mapping algorithms other than 2 are not designed to transfer abosolute pressure" << std::endl;
 		system("PAUSE ");
 	}
-	if (Bleich == 1 && SX == 0.1) {
-		std::cout << "Have you divided the WP by SZ and SX to simulate the unit dimension wetted surface?" << std::endl;
-		std::cout << "Have you change the peak pressure and the decay rate???" << std::endl;
-		system("PAUSE ");
-	}
 	
 	meshgenerationstruct a;
 	a = meshgeneration();
 	std::cout << "mesh generation done" << std::endl;
 
-	for (i = 0; i < a.NNODE; i++) {
-		if (abs(a.GCOORD[i][0]) < 1e-5 && abs(a.GCOORD[i][1] + 2.4384) < 1e-5 && abs(a.GCOORD[i][2] - (2.4384)) < 1e-5) {
-			std::cout << " " << std::endl;
-		}
-	}
-
 	LOBATTOstruct b;
 	b = LOBATTO(N);
 	std::cout << "LOBATTO() done" << std::endl;
+
 	LOCAL_NODEstruct c;
 	c = LOCAL_NODE(N);
+	std::cout << "LOCAL_NODE(N) done" << std::endl;
 
-	//observation: LNA is identical with the Gmsh user manual 
+	//Use the LNA_2D from the meshgeneration routine? 
 	TD_LOCAL_NODEstruct ct;
 	ct = TD_LOCAL_NODE(NC);
-	if (internalmesh == 1) {
-		ELE_GEN(a.NEL, a.GCOORD, a.IEN, c.LNA, b.Z);
-	}
+
 	std::cout << "ELE_GENstruct done" << std::endl;
 	//---------------SHAPE FUNCTION ROUTINE------------------------------//
 	//DETERMINE GLL QUADRATURE POINTS AND WEIGHTS
