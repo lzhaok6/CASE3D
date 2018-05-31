@@ -122,13 +122,11 @@ int main()
 	}
 	*/
 
-	
 	double *T; //TIMESTEP ARRAY 
 	T = new double[t.NDT + 1];
 	for (i = 0; i < t.NDT + 1; i++) {
 		T[i] = 0.0;
 	}
-	
 
 	//DETERMINE TIMESTEP ARRAY T
 	T[0] = 0.0;
@@ -197,133 +195,6 @@ int main()
 			}
 		}
 	}
-	
-	//Define the shape function value at Gauss-Legendre points on base fluid/structure mesh
-	//phi_femg
-	double ***phi_femg;
-	phi_femg = new double**[NCINT*NCINT];
-	for (i = 0; i < NCINT*NCINT; i++) { //for all the points in that element
-		phi_femg[i] = new double*[hprefg + 1];
-		for (j = 0; j < hprefg + 1; j++) {
-			phi_femg[i][j] = new double[hprefg + 1];
-		}
-	}
-	for (i = 0; i < NCINT*NCINT; i++) {
-		for (j = 0; j < hprefg + 1; j++) {
-			for (k = 0; k < hprefg + 1; k++) {
-				phi_femg[i][j][k] = 0.0;
-			}
-		}
-	}
-	//use f.S
-	if (mappingalgo == 5) {
-		LOBATTOstruct bb;
-		bb = LOBATTO(hprefg);
-		GLLQUADstruct ff;
-		ff = GLLQUAD(bb.Z, bb.WL, hprefg, 0); //Gauss-Legendre point
-		for (h = 0; h < NCINT; h++) { //stands for every fem point, LNA[u][v][w](shape function is based on those points)
-			for (k = 0; k < NCINT; k++) {
-				for (i = 0; i < hprefg + 1; i++) {  //i j k are the independent variable in basis function(sem points)
-					for (j = 0; j < hprefg + 1; j++) {
-						nomx = 1.0; nomy = 1.0; //multiplier initialization
-						denomx = 1.0; denomy = 1.0; //multiplier initialization
-						for (z = 0; z < NCINT; z++) { //loop through nominator and denominator in basis function expression
-							if (z != h) {
-								nomx *= (ff.S[i] - basep[z]);
-								denomx *= (basep[h] - basep[z]);
-							}
-							if (z != k) {
-								nomy *= (ff.S[j] - basep[z]);
-								denomy *= (basep[k] - basep[z]);
-							}
-						}
-						phi_femg[ct.LNA[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
-						//the coordinate definition dof u,v is the same with i,j
-					}
-				}
-			}
-		}
-	}
-
-	//Define the linear lagrange shape function defined on 2nd order GLL points for mapping algorithm 2
-	double ***phi_sem2;
-	phi_sem2 = new double**[NCINT*NCINT];
-	for (i = 0; i < NCINT*NCINT; i++) { //for all the points in that element
-		phi_sem2[i] = new double*[3];
-		for (j = 0; j < 3; j++) {
-			phi_sem2[i][j] = new double[3];
-		}
-	}
-	for (i = 0; i < NCINT*NCINT; i++) {
-		for (j = 0; j < 3; j++) {
-			for (k = 0; k < 3; k++) {
-				phi_sem2[i][j][k] = 0.0;
-			}
-		}
-	}
-	//use f.S
-	int Nq2 = 2; 
-	int Nq2INT = Nq + 1; 
-	LOBATTOstruct bbb;
-	bbb = LOBATTO(Nq2);
-	GLLQUADstruct fff;
-	fff = GLLQUAD(bbb.Z, bbb.WL, Nq2, !FEM);
-	for (h = 0; h < NCINT; h++) { //stands for every fem point, LNA[u][v][w](shape function is based on those points)
-		for (k = 0; k < NCINT; k++) {
-			for (i = 0; i < Nq2INT; i++) {  //i j k are the independent variable in basis function(sem points)
-				for (j = 0; j < Nq2INT; j++) {
-					nomx = 1.0; nomy = 1.0; //multiplier initialization
-					denomx = 1.0; denomy = 1.0; //multiplier initialization
-					for (z = 0; z < NCINT; z++) { //loop through nominator and denominator in basis function expression
-						if (z != h) {
-							nomx *= (fff.S[i] - basep[z]);
-							denomx *= (basep[h] - basep[z]);
-						}
-						if (z != k) {
-							nomy *= (fff.S[j] - basep[z]);
-							denomy *= (basep[k] - basep[z]);
-						}
-					}
-					phi_sem2[ct.LNA[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
-					//the coordinate definition dof u,v is the same with i,j
-				}
-			}
-		}
-	}
-
-	//Generation of tabular incident wave
-	double x;
-	int row;
-	int col, col_a, col_t;
-	double*timer;
-	double*ampt;
-	timer = new double[116];
-	ampt = new double[116];
-	std::string lineA;
-	std::ifstream myyfile("shock_amplitude.txt");
-	if (!myyfile) {
-		std::cout << "can not open the shock amplitude file" << std::endl;
-		system("PAUSE ");
-	}
-	while (myyfile.good()) {
-		row = 0;
-		while (std::getline(myyfile, lineA)) { //read the file line by line
-			std::istringstream streamA(lineA);
-			col = 0; col_a = 0; col_t = 0;
-			while (streamA >> std::skipws >> x) {
-				if (col % 2 == 0) {
-					timer[4 * row + col_t] = x;
-					col_t += 1;
-				}
-				else {
-					ampt[4 * row + col_a] = x;
-					col_a += 1;
-				}
-				col++;
-			}
-			row += 1;
-		}
-	}
 
 	//derive the peak wave pressure and decay rate
 	double XC = 0.0; double YC = 0.0; double ZC = 0.0;
@@ -373,10 +244,6 @@ int main()
 	}
 
 	double KAPPA = 0.0;
-	//-0.3048
-	//-1.2192
-	//-0.3048
-	//-0.406399995, -0.203199998,           0.
 	for (i = 0; i < a.NNODE; i++) {
 		if (abs(a.GCOORD[i][0]) < 1e-3 && abs(a.GCOORD[i][1] + SY) < 1e-3 && abs(a.GCOORD[i][2] - SZ / 2) < 1e-3) {
 			std::cout << "the node is: " << i << std::endl;
@@ -384,7 +251,7 @@ int main()
 	}
 	
 	TIME_INT(a.NNODE, a.GCOORD, f.W, ct.LNA, c.LNA, a.IEN, a.NEL, f.S, g.SHL, TIME, T, t.DT, t.NDT, b.Z,
-		a.AYIN, o.HMASTER, o.Q, phi_fem, timer, ampt, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamma, o.gamma_t, o.G, o.gamman, o.gamma_tn, o.Gn, phi_femg, phi_sem2);
+		a.AYIN, o.HMASTER, o.Q, phi_fem, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamma, o.gamma_t, o.G, o.gamman, o.gamma_tn, o.Gn);
 
 	printf("Cleaning up...\n");
 	/* clean up */

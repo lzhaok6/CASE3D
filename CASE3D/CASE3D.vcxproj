@@ -190,8 +190,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TD_ELE_GEN.cpp" />
-    <ClCompile Include="TD_LOCAL_NODE.cpp" />
     <ClCompile Include="TIME_INT.cpp" />
     <ClCompile Include="TIMINT.cpp" />
     <ClCompile Include="WAVE_IN.cpp" />

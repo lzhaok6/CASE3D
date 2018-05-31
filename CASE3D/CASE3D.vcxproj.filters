@@ -131,12 +131,6 @@
     <ClCompile Include="NRB.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TD_ELE_GEN.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TD_LOCAL_NODE.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TIME_INT.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

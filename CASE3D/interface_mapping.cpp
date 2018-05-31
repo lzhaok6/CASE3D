@@ -24,7 +24,7 @@ A new algorithm 4 is added.
 */
 
 double BF_val[4];
-struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int** LNA_base, int**LNA_basealgo5, double *Z, int TIME, double ** GCOORD, double ***phi_fem, double* W, double*** phi_femg, double*** phi_sem2) {
+struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int** LNA_base, int**LNA_basealgo5, double *Z, int TIME, double ** GCOORD, double ***phi_fem, double* W) {
 	interface_mappingstruct t;
 	int i, j, k, l, m, n;
 	int u, v;
@@ -38,10 +38,6 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3
 	case 1: 
 		if (mappingalgo == 2) {
 			//In this code, we use the 2nd order GLL integration instead of 1st order GL integration in FSP case since we have to include a 2D Jacobian determinate to accommodate the geometric mapping
-			LOBATTOstruct b;
-			b = LOBATTO(2);
-			GLLQUADstruct f;
-			f = GLLQUAD(b.Z, b.WL, 2, 1); //linear integration (Gauss-Legendre points) 
 			ct = 0;
 			for (k = 0; k < owsfnumber; k++) {
 				if (ol[k].FSNEL > 0) {
@@ -100,8 +96,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3
 									for (v = 0; v < 2; v++) {
 										for (n = 0; n < 3; n++) {
 											DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[m].IEN_2D[ol[m].LNA_2D[u][v] - 1][l] - 1) + n] - GCOORD[ol[m].IEN_gb[ol[m].LNA_2D[u][v] - 1][l] - 1][n];
-											ol[m].DISP[ol[m].IEN_gb[ol[m].LNA_2D[i][j] - 1][l] - 1][n]
-												+= DISPTEMP * phi_fem[ol[m].LNA_algo2[u][v] - 1][i][j];
+											ol[m].DISP[ol[m].IEN_gb[ol[m].LNA_2D[i][j] - 1][l] - 1][n] += DISPTEMP * phi_fem[ol[m].LNA_algo2[u][v] - 1][i][j];
 										}
 									}
 								}

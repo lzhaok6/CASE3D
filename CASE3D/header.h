@@ -24,10 +24,10 @@ struct TIMINTstruct TIMINT(double LMAX);
 void NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN, int NEL, double***SHL, double***SHOD);
 double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO);
 void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int NNODE, double***SHOD);
-struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int**LNA_base, int**LNA_basealgo5, double *Z, int TIME, double** GCOORD, double ***phi_fem, double *W, double ***phi_femg, double*** phi_sem2);
+struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int**LNA_base, int**LNA_basealgo5, double *Z, int TIME, double** GCOORD, double ***phi_fem, double *W);
 void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, int**IEN, int NEL, double* S, double***SHL, int TIME, double *T, double DT, int NDT, double* Z,
-	double** AYIN, double*** HMASTER, double* Q, double*** phi_fem, double* timer, double* ampt, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
-	double XO, double YO, double ZO, double ***SHOD, double ****gamma, double****gamma_t, double*****G, double** gamman, double** gamma_tn, double****Gn, double*** phi_femg, double*** phi_sem2);
+	double** AYIN, double*** HMASTER, double* Q, double*** phi_fem, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
+	double XO, double YO, double ZO, double ***SHOD, double ****gamma, double****gamma_t, double*****G, double** gamman, double** gamma_tn, double****Gn);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
 
@@ -35,54 +35,54 @@ const int N = 1;    //N is the element order of fluid mesh
 const int NINT = N + 1; //NINT=N+1;
 
 typedef struct owetsurf {
-	double **SF; //weighted integration factor: the previous AF, CF, DF... 
+	//double **SF; //weighted integration factor: the previous AF, CF, DF... 
 	int *GIDF;   //Coupled fluid element array (numbering)
-	double NORM; //if the inward normal direction of a surface is identical with the axis, NROM=1, vice versa (used to get dynamic displacement on wet surfaces)
-	double NORM_BF; //the direction of fluid force to structure (If the force is positive x then NORM_BF=1.0, vice versa)
+	//double NORM; //if the inward normal direction of a surface is identical with the axis, NROM=1, vice versa (used to get dynamic displacement on wet surfaces)
+	//double NORM_BF; //the direction of fluid force to structure (If the force is positive x then NORM_BF=1.0, vice versa)
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
 	double *PSI; //integrated incident pressure 
 	double *DI;  //displacement predictor 
 	double **DISPI; //incident displacement
 	double **DISP; //total (actual) displacement (the combination of incident displacement and dynamic displacement)
 	double **DISP_norm; //normal displacement out of fluid domain for two concecutive time steps
-	double**BF1;    //For mapping algorithm1, 3 and 4
-	double*BF2;     //For mapping algorithm2
-	double**BF3;    //For mapping algorithm3
-	double** BP;    //For mapping algorithm4
-	double** BPG;   //For mapping algorithm5 
+	//double**BF1;    //For mapping algorithm1, 3 and 4
+	//double*BF2;     //For mapping algorithm2
+	//double**BF3;    //For mapping algorithm3
+	//double** BP;    //For mapping algorithm4
+	//double** BPG;   //For mapping algorithm5 
 	double *WP; //wet surface pressure, representing AP, CP, DP previously
 	double *WPIN; //wet surface incident pressure, APIN, ...
-	int *FP; //2D node count in one 3D element on wet surfaces. (Does not exist in non_MpCCI code)
+	//int *FP; //2D node count in one 3D element on wet surfaces. (Does not exist in non_MpCCI code)
 	double*** FPMASTER;
 	double*** FPMASTER_2D; 
-	int *SP; //2D node count in one 3D element on NRB  
+	//int *SP; //2D node count in one 3D element on NRB  
 	int **IEN_2D; //wet surface connectivity matrix (used to write MpCCI model file and information mapping. The wetted surface information from MpCCI is defined this way)
 	int **IEN_algo2; //
 	int **IEN_gb; //connectivity matrix on 2D surface pointing to global points.
-	int dir; //the direction of displacement and force on a specific wet surface (0 means x direction; 1 means y and 2 means z)
-	double location; //the constant coordinate component of wet surface points. (used to calculate displacement from node coordinate)  
-	double OBF_val; //The total force on wet surface before interface_mapping (used to check if the interface force mapping is conservative)
-	double **XYHE_gb; 
-	int FSNEL_fem; //element number on SEM made FEM coupling surface 
+	//int dir; //the direction of displacement and force on a specific wet surface (0 means x direction; 1 means y and 2 means z)
+	//double location; //the constant coordinate component of wet surface points. (used to calculate displacement from node coordinate)  
+	//double OBF_val; //The total force on wet surface before interface_mapping (used to check if the interface force mapping is conservative)
+	//double **XYHE_gb; 
+	//int FSNEL_fem; //element number on SEM made FEM coupling surface 
 	int FSNEL; 
 	int *GIDN; //wet nodes on coupling surfaces
 	int GIDNct; //wet nodes number on coupling surfaces
-	int GIDNct_st; //wet nodes number on coupling surfaces (structure)
-	int**IEN_base;
-	double**NW; //Node weight on base fluid mesh for displacement mapping(algorithm 3 and 4)
-	int **eletran; //connectivity matrix of coarse and fine mesh
-	int XNEL;
-	int YNEL;
+	//int GIDNct_st; //wet nodes number on coupling surfaces (structure)
+	//int**IEN_base;
+	//double**NW; //Node weight on base fluid mesh for displacement mapping(algorithm 3 and 4)
+	//int **eletran; //connectivity matrix of coarse and fine mesh
+	//int XNEL;
+	//int YNEL;
 	int* DP; //2D local node numbering of NRB elements (the surface sequence is different from the structural wet surface). 
-	double* nodecoord_mpcci;
+	//double* nodecoord_mpcci;
 	double** norm; //store the normal direction of linear elements 
 	double** Jacob_2D; //the Jacobian value of 2D element on wetted surface
 	int LNA_2D[NINT][NINT];
 	int LNA_algo2[2][2]; //The local node orientation of the linear element in algorithm2
 	int FP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of FPMASTER
 	double** JACOB;
-	int* GIDN;
-	int GIDNct; 
+	//int* GIDN;
+	//int GIDNct; 
 } OWETSURF;
 
 //Store the properties on NRB surface (currently just one)

@@ -804,6 +804,8 @@ struct meshgenerationstruct meshgeneration() {
 		for (i = 0; i < nr[0].NRBNODE; i++) {
 			nr[0].NRBA[i] = dummy2[i];
 		}
+		//obtain the normal vector corresponding to every
+
 	}
 
 	
