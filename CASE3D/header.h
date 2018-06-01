@@ -73,7 +73,6 @@ typedef struct owetsurf {
 	//int **eletran; //connectivity matrix of coarse and fine mesh
 	//int XNEL;
 	//int YNEL;
-	int* DP; //2D local node numbering of NRB elements (the surface sequence is different from the structural wet surface). 
 	//double* nodecoord_mpcci;
 	double** norm; //store the normal direction of linear elements 
 	double** Jacob_2D; //the Jacobian value of 2D element on wetted surface
@@ -96,9 +95,12 @@ typedef struct nrbsurf {
 	int NNODE_nrb; //The total number of node on NRBC
 	int LNA_2D[NINT][NINT]; 
 	int DP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of ADMASTER
+	int DP_2D[NINT*NINT];
 	//std::vector<int>NRBA; 
 	int* NRBA; 
 	int NRBNODE;
+	double**norm; 
+	//int LNA_norm[4];
 } NRBSURF; 
 
 struct LOBATTOstruct {

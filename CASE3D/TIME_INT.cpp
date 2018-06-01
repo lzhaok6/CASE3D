@@ -131,18 +131,25 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 	double HFTEMPn[(N + 1)*(N + 1)*(N + 1)];
 	double FEETEMP[(N + 1)*(N + 1)*(N + 1)]; //LOCAL DISP. POTENTIAL
 	double *DPS_ukn;
-	double *XEST; //SOLUTION ARRAY FOR NRB  (ESTIMATED DISPLACEMENT???)
-	double *XEST_kn;
-	double *XEST_ukn;
+	//double *XEST; //SOLUTION ARRAY FOR NRB  (ESTIMATED DISPLACEMENT???)
+	double **XEST; 
+	//double *XEST_kn;
+	double **XEST_kn;
+	//double *XEST_ukn;
+	double **XEST_ukn; 
 	double *XNRBORG; //SOLUTION ARRAY FOR NRBC DISPLACEMENT AT T=0 (ORG MEANS ORIGIN)
-	double *XNRBORG2;
+	//double *XNRBORG2;
+	double **XNRBORG2; 
 	double *XCOR; //SOLUTION ARRAY FOR NRB
 	double *XCOR_kn;
 	double *XCOR_ukn;
-	double **XNRB_kn;
-	double **XNRB_ukn;
+	//double **XNRB_kn;
+	double ***XNRB_kn;
+	//double **XNRB_ukn;
+	double ***XNRB_ukn;
 	double** PSI_inc;
-	double **XNRB; 
+	//double **XNRB; 
+	double ***XNRB;
 	double *DPS;
 	//==============================================================================//
 	DSDOT = new double[NNODE];
@@ -183,42 +190,56 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 	HFn = new double[NNODE];
 	//DPS_ukn = new double[u.NRBNODE];
 	DPS_ukn = new double[NNODE];
-	//XEST = new double[u.NRBNODE];
-	XEST = new double[NNODE];
-	//XEST_kn = new double[u.NRBNODE];
-	XEST_kn = new double[NNODE];
-	//XEST_ukn = new double[u.NRBNODE];
-	XEST_ukn = new double[NNODE];
+	//XEST = new double[NNODE];
+	XEST = new double*[NINT*NINT];
+	for (i = 0; i < NINT*NINT; i++) {
+		XEST[i] = new double[nr[0].NEL_nrb];
+	}
+	//XEST_kn = new double[NNODE];
+	XEST_kn = new double*[NINT*NINT];
+	for (i = 0; i < NINT*NINT; i++) {
+		XEST_kn[i] = new double[nr[0].NEL_nrb];
+	}
+	//XEST_ukn = new double[NNODE];
+	XEST_ukn = new double*[NINT*NINT];
+	for (i = 0; i < NINT*NINT; i++) {
+		XEST_ukn[i] = new double[nr[0].NEL_nrb];
+	}
 	//XNRBORG = new double[u.NRBNODE];
 	XNRBORG = new double[NNODE];
-	//XNRBORG2 = new double[u.NRBNODE];
-	XNRBORG2 = new double[NNODE];
+	//XNRBORG2 = new double[NNODE];
+	XNRBORG2 = new double*[NINT*NINT];
+	for (i = 0; i < NINT*NINT; i++) {
+		XNRBORG2[i] = new double[nr[0].NEL_nrb];
+	}
 	//XCOR = new double[u.NRBNODE];
 	XCOR = new double[NNODE];
 	//XCOR_kn = new double[u.NRBNODE];
 	XCOR_kn = new double[NNODE];
 	//XCOR_ukn = new double[u.NRBNODE];
 	XCOR_ukn = new double[NNODE];
-	//XNRB_kn = new double*[u.NRBNODE];
-	XNRB_kn = new double*[NNODE];
 	/*
-	for (i = 0; i < u.NRBNODE; i++) {
-		XNRB_kn[i] = new double[2];
-	}
-	XNRB_ukn = new double*[u.NRBNODE];
-	for (i = 0; i < u.NRBNODE; i++) {
-		XNRB_ukn[i] = new double[2];
-	}
-	*/
-	
+	XNRB_kn = new double*[NNODE];
 	for (i = 0; i < NNODE; i++) {
 		XNRB_kn[i] = new double[2];
 	}
+	*/
+	XNRB_kn = new double**[NINT*NINT];
+	XNRB_ukn = new double**[NINT*NINT];
+	for (i = 0; i < NINT*NINT; i++) {
+		XNRB_kn[i] = new double*[nr[0].NEL_nrb];
+		XNRB_ukn[i] = new double*[nr[0].NEL_nrb];
+		for (j = 0; j < nr[0].NEL_nrb; j++) {
+			XNRB_kn[i][j] = new double[2];
+			XNRB_ukn[i][j] = new double[2];
+		}
+	}
+	/*
 	XNRB_ukn = new double*[NNODE];
 	for (i = 0; i < NNODE; i++) {
 		XNRB_ukn[i] = new double[2];
 	}
-	
+	*/
 	//=======================================================================//
 	for (i = 0; i < NNODE; i++) {
 		DSDOT[i] = 0.0;
@@ -281,40 +302,42 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 		HFTEMPn[i] = 0.0;
 		FEETEMP[i] = 0.0;
 	}
-	/*
-	for (i = 0; i < u.NRBNODE; i++) {
+	
+	for (i = 0; i < NNODE; i++) {
 		DPS_ukn[i] = 0.0;
-		XEST[i] = 0.0;
-		XEST_kn[i] = 0.0;
-		XEST_ukn[i] = 0.0;
+		//XEST[i] = 0.0;
+		//XEST_kn[i] = 0.0;
+		//XEST_ukn[i] = 0.0;
 		XNRBORG[i] = 0.0;
-		XNRBORG2[i] = 0.0;
+		//XNRBORG2[i] = 0.0;
 		XCOR[i] = 0.0;
 		XCOR_kn[i] = 0.0;
 		XCOR_ukn[i] = 0.0;
 	}
-	for (i = 0; i < u.NRBNODE; i++) {
+
+	for (i = 0; i < NINT*NINT; i++) {
+		for (j = 0; j < nr[0].NEL_nrb; j++) {
+			XEST[i][j] = 0.0;
+			XEST_kn[i][j] = 0.0;
+			XEST_ukn[i][j] = 0.0;
+			XNRBORG2[i][j] = 0.0;
+		}
+	}
+	/*
+	for (i = 0; i < NNODE; i++) {
 		for (j = 0; j < 2; j++) {
 			XNRB_kn[i][j] = 0.0;
 			XNRB_ukn[i][j] = 0.0;
 		}
 	}
 	*/
-	for (i = 0; i < NNODE; i++) {
-		DPS_ukn[i] = 0.0;
-		XEST[i] = 0.0;
-		XEST_kn[i] = 0.0;
-		XEST_ukn[i] = 0.0;
-		XNRBORG[i] = 0.0;
-		XNRBORG2[i] = 0.0;
-		XCOR[i] = 0.0;
-		XCOR_kn[i] = 0.0;
-		XCOR_ukn[i] = 0.0;
-	}
-	for (i = 0; i < NNODE; i++) {
-		for (j = 0; j < 2; j++) {
-			XNRB_kn[i][j] = 0.0;
-			XNRB_ukn[i][j] = 0.0;
+
+	for (i = 0; i < NINT*NINT; i++) {
+		for (j = 0; j < nr[0].NEL_nrb; j++) {
+			for (k = 0; k < 2; k++) {
+				XNRB_kn[i][j][k] = 0.0; 
+				XNRB_ukn[i][j][k] = 0.0;
+			}
 		}
 	}
 	
@@ -333,9 +356,18 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 				ol[z].DISPI[j] = new double[2];
 			}
 		}
+		/*
 		XNRB = new double*[NNODE];
 		for (i = 0; i < NNODE; i++) {
 			XNRB[i] = new double[2];
+		}
+		*/
+		XNRB = new double**[NINT*NINT];
+		for (i = 0; i < NINT*NINT; i++) {
+			XNRB[i] = new double*[nr[0].NEL_nrb];
+			for (j = 0; j < nr[0].NEL_nrb; j++) {
+				XNRB[i][j] = new double[2];
+			}
 		}
 		DPS = new double[NNODE];
 		//initialization
@@ -354,9 +386,18 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 				}
 			}
 		}
+		/*
 		for (i = 0; i < NNODE; i++) {
 			for (j = 0; j < 2; j++) {
 				XNRB[i][j] = 0.0;
+			}
+		}
+		*/
+		for (i = 0; i < NINT*NINT; i++) {
+			for (j = 0; j < nr[0].NEL_nrb; j++) {
+				for (k = 0; k < 2; k++) {
+					XNRB[i][j][k] = 0.0;
+				}
 			}
 		}
 		for (i = 0; i < NNODE; i++) {
@@ -903,30 +944,32 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 					FEEDOT_inc[nr[z].NRBA[j] - 1][1] = FEEDOT_inc[nr[z].NRBA[j] - 1][0] + (0.5 * DT)*(PIN[nr[z].NRBA[j] - 1][0] + PIN[nr[z].NRBA[j] - 1][1]);
 					//prototype: FEEDOT_inc[u.NRBA[j][0] - 1][1] = (PPEAK*TAU - PPEAK*TAU*exp(pow((pow(XC, 2) - 2 * XC*d.GCOORD[u.NRBA[j][0] - 1][0] + pow(YC, 2) - 2 * YC*d.GCOORD[u.NRBA[j][0] - 1][1] + pow(ZC, 2) - 2 * ZC*d.GCOORD[u.NRBA[j][0] - 1][2] + pow(d.GCOORD[u.NRBA[j][0] - 1][0], 2) + pow(d.GCOORD[u.NRBA[j][0] - 1][1], 2) + pow(d.GCOORD[u.NRBA[j][0] - 1][2], 2)), 0.5) / (C*TAU))*exp(-(DT*i) / TAU)*exp(-pow((pow(XC, 2) - 2 * XC*XO + pow(XO, 2) + pow(YC, 2) - 2 * YC*YO + pow(YO, 2) + pow(ZC, 2) - 2 * ZC*ZO + pow(ZO, 2)), 0.5) / (C*TAU))*exp(-DT / TAU))*(sign((C*DT - pow((pow(XC, 2) - 2 * XC*d.GCOORD[u.NRBA[j][0] - 1][0] + pow(YC, 2) - 2 * YC*d.GCOORD[u.NRBA[j][0] - 1][1] + pow(ZC, 2) - 2 * ZC*d.GCOORD[u.NRBA[j][0] - 1][2] + pow(d.GCOORD[u.NRBA[j][0] - 1][0], 2) + pow(d.GCOORD[u.NRBA[j][0] - 1][1], 2) + pow(d.GCOORD[u.NRBA[j][0] - 1][2], 2)), 0.5) + pow((pow(XC, 2) - 2 * XC*XO + pow(XO, 2) + pow(YC, 2) - 2 * YC*YO + pow(YO, 2) + pow(ZC, 2) - 2 * ZC*ZO + pow(ZO, 2)), 0.5) + C*DT*i) / C) / 2.0 + 0.5);
 				}
-				count = 0;
-				for (j = 0; j < nr[z].NRBNODE; j++) {
-					R = pow(pow(GCOORD[nr[z].NRBA[j] - 1][0] - XC, 2) + pow(GCOORD[nr[z].NRBA[j] - 1][1] - YC, 2) + pow(GCOORD[nr[z].NRBA[j] - 1][2] - ZC, 2), 0.5);
-					angle = (norm[z][0] * (GCOORD[nr[z].NRBA[j] - 1][0] - XC) + norm[z][1] * (GCOORD[nr[z].NRBA[j] - 1][1] - YC) + norm[z][2] * (GCOORD[nr[z].NRBA[j] - 1][2] - ZC)) / R;
-					XEST_kn[nr[z].NRBA[j] - 1] = angle*((0.5 * DT / (RHO*C))*(PIN[nr[z].NRBA[j] - 1][0] + PIN[nr[z].NRBA[j] - 1][1]) +
-						(0.5 * DT / (RHO*R))*(FEEDOT_inc[nr[z].NRBA[j] - 1][0] + FEEDOT_inc[nr[z].NRBA[j] - 1][1])) -
-						(0.5 * DT / (RHO*C))*(PIN[nr[z].NRBA[j] - 1][0] + PIN[nr[z].NRBA[j] - 1][1]);
-					XEST_ukn[nr[z].NRBA[j] - 1] = (DT / (RHO*C))*P[nr[z].NRBA[j] - 1][0]; //plane wave approximation (PWA)
-					XNRBORG2[nr[z].NRBA[j] - 1] = angle*XNRBORG[nr[z].NRBA[j] - 1];
-					count += 1;
+				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
+					for (k = 0; k < NINT*NINT; k++) {
+						R = pow(pow(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] - XC, 2) + pow(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1] - YC, 2) + pow(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][2] - ZC, 2), 0.5);
+						angle = (nr[z].norm[j][0] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] - XC) + nr[z].norm[j][1] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1] - YC) + nr[z].norm[j][2] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][2] - ZC)) / R;
+						XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*((0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) +
+							(0.5 * DT / (RHO*R))*(FEEDOT_inc[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + FEEDOT_inc[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1])) -
+							(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
+						XEST_ukn[nr[z].DP_2D[k] - 1][j] = (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0]; //plane wave approximation (PWA)
+						XNRBORG2[nr[z].DP_2D[k] - 1][j] = angle*XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
+					}
 				}
-				for (j = 0; j < nr[z].NRBNODE; j++) {
-					XNRB_kn[nr[z].NRBA[j] - 1][1] = XNRB_kn[nr[z].NRBA[j] - 1][0] + XEST_kn[nr[z].NRBA[j] - 1];
-					XNRB_ukn[nr[z].NRBA[j] - 1][1] = XNRB_ukn[nr[z].NRBA[j] - 1][0] + XEST_ukn[nr[z].NRBA[j] - 1];
+				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
+					for (k = 0; k < NINT*NINT; k++) {
+						XNRB_kn[nr[z].DP_2D[k] - 1][j][1] = XNRB_kn[nr[z].DP_2D[k] - 1][j][0] + XEST_kn[nr[z].DP_2D[k] - 1][j];
+						XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] = XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] + XEST_ukn[nr[z].DP_2D[k] - 1][j];
+					}
 				}
-				for (j = 0; j < nr[z].NEL_nrb; j++) {
+				for (j = 0; j < nr[z].NEL_nrb; j++) { //IEN_gb needs to be changed (NINT*N)
 					for (h = 0; h < NINT*NINT; h++) {
 						BNRBTEMP[h] = 0.0;
 						for (k = 0; k < NINT*NINT; k++) {
-							BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (XNRB_kn[nr[z].IEN_gb[nr[z].DP[k] - 1][j] - 1][1] + XNRB_ukn[nr[z].IEN_gb[nr[z].DP[k] - 1][j] - 1][1] + XNRBORG2[nr[z].IEN_gb[nr[z].DP[k] - 1][j] - 1]);
+							BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (XNRB_kn[nr[z].DP_2D[k] - 1][j][1] + XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] + XNRBORG2[nr[z].DP_2D[k] - 1][j]);
 						}
 					}
 					for (k = 0; k < NINT*NINT; k++) {
-						BNRB[nr[z].IEN_gb[nr[z].DP[k] - 1][j] - 1] += BNRBTEMP[k];
+						BNRB[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1] += BNRBTEMP[k];
 					}
 				}
 			}
@@ -934,22 +977,26 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 		else {
 			for (z = 0; z < nrbsurfnumber; z++) { //from bottom to front surface (k=0 means all node case)
 				//NRB PREDICTOR
-				for (j = 0; j < nr[z].NRBNODE; j++) {
-					XEST[nr[z].NRBA[j] - 1] = (DT / (RHO*C))*P[nr[z].NRBA[j] - 1][0];  //SOLUTION ARRAY FOR NRB (DX)
+				for (j = 0; j < nr[z].NEL_nrb; j++) { 
+					for (k = 0; k < NINT*NINT; k++) {
+						XEST[nr[z].DP_2D[k] - 1][j] = (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];  //SOLUTION ARRAY FOR NRB (DX)
+					}
 				}
-				for (j = 0; j < nr[z].NRBNODE; j++) {
-					XNRB[nr[z].NRBA[j] - 1][1] = XNRB[nr[z].NRBA[j] - 1][0] + XEST[nr[z].NRBA[j] - 1]; //0 IS BEFORE MODIFICATION, 1 IS AFTER MODIFICATION
+				for (j = 0; j < nr[z].NEL_nrb; j++) { 
+					for (k = 0; k < NINT*NINT; k++) {
+						XNRB[nr[z].DP_2D[k] - 1][j][1] = XNRB[nr[z].DP_2D[k] - 1][j][0] + XEST[nr[z].DP_2D[k] - 1][j]; //0 IS BEFORE MODIFICATION, 1 IS AFTER MODIFICATION
+					}
 				}
 				//XNRB is the predicted displacement normal to the structure (since P is normal to the surface)
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
 					for (h = 0; h < NINT*NINT; h++) {
 						BNRBTEMP[h] = 0.0;
 						for (k = 0; k < NINT*NINT; k++) {
-							BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (XNRB[nr[z].IEN_gb[nr[z].DP[k] - 1][j] - 1][1] - XNRBORG[nr[z].IEN_gb[nr[z].DP[k] - 1][j] - 1]);
+							BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (XNRB[nr[z].DP_2D[k] - 1][j][1] - XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1]);
 						}
 					}
 					for (k = 0; k < NINT*NINT; k++) {
-						BNRB[nr[z].IEN_gb[nr[z].DP[k] - 1][j] - 1] += BNRBTEMP[k];
+						BNRB[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1] += BNRBTEMP[k];
 					}
 				}
 			}
@@ -1123,12 +1170,25 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 				for (j = 0; j < nr[z].NRBNODE; j++) {
 					DPS_ukn[nr[z].NRBA[j] - 1] = 0.5*DT*(P[nr[z].NRBA[j] - 1][1] + P[nr[z].NRBA[j] - 1][0]);
 					XCOR_ukn[nr[z].NRBA[j] - 1] = DPS_ukn[nr[z].NRBA[j] - 1] / (RHO*C);
-					XNRB_ukn[nr[z].NRBA[j] - 1][1] = XNRB_ukn[nr[z].NRBA[j] - 1][0] + XCOR_ukn[nr[z].NRBA[j] - 1];
+					//XNRB_ukn[nr[z].NRBA[j] - 1][1] = XNRB_ukn[nr[z].NRBA[j] - 1][0] + XCOR_ukn[nr[z].NRBA[j] - 1];
 				}
 
+				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
+					for (k = 0; k < NINT*NINT; k++) {
+						XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] = XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] + XCOR_ukn[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
+					}
+				}
+				/*
 				for (j = 0; j < nr[z].NRBNODE; j++) {
 					XNRB_kn[nr[z].NRBA[j] - 1][0] = XNRB_kn[nr[z].NRBA[j] - 1][1];
 					XNRB_ukn[nr[z].NRBA[j] - 1][0] = XNRB_ukn[nr[z].NRBA[j] - 1][1];
+				}
+				*/
+				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
+					for (k = 0; k < NINT*NINT; k++) {
+						XNRB_kn[nr[z].DP_2D[k] - 1][j][0] = XNRB_kn[nr[z].DP_2D[k] - 1][j][1];
+						XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] = XNRB_ukn[nr[z].DP_2D[k] - 1][j][1];
+					}
 				}
 			}
 		}
@@ -1141,9 +1201,15 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 				for (j = 0; j < nr[z].NRBNODE; j++) {
 					XCOR[nr[z].NRBA[j] - 1] = DPS[nr[z].NRBA[j] - 1] / (RHO*C);  //DISPLACEMENT CORRECTOR
 				}
-
+				/*
 				for (j = 0; j < nr[z].NRBNODE; j++) {
 					XNRB[nr[z].NRBA[j] - 1][1] = XNRB[nr[z].NRBA[j] - 1][0] + XCOR[nr[z].NRBA[j] - 1]; //CORRECTED DISPLACEMENT ON NRB
+				}
+				*/
+				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
+					for (k = 0; k < NINT*NINT; k++) {
+						XNRB[nr[z].DP_2D[k] - 1][j][1] = XNRB[nr[z].DP_2D[k] - 1][j][0] + XCOR[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
+					}
 				}
 			}
 		}
@@ -1171,9 +1237,17 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 
 		if (tfm == 0) {
 			for (z = 0; z < nrbsurfnumber; z++) {
+				/*
 				for (j = 0; j < nr[z].NRBNODE; j++) {
 					XNRB[nr[z].NRBA[j] - 1][0] = XNRB[nr[z].NRBA[j] - 1][1];
 				}
+				*/
+				for (j = 0; j < nr[z].NEL_nrb; j++) {
+					for (k = 0; k < NINT*NINT; k++) {
+						XNRB[nr[z].DP_2D[k] - 1][j][0] = XNRB[nr[z].DP_2D[k] - 1][j][1];
+					}
+				}
+
 			}
 		}
 		

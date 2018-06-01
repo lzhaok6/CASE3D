@@ -495,7 +495,7 @@ struct meshgenerationstruct meshgeneration() {
 		//The assumption here is that all the wet surface corresponds to the same face in its corresponding local element (Check out Evernote: How to determine the wet elements on the fluid side). 
 		int flag; 
 		//int LNA_2D[NINT][NINT];
-
+		int LNA_norm[4];
 		//If the wet surface is the left face of the local element (i.e., i=0). 
 		ct = 0; 
 		for (j = 0; j < NINT; j++) {
@@ -506,6 +506,7 @@ struct meshgenerationstruct meshgeneration() {
 						ol[0].LNA_2D[j][k] = l + 1;
 						nr[0].DP[ct] = c.LNA[0][j][k];
 						ol[0].FP[ct] = c.LNA[0][j][k];
+						nr[0].DP_2D[ct] = nr[0].LNA_2D[j][k];
 						ct += 1;
 					}
 				}
@@ -513,6 +514,10 @@ struct meshgenerationstruct meshgeneration() {
 		}
 		if (ct == NINT*NINT) {
 			flag = 0;
+			LNA_norm[0] = nr[0].LNA_2D[0][0]; //make sure the orientation is counter clockwise
+			LNA_norm[1] = nr[0].LNA_2D[0][N];
+			LNA_norm[2] = nr[0].LNA_2D[N][N];
+			LNA_norm[3] = nr[0].LNA_2D[N][0];
 			goto endextraction; //If the face is found, jump to the end of process
 		}
 		//right face (i.e. i=N)
@@ -525,6 +530,7 @@ struct meshgenerationstruct meshgeneration() {
 						ol[0].LNA_2D[j][k] = l + 1;
 						nr[0].DP[ct] = c.LNA[N][j][k];
 						ol[0].FP[ct] = c.LNA[N][j][k];
+						nr[0].DP_2D[ct] = nr[0].LNA_2D[j][k];
 						ct += 1;
 					}
 				}
@@ -532,6 +538,10 @@ struct meshgenerationstruct meshgeneration() {
 		}
 		if (ct == NINT*NINT) {
 			flag = N;
+			LNA_norm[0] = nr[0].LNA_2D[0][0];
+			LNA_norm[1] = nr[0].LNA_2D[N][0];
+			LNA_norm[2] = nr[0].LNA_2D[N][N];
+			LNA_norm[3] = nr[0].LNA_2D[0][N];
 			goto endextraction;
 		}
 		//back face (k=0)
@@ -544,6 +554,7 @@ struct meshgenerationstruct meshgeneration() {
 						ol[0].LNA_2D[i][j] = l + 1;
 						nr[0].DP[ct] = c.LNA[i][j][0];
 						ol[0].FP[ct] = c.LNA[i][j][0];
+						nr[0].DP_2D[ct] = nr[0].LNA_2D[j][k];
 						ct += 1;
 					}
 				}
@@ -551,6 +562,10 @@ struct meshgenerationstruct meshgeneration() {
 		}
 		if (ct == NINT*NINT) {
 			flag = 0;
+			LNA_norm[0] = nr[0].LNA_2D[0][0];
+			LNA_norm[1] = nr[0].LNA_2D[0][N];
+			LNA_norm[2] = nr[0].LNA_2D[N][N];
+			LNA_norm[3] = nr[0].LNA_2D[N][0];
 			goto endextraction;
 		}
 		//front face (k=N)
@@ -563,6 +578,7 @@ struct meshgenerationstruct meshgeneration() {
 						ol[0].LNA_2D[i][j] = l + 1;
 						nr[0].DP[ct] = c.LNA[i][j][N];
 						ol[0].FP[ct] = c.LNA[i][j][N];
+						nr[0].DP_2D[ct] = nr[0].LNA_2D[j][k];
 						ct += 1;
 					}
 				}
@@ -570,6 +586,10 @@ struct meshgenerationstruct meshgeneration() {
 		}
 		if (ct == NINT*NINT) {
 			flag = N;
+			LNA_norm[0] = nr[0].LNA_2D[0][0];
+			LNA_norm[1] = nr[0].LNA_2D[N][0];
+			LNA_norm[2] = nr[0].LNA_2D[N][N];
+			LNA_norm[3] = nr[0].LNA_2D[0][N];
 			goto endextraction;
 		}
 		//bottom face (j=0)
@@ -582,6 +602,7 @@ struct meshgenerationstruct meshgeneration() {
 						ol[0].LNA_2D[i][k] = l + 1;
 						nr[0].DP[ct] = c.LNA[i][0][k];
 						ol[0].FP[ct] = c.LNA[i][0][k];
+						nr[0].DP_2D[ct] = nr[0].LNA_2D[j][k];
 						ct += 1;
 					}
 				}
@@ -589,6 +610,10 @@ struct meshgenerationstruct meshgeneration() {
 		}
 		if (ct == NINT*NINT) {
 			flag = 0;
+			LNA_norm[0] = nr[0].LNA_2D[0][0];
+			LNA_norm[1] = nr[0].LNA_2D[N][0];
+			LNA_norm[2] = nr[0].LNA_2D[N][N];
+			LNA_norm[3] = nr[0].LNA_2D[0][N];
 			goto endextraction;
 		}
 		//top face (j=N)
@@ -601,6 +626,7 @@ struct meshgenerationstruct meshgeneration() {
 						ol[0].LNA_2D[i][k] = l + 1;
 						nr[0].DP[ct] = c.LNA[i][N][k];
 						ol[0].FP[ct] = c.LNA[i][N][k];
+						nr[0].DP_2D[ct] = nr[0].LNA_2D[j][k];
 						ct += 1;
 					}
 				}
@@ -608,10 +634,14 @@ struct meshgenerationstruct meshgeneration() {
 		}
 		if (ct == NINT*NINT) {
 			flag = N;
+			LNA_norm[0] = nr[0].LNA_2D[0][0];
+			LNA_norm[1] = nr[0].LNA_2D[0][N];
+			LNA_norm[2] = nr[0].LNA_2D[N][N];
+			LNA_norm[3] = nr[0].LNA_2D[N][0];
 			goto endextraction;
 		}
-
 	endextraction:
+
 		//================================end extraction===================================//
 		//=============separate the high-order element into linear elements and obtain the normal direction================//
 		int pys_num = 2; //the physical group number that corresponds to the wet surface (physical group 3)
@@ -734,12 +764,20 @@ struct meshgenerationstruct meshgeneration() {
 			double ax, ay, az; double bx, by, bz;
 			double n1, n2, n3; double absn;
 			for (i = 0; i < ol[0].FSNEL; i++) {
+				/*
 				ax = t.GCOORD[ol[0].IEN_algo2[1][i] - 1][0] - t.GCOORD[ol[0].IEN_algo2[0][i] - 1][0];
 				ay = t.GCOORD[ol[0].IEN_algo2[1][i] - 1][1] - t.GCOORD[ol[0].IEN_algo2[0][i] - 1][1];
 				az = t.GCOORD[ol[0].IEN_algo2[1][i] - 1][2] - t.GCOORD[ol[0].IEN_algo2[0][i] - 1][2];
 				bx = t.GCOORD[ol[0].IEN_algo2[2][i] - 1][0] - t.GCOORD[ol[0].IEN_algo2[1][i] - 1][0];
 				by = t.GCOORD[ol[0].IEN_algo2[2][i] - 1][1] - t.GCOORD[ol[0].IEN_algo2[1][i] - 1][1];
 				bz = t.GCOORD[ol[0].IEN_algo2[2][i] - 1][2] - t.GCOORD[ol[0].IEN_algo2[1][i] - 1][2];
+				*/
+				ax = t.GCOORD[nr[0].IEN_gb[LNA_norm[1] - 1][i] - 1][0] - t.GCOORD[nr[0].IEN_gb[LNA_norm[0] - 1][i] - 1][0];
+				ay = t.GCOORD[nr[0].IEN_gb[LNA_norm[1] - 1][i] - 1][1] - t.GCOORD[nr[0].IEN_gb[LNA_norm[0] - 1][i] - 1][1];
+				az = t.GCOORD[nr[0].IEN_gb[LNA_norm[1] - 1][i] - 1][2] - t.GCOORD[nr[0].IEN_gb[LNA_norm[0] - 1][i] - 1][2];
+				bx = t.GCOORD[nr[0].IEN_gb[LNA_norm[2] - 1][i] - 1][0] - t.GCOORD[nr[0].IEN_gb[LNA_norm[1] - 1][i] - 1][0];
+				by = t.GCOORD[nr[0].IEN_gb[LNA_norm[2] - 1][i] - 1][1] - t.GCOORD[nr[0].IEN_gb[LNA_norm[1] - 1][i] - 1][1];
+				bz = t.GCOORD[nr[0].IEN_gb[LNA_norm[2] - 1][i] - 1][2] - t.GCOORD[nr[0].IEN_gb[LNA_norm[1] - 1][i] - 1][2];
 				n1 = ay*bz - az*by; n2 = az*bx - ax*bz; n3 = ax*by - ay*bx;
 				absn = sqrt(pow(n1, 2) + pow(n2, 2) + pow(n3, 2));
 				ol[0].norm[i][0] = n1 / absn; ol[0].norm[i][1] = n2 / absn; ol[0].norm[i][2] = n3 / absn;
@@ -816,7 +854,26 @@ struct meshgenerationstruct meshgeneration() {
 		for (i = 0; i < nr[0].NRBNODE; i++) {
 			nr[0].NRBA[i] = dummy2[i];
 		}
-		//obtain the normal vector corresponding to every
+		//obtain the normal vector corresponding to every NRB element (high-order)
+		nr[0].norm = new double*[nr[0].NEL_nrb]; //store the normal direction of linear elements on the wetted surface
+		for (i = 0; i < nr[0].NEL_nrb; i++) {
+			nr[0].norm[i] = new double[3];
+		}
+		//Obtain the normal direction unit vector of the newly separated elements (numbering from 0 to elenum)
+		//The normal direction calculation might be wrong. We need to validate it using a FSP mesh generated by BOLT.
+		double ax, ay, az; double bx, by, bz;
+		double n1, n2, n3; double absn;
+		for (i = 0; i < nr[0].NEL_nrb; i++) {
+			ax = t.GCOORD[nr[0].IEN_gb[LNA_norm[1] - 1][i] - 1][0] - t.GCOORD[nr[0].IEN_gb[LNA_norm[0] - 1][i] - 1][0];
+			ay = t.GCOORD[nr[0].IEN_gb[LNA_norm[1] - 1][i] - 1][1] - t.GCOORD[nr[0].IEN_gb[LNA_norm[0] - 1][i] - 1][1];
+			az = t.GCOORD[nr[0].IEN_gb[LNA_norm[1] - 1][i] - 1][2] - t.GCOORD[nr[0].IEN_gb[LNA_norm[0] - 1][i] - 1][2];
+			bx = t.GCOORD[nr[0].IEN_gb[LNA_norm[2] - 1][i] - 1][0] - t.GCOORD[nr[0].IEN_gb[LNA_norm[1] - 1][i] - 1][0];
+			by = t.GCOORD[nr[0].IEN_gb[LNA_norm[2] - 1][i] - 1][1] - t.GCOORD[nr[0].IEN_gb[LNA_norm[1] - 1][i] - 1][1];
+			bz = t.GCOORD[nr[0].IEN_gb[LNA_norm[2] - 1][i] - 1][2] - t.GCOORD[nr[0].IEN_gb[LNA_norm[1] - 1][i] - 1][2];
+			n1 = ay*bz - az*by; n2 = az*bx - ax*bz; n3 = ax*by - ay*bx;
+			absn = sqrt(pow(n1, 2) + pow(n2, 2) + pow(n3, 2));
+			nr[0].norm[i][0] = n1 / absn; nr[0].norm[i][1] = n2 / absn; nr[0].norm[i][2] = n3 / absn;
+		}
 
 	}
 
