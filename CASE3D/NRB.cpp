@@ -27,11 +27,6 @@ void NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN, int NEL, d
 	//We need NRBA to store all the nodes on NRB
 	//We also need the total number of node in each NRB surface
 	//We need to lump ADMASTER to get ADMASTERG 
-	for (i = 0; i < NINT; i++) {
-		for (j = 0; j < NINT; j++) {
-			nr[0].DP[i*NINT + j] = nr[0].LNA_2D[i][j];
-		}
-	}
 	nr[0].ADMASTER = new double**[nr[0].NEL_nrb];
 	for (i = 0; i < nr[0].NEL_nrb; i++) {
 		nr[0].ADMASTER[i] = new double*[NINT];

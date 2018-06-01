@@ -504,6 +504,8 @@ struct meshgenerationstruct meshgeneration() {
 					if (localnode[l] == c.LNA[0][j][k]) {
 						nr[0].LNA_2D[j][k] = l + 1;
 						ol[0].LNA_2D[j][k] = l + 1;
+						nr[0].DP[ct] = c.LNA[0][j][k];
+						ol[0].FP[ct] = c.LNA[0][j][k];
 						ct += 1;
 					}
 				}
@@ -521,6 +523,8 @@ struct meshgenerationstruct meshgeneration() {
 					if (localnode[l] == c.LNA[N][j][k]) {
 						nr[0].LNA_2D[j][k] = l + 1;
 						ol[0].LNA_2D[j][k] = l + 1;
+						nr[0].DP[ct] = c.LNA[N][j][k];
+						ol[0].FP[ct] = c.LNA[N][j][k];
 						ct += 1;
 					}
 				}
@@ -538,6 +542,8 @@ struct meshgenerationstruct meshgeneration() {
 					if (localnode[l] == c.LNA[i][j][0]) {
 						nr[0].LNA_2D[i][j] = l + 1;
 						ol[0].LNA_2D[i][j] = l + 1;
+						nr[0].DP[ct] = c.LNA[i][j][0];
+						ol[0].FP[ct] = c.LNA[i][j][0];
 						ct += 1;
 					}
 				}
@@ -555,6 +561,8 @@ struct meshgenerationstruct meshgeneration() {
 					if (localnode[l] == c.LNA[i][j][N]) {
 						nr[0].LNA_2D[i][j] = l + 1;
 						ol[0].LNA_2D[i][j] = l + 1;
+						nr[0].DP[ct] = c.LNA[i][j][N];
+						ol[0].FP[ct] = c.LNA[i][j][N];
 						ct += 1;
 					}
 				}
@@ -572,6 +580,8 @@ struct meshgenerationstruct meshgeneration() {
 					if (localnode[l] == c.LNA[i][0][k]) {
 						nr[0].LNA_2D[i][k] = l + 1;
 						ol[0].LNA_2D[i][k] = l + 1;
+						nr[0].DP[ct] = c.LNA[i][0][k];
+						ol[0].FP[ct] = c.LNA[i][0][k];
 						ct += 1;
 					}
 				}
@@ -589,6 +599,8 @@ struct meshgenerationstruct meshgeneration() {
 					if (localnode[l] == c.LNA[i][N][k]) {
 						nr[0].LNA_2D[i][k] = l + 1;
 						ol[0].LNA_2D[i][k] = l + 1;
+						nr[0].DP[ct] = c.LNA[i][N][k];
+						ol[0].FP[ct] = c.LNA[i][N][k];
 						ct += 1;
 					}
 				}

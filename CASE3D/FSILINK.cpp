@@ -27,11 +27,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 	gq = GLLQUAD(bq.Z, bq.WL, Nq, !FEM);
 	LOCAL_SHAPEstruct ls;
 	ls = LOCAL_SHAPE(LNA, N, Nq); //one order higher than the interpolation order
-	for (i = 0; i < NINT; i++) {
-		for (j = 0; j < NINT; j++) {
-			ol[0].FP[i*NINT + j] = ol[0].LNA_2D[i][j];
-		}
-	}
+	
 	double FUNC;
 	//Check out Evernote "Some thoughts on boundary force integration" 
 	for (e = 0; e < ol[0].FSNEL; e++) {

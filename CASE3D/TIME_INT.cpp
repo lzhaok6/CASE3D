@@ -267,11 +267,6 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 	for (i = 0; i < NNODE; i++) {
 		FFORCE[i] = 0.0;
 	}
-	/*
-	for (i = 0; i < u.NRBNODE; i++) {
-		BNRB[i] = 0.0;
-	}
-	*/
 	
 	for (i = 0; i < NNODE; i++) {
 		BNRB[i] = 0.0;
