@@ -494,7 +494,6 @@ struct meshgenerationstruct meshgeneration() {
 		//The local surface (left/right/front/behind/top/bottom) could be identified.
 		//The assumption here is that all the wet surface corresponds to the same face in its corresponding local element (Check out Evernote: How to determine the wet elements on the fluid side). 
 		int flag; 
-		//int LNA_2D[NINT][NINT];
 		int LNA_norm[4];
 		//If the wet surface is the left face of the local element (i.e., i=0). 
 		ct = 0; 
@@ -644,8 +643,8 @@ struct meshgenerationstruct meshgeneration() {
 
 		//================================end extraction===================================//
 		//=============separate the high-order element into linear elements and obtain the normal direction================//
-		int pys_num = 2; //the physical group number that corresponds to the wet surface (physical group 3)
-		int elenum = phygrp_start[pys_num + 1] - phygrp_start[pys_num]; //number of high-order on the wet surface 
+		int wt_pys_num = 2; //the physical group number that corresponds to the wet surface (physical group 3)
+		int elenum = phygrp_start[wt_pys_num + 1] - phygrp_start[wt_pys_num]; //number of high-order on the wet surface 
 		int** IEN_py; //the linear element connectivity matrix of 2D physical groups (boundaries) separated from the original 2D high-order elements
 		IEN_py = new int*[4];
 		for (i = 0; i < 4; i++) {
@@ -657,24 +656,24 @@ struct meshgenerationstruct meshgeneration() {
 			ct = 0;
 			for (e = 0; e < elenum; e++) {
 				if (flag == N) { //counter-clockwise
-					IEN_py[0][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[0][0] - 1]; //oriente the nodes so that the normal direction is pointing out of the element
+					IEN_py[0][ct] = t.BCIEN[wt_pys_num][e][ol[0].LNA_2D[0][0] - 1]; //oriente the nodes so that the normal direction is pointing out of the element
 					ol[0].LNA_algo2[0][0] = 1;
-					IEN_py[1][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[N][0] - 1];
+					IEN_py[1][ct] = t.BCIEN[wt_pys_num][e][ol[0].LNA_2D[N][0] - 1];
 					ol[0].LNA_algo2[1][0] = 2;
-					IEN_py[2][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[N][N] - 1];
+					IEN_py[2][ct] = t.BCIEN[wt_pys_num][e][ol[0].LNA_2D[N][N] - 1];
 					ol[0].LNA_algo2[1][1] = 3;
-					IEN_py[3][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[0][N] - 1];
+					IEN_py[3][ct] = t.BCIEN[wt_pys_num][e][ol[0].LNA_2D[0][N] - 1];
 					ol[0].LNA_algo2[0][1] = 4;
 					ct += 1;
 				}
 				else if (flag == 0) { //clockwise
-					IEN_py[0][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[0][0] - 1]; //oriente the nodes so that the normal direction is out of the element
+					IEN_py[0][ct] = t.BCIEN[wt_pys_num][e][ol[0].LNA_2D[0][0] - 1]; //oriente the nodes so that the normal direction is out of the element
 					ol[0].LNA_algo2[0][0] = 1;
-					IEN_py[1][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[0][N] - 1];
+					IEN_py[1][ct] = t.BCIEN[wt_pys_num][e][ol[0].LNA_2D[0][N] - 1];
 					ol[0].LNA_algo2[0][1] = 2;
-					IEN_py[2][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[N][N] - 1];
+					IEN_py[2][ct] = t.BCIEN[wt_pys_num][e][ol[0].LNA_2D[N][N] - 1];
 					ol[0].LNA_algo2[1][1] = 3;
-					IEN_py[3][ct] = t.BCIEN[pys_num][e][ol[0].LNA_2D[N][0] - 1];
+					IEN_py[3][ct] = t.BCIEN[wt_pys_num][e][ol[0].LNA_2D[N][0] - 1];
 					ol[0].LNA_algo2[1][0] = 4;
 					ct += 1;
 				}
@@ -707,7 +706,7 @@ struct meshgenerationstruct meshgeneration() {
 			}
 			for (i = 0; i < ol[0].FSNEL; i++) {
 				for (j = 0; j < NINT*NINT; j++) {
-					ol[0].IEN_gb[j][i] = t.BCIEN[pys_num][ele_num[i]][j];
+					ol[0].IEN_gb[j][i] = t.BCIEN[wt_pys_num][ele_num[i]][j];
 				}
 			}
 
@@ -813,7 +812,7 @@ struct meshgenerationstruct meshgeneration() {
 		}
 		ct = 0; 
 		for (i = 0; i < physicalgroups; i++) {
-			if (i != pys_num) { //pys_num is the physical group number corresponding to the wetted surface
+			if (i != wt_pys_num) { //wt_pys_num is the physical group number corresponding to the wetted surface
 				for (e = 0; e < phygrp_start[i + 1] - phygrp_start[i]; e++) {
 					for (j = 0; j < NINT*NINT; j++) {
 						nr[0].IEN_gb[j][ct] = t.BCIEN[i][e][j];
@@ -874,9 +873,7 @@ struct meshgenerationstruct meshgeneration() {
 			absn = sqrt(pow(n1, 2) + pow(n2, 2) + pow(n3, 2));
 			nr[0].norm[i][0] = n1 / absn; nr[0].norm[i][1] = n2 / absn; nr[0].norm[i][2] = n3 / absn;
 		}
-
 	}
 
-	
 	return t;
 }

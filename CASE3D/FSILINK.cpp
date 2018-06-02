@@ -59,7 +59,7 @@ void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int 
 						FUNC = 0.0; //accumulator 
 						for (i = 0; i < NqINT; i++) {
 							for (j = 0; j < NqINT; j++) {
-								FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * ol[0].Jacob_2D[e][i*NqINT*NqINT + j*NqINT];
+								FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * ol[0].Jacob_2D[e][i*NqINT + j];
 								//FUNC += gq.W[i] * gq.W[j] * (linear 2D shape function defined on Nq order GLL quadrature points) * (Nth order 2D shape function defined on Nq order GLL quadrature points) * ol[0].Jacob_2D[e][i*NqINT*NqINT + j*NqINT];
 							}
 						}

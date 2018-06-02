@@ -202,19 +202,19 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 	for (i = 0; i < ol[0].FSNEL; i++) {
 		ol[0].Jacob_2D[i] = new double[NINT*NINT];
 	}
-	//Use second order GLL integration (one order higher than the element order which is one in algorithm 2 since the high-order element is splitted)
-	int Nq2 = 2;
-	int Nq2INT = Nq2 + 1;
-	bq = LOBATTO(2);
-	gq = GLLQUAD(bq.Z, bq.WL, Nq2, !FEM);
-	lg = LOCAL_GSHAPE(gq.S, LNA, Nq2INT);
+	//Use second order GLL integration (one order higher than the element order which is one in algorithm 2)
+	int Nq = 2;
+	int NqINT = Nq + 1;
+	bq = LOBATTO(Nq);
+	gq = GLLQUAD(bq.Z, bq.WL, Nq, !FEM);
+	lg = LOCAL_GSHAPE(gq.S, LNA, NqINT);
 	t.XS_2D = new double***[ol[0].FSNEL];
 	for (i = 0; i < ol[0].FSNEL; i++) {
 		t.XS_2D[i] = new double**[2];
 		for (j = 0; j < 2; j++) {
 			t.XS_2D[i][j] = new double*[2];
 			for (k = 0; k < 2; k++) {
-				t.XS_2D[i][j][k] = new double[Nq2INT*Nq2INT];
+				t.XS_2D[i][j][k] = new double[NqINT*NqINT];
 			}
 		}
 	}
@@ -222,8 +222,8 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 	//Assuming linear geometric property mapping here. 
 	//why it is xi and deta? Could be be xi and eta for example? 
 	for (m = 0; m < ol[0].FSNEL; m++) { //loop through each element on wetted surface
-		for (i = 0; i < Nq2INT; i++) {
-			for (j = 0; j < Nq2INT; j++) {
+		for (i = 0; i < NqINT; i++) {
+			for (j = 0; j < NqINT; j++) {
 				for (l = 0; l < 4; l++) { //4 nodes on the linear element
 					/*
 					t.XS_2D[m][0][0][i*2 + j] = t.XS_2D[m][0][0][i*2 + j] + lg.GSHL_2D[0][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][0]; //dx/dxi
@@ -232,12 +232,12 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 					t.XS_2D[m][1][1][i*2 + j] = t.XS_2D[m][1][1][i*2 + j] + lg.GSHL_2D[1][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][1]; //dy/deta
 					*/
 					//We need to figure out which surface corresponds to the wetted surface here. 
-					t.XS_2D[m][0][0][i * Nq2INT + j] = t.XS_2D[m][0][0][i * Nq2INT + j] + lg.GSHL_2D[0][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][];
-					t.XS_2D[m][1][0][i * Nq2INT + j] = t.XS_2D[m][1][0][i * Nq2INT + j] + lg.GSHL_2D[0][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][];
-					t.XS_2D[m][0][1][i * Nq2INT + j] = t.XS_2D[m][0][1][i * Nq2INT + j] + lg.GSHL_2D[1][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][];
-					t.XS_2D[m][1][1][i * Nq2INT + j] = t.XS_2D[m][1][1][i * Nq2INT + j] + lg.GSHL_2D[1][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][];
+					t.XS_2D[m][0][0][i * NqINT + j] = t.XS_2D[m][0][0][i * NqINT + j] + lg.GSHL_2D[0][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][];
+					t.XS_2D[m][1][0][i * NqINT + j] = t.XS_2D[m][1][0][i * NqINT + j] + lg.GSHL_2D[0][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][];
+					t.XS_2D[m][0][1][i * NqINT + j] = t.XS_2D[m][0][1][i * NqINT + j] + lg.GSHL_2D[1][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][];
+					t.XS_2D[m][1][1][i * NqINT + j] = t.XS_2D[m][1][1][i * NqINT + j] + lg.GSHL_2D[1][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][];
 				}
-				ol[0].Jacob_2D[m][i * Nq2INT + j] = t.XS_2D[m][0][0][i * Nq2INT + j] * t.XS_2D[m][1][1][i * Nq2INT + j] - t.XS_2D[m][1][0][i * Nq2INT + j] * t.XS_2D[m][0][1][i * Nq2INT + j];
+				ol[0].Jacob_2D[m][i * NqINT + j] = t.XS_2D[m][0][0][i * NqINT + j] * t.XS_2D[m][1][1][i * NqINT + j] - t.XS_2D[m][1][0][i * NqINT + j] * t.XS_2D[m][0][1][i * NqINT + j];
 			}
 		}
 	}
