@@ -7,7 +7,7 @@
 
 
 //NRB determines the NRB local node numbering and the associated NRB arrays
-void NRB(int NNODE, double **GCOORD, double* W, int*** LNA, int**IEN, int NEL, double***SHL, double***SHOD) {
+void NRB(int NNODE, double **GCOORD, int*** LNA) {
 	int i, j, k, l, m, e;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[nrbsurfnumber];

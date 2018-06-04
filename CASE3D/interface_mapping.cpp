@@ -23,8 +23,7 @@ The algorithm 4 is now the algorithm 3.
 A new algorithm 4 is added. 
 */
 
-double BF_val[4];
-struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int** LNA_base, int**LNA_basealgo5, double *Z, int TIME, double ** GCOORD, double ***phi_fem, double* W) {
+struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD, double ***phi_fem) {
 	interface_mappingstruct t;
 	int i, j, k, l, m, n;
 	int u, v;
@@ -108,9 +107,10 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, int**IEN_3
 			}	
 			std::cout << " " << std::endl; 
 		}
-
 		break;
 	}
+	t.energy_rec = 0;
+	t.energy_sent = 0; 
 
 	return t;
 }

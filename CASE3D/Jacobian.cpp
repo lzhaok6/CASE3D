@@ -63,6 +63,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 	GLLQUADstruct gq;
 	gq = GLLQUAD(bq.Z, bq.WL, N, !FEM);
 	LOCAL_GSHAPEstruct lg;
+	lg = LOCAL_GSHAPE(gq.S, LNA, NINT);
 
 	for (m = 0; m < NEL; m++) {
 		std::cout << m << std::endl;
@@ -232,15 +233,16 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 					t.XS_2D[m][1][1][i*2 + j] = t.XS_2D[m][1][1][i*2 + j] + lg.GSHL_2D[1][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][1]; //dy/deta
 					*/
 					//We need to figure out which surface corresponds to the wetted surface here. 
-					t.XS_2D[m][0][0][i * NqINT + j] = t.XS_2D[m][0][0][i * NqINT + j] + lg.GSHL_2D[0][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][];
-					t.XS_2D[m][1][0][i * NqINT + j] = t.XS_2D[m][1][0][i * NqINT + j] + lg.GSHL_2D[0][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][];
-					t.XS_2D[m][0][1][i * NqINT + j] = t.XS_2D[m][0][1][i * NqINT + j] + lg.GSHL_2D[1][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][];
-					t.XS_2D[m][1][1][i * NqINT + j] = t.XS_2D[m][1][1][i * NqINT + j] + lg.GSHL_2D[1][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][];
+					t.XS_2D[m][0][0][i * NqINT + j] = t.XS_2D[m][0][0][i * NqINT + j] + lg.GSHL_2D[0][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][ol[0].Jacob_face[0]];
+					t.XS_2D[m][1][0][i * NqINT + j] = t.XS_2D[m][1][0][i * NqINT + j] + lg.GSHL_2D[0][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][ol[0].Jacob_face[1]];
+					t.XS_2D[m][0][1][i * NqINT + j] = t.XS_2D[m][0][1][i * NqINT + j] + lg.GSHL_2D[1][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][ol[0].Jacob_face[0]];
+					t.XS_2D[m][1][1][i * NqINT + j] = t.XS_2D[m][1][1][i * NqINT + j] + lg.GSHL_2D[1][l][i][j] * GCOORD[ol[0].IEN_gb[l][m] - 1][ol[0].Jacob_face[1]];
 				}
 				ol[0].Jacob_2D[m][i * NqINT + j] = t.XS_2D[m][0][0][i * NqINT + j] * t.XS_2D[m][1][1][i * NqINT + j] - t.XS_2D[m][1][0][i * NqINT + j] * t.XS_2D[m][0][1][i * NqINT + j];
 			}
 		}
 	}
+	//check if the value is positive and check if i and j is exchanged, would the value of FPMASTER_2D be changed!!!
 
 	std::cout << " " << std::endl;
 	return t;

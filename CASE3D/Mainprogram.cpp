@@ -19,11 +19,12 @@ This code dedicated for frigate currently only support mapping algorithm 2.
 
 double time_step_size;
 double current_time;
-//OWETSURF ol[owsfnumber]; //declear the data structure globally
+OWETSURF ol[owsfnumber]; //declear the data structure globally
+NRBSURF nr[nrbsurfnumber]; 
 int main()
 {
-	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
-	extern NRBSURF nr[owsfnumber];
+	//extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
+	//extern NRBSURF nr[owsfnumber];
 	double LMAX;
 	int h, i, j, k, q, z, ii, jj; //error prone: cannot be the same with data structure type (z is the same as Z)
 	int TIME = 0;     //CONTROL TIME
@@ -56,11 +57,6 @@ int main()
 	c = LOCAL_NODE(N);
 	std::cout << "LOCAL_NODE(N) done" << std::endl;
 
-	//Use the LNA_2D from the meshgeneration routine? 
-	TD_LOCAL_NODEstruct ct;
-	ct = TD_LOCAL_NODE(NC);
-
-	std::cout << "ELE_GENstruct done" << std::endl;
 	//---------------SHAPE FUNCTION ROUTINE------------------------------//
 	//DETERMINE GLL QUADRATURE POINTS AND WEIGHTS
 	GLLQUADstruct f;
@@ -103,7 +99,7 @@ int main()
 	//std::cout << "MATRIX done" << std::endl;
 	//DETERMINE MAXIMUM MESH EIGENVALUE TO FIND CFL TIMESTEP
 	LMAX = EIGENMAX(o.QMASTER, o.HMASTER, a.NEL);
-	FSILINK(f.W, c.LNA, a.IEN, g.SHL, a.GCOORD, a.NNODE, g.SHOD);
+	FSILINK(c.LNA);
 
 	//read the model file to MpCCI adapter
 	char* modelfile = "model.txt";
@@ -113,14 +109,6 @@ int main()
 	t = TIMINT(LMAX);
 
 	time_step_size = t.DT;
-
-	/*
-	double *T; //TIMESTEP ARRAY 
-	T = new double[t.NDT];
-	for (i = 0; i < t.NDT; i++) {
-		T[i] = 0.0;
-	}
-	*/
 
 	double *T; //TIMESTEP ARRAY 
 	T = new double[t.NDT + 1];
@@ -198,7 +186,7 @@ int main()
 
 	//derive the peak wave pressure and decay rate
 	double XC = 0.0; double YC = 0.0; double ZC = 0.0;
-	double XO = 0.0; double YO = 0.0; double ZO = 0.0;
+	double XO = 0.0; double YO = 0.0; double ZO = 0.0; //stand-off point
 	double dist = 0.0;
 	double dists = 0.0; //distance from charge center to nearest structural point
 	double distf = 0.0; //distance from charge center to nearest freesurface point
@@ -236,22 +224,10 @@ int main()
 	}
 	double PPEAK = K*pow(dist / pow(W*0.453592, 1.0 / 3.0), -(1 + A)); //pa
 	double TAU = pow(W*0.453592, 1.0 / 3.0)*0.084*pow(pow(W*0.453592, 1.0 / 3.0) / dist, -B) / 1000; //sec
-	if (Bleich == 1) {
-		PPEAK = 0.712e6;
-		TAU = 0.999e-3;
-		//PPEAK = 16.12e6;
-		//TAU = 0.423e-3;
-	}
 
 	double KAPPA = 0.0;
-	for (i = 0; i < a.NNODE; i++) {
-		if (abs(a.GCOORD[i][0]) < 1e-3 && abs(a.GCOORD[i][1] + SY) < 1e-3 && abs(a.GCOORD[i][2] - SZ / 2) < 1e-3) {
-			std::cout << "the node is: " << i << std::endl;
-		}
-	}
 	
-	TIME_INT(a.NNODE, a.GCOORD, f.W, ct.LNA, c.LNA, a.IEN, a.NEL, f.S, g.SHL, TIME, T, t.DT, t.NDT, b.Z,
-		a.AYIN, o.HMASTER, o.Q, phi_fem, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamma, o.gamma_t, o.G, o.gamman, o.gamma_tn, o.Gn);
+	TIME_INT(a.NNODE, a.GCOORD, c.LNA, a.IEN, a.NEL, TIME, T, t.DT, t.NDT, o.HMASTER, o.Q, phi_fem, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamman, o.gamma_tn, o.Gn);
 
 	printf("Cleaning up...\n");
 	/* clean up */

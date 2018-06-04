@@ -12,7 +12,7 @@
 #include <vector>
 
 //construct the link between structure and fluid module A C D separately
-void FSILINK(double* W, int*** LNA, int**IEN, double***SHL, double**GCOORD, int NNODE, double***SHOD) {
+void FSILINK(int*** LNA) {
 	int i, j, k, l, m, n, o, e;
 	int IC; //counter 
 	//extern int owsfnumber;

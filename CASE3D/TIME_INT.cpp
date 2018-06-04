@@ -14,10 +14,10 @@
 #include <Eigen/LU>
 
 //NRB determines the NRB local node numbering and the associated NRB arrays
-void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, int**IEN, int NEL, double* S, double***SHL,
-	int TIME, double *T, double DT, int NDT, double* Z, double** AYIN, double*** HMASTER, double* Q, double***phi_fem, double KAPPA,
-	double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO, double ***SHOD, double ****gamma, double****gamma_t, double*****G,
-	double** gamman, double** gamma_tn, double****Gn) {
+void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT, 
+	double*** HMASTER, double* Q, double***phi_fem, double KAPPA, double PPEAK, double TAU, double XC, double YC, 
+	double ZC, double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn) {
+
 	int h, i, j, k, q, z, ii, jj, m;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[nrbsurfnumber]; 
@@ -96,14 +96,15 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 		}
 	}
 
-	NRB(NNODE, GCOORD, W, LNA_3D, IEN, NEL, SHL, SHOD);
+	NRB(NNODE, GCOORD, LNA_3D);
+	//int NNODE, double **GCOORD, int*** LNA
 
 	//time history record
 	std::clock_t start;
 	double duration;
 	double duration_int;
 	start = std::clock();
-	printf("3Dbarge - computation\n");
+	printf("3DFrigate - computation\n");
 	fflush(stdout);
 	//Obtain system time information:
 	auto ti = std::time(nullptr);
@@ -431,12 +432,7 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 	//Initialize the incident pressure and total pressure along with hydrostatic pressure for the first time step
 	TIME = 1;
 	for (i = 0; i < NNODE; i++) {
-		if (Bleich == 1) {
-			PH[i] = (abs(GCOORD[i][1]) + (DRAFT - abs(GCOORD[0][1]))) * RHO * grav + PATM;
-		}
-		else {
-			PH[i] = abs(GCOORD[i][1]) * RHO * grav + PATM; //absolute pressure
-		}
+		PH[i] = abs(GCOORD[i][1]) * RHO * grav + PATM; //absolute pressure
 	}
 	PIN = WAVE_IN(NNODE, GCOORD, T, TIME, PIN, DT, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO);
 	
@@ -534,12 +530,6 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 	//Update the current MpCCI time
 	current_time = T[0];
 
-	//Obtain the local node numbering for the base fluid mesh
-	TD_LOCAL_NODEstruct ctbase;
-	ctbase = TD_LOCAL_NODE(hpref);
-	TD_LOCAL_NODEstruct ctbase_algo5;
-	ctbase_algo5 = TD_LOCAL_NODE(hprefg);
-
 	//Perform the initial interface mapping
 	LOBATTOstruct b;
 	b = LOBATTO(hprefg);
@@ -547,150 +537,9 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 	f = GLLQUAD(b.Z, b.WL, hprefg, 0); //obtain Gauss-Legendre nodes (Not Gauss-Lobatto nodes)
 
 	interface_mappingstruct in;
-	in = interface_mapping(1, IEN, LNA_3D, LNA_2D, ctbase.LNA, ctbase_algo5.LNA, Z, TIME, GCOORD, phi_fem, f.W);
+	in = interface_mapping(1, GCOORD, phi_fem);
 	dotransfer();
-	in = interface_mapping(0, IEN, LNA_3D, LNA_2D, ctbase.LNA, ctbase_algo5.LNA, Z, TIME, GCOORD, phi_fem, f.W);
-
-	//Get the sample points on a line to observe the wave propagation pressure distribution
-	std::vector<int> sampline;
-	count = 0;
-	if (Bleich == 1) {
-		for (i = 0; i < NNODE; i++) {
-			if (abs(GCOORD[i][0] - 0.0) < 1e-6 && abs(GCOORD[i][2] - SZ / 2) < 1e-6) {
-				sampline.push_back(i + 1);
-				count += 1;
-			}
-		}
-	}
-	else {
-		for (i = 0; i < NNODE; i++) {
-			if (abs(GCOORD[i][0] - 0.0) < 1e-6 && abs(GCOORD[i][2] - 0.0) < 1e-6) {
-				sampline.push_back(i + 1);
-				count += 1;
-			}
-		}
-	}
-	double* ypt;
-	ypt = new double[count];
-	int cnt = 0;
-	for (i = 0; i < round(DY / YHE); i++) {
-		for (j = 0; j < NINT; j++) {
-			ypt[cnt] = AYIN[SYNEL + i][j];
-			cnt += 1;
-		}
-		cnt -= 1;
-	}
-	if (cnt + 1 != count) {
-		std::cout << "ypt is wrong" << std::endl;
-		system("PAUSE ");
-	}
-	//get the points under the structural bottom corners
-	int** samplinec;
-	samplinec = new int*[4];
-	for (i = 0; i < 4; i++) {
-		samplinec[i] = new int[count];
-	}
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < count; j++) {
-			samplinec[i][j] = 0;
-		}
-	}
-	int ct1 = 0; int ct2 = 0; int ct3 = 0; int ct4 = 0;
-	for (i = 0; i < NNODE; i++) {
-		if (GCOORD[i][1] <= -SY && abs(GCOORD[i][0] + SX) < 1e-6 && abs(GCOORD[i][2] - SZ / 2) < 1e-6) {
-			samplinec[0][ct1] = i + 1;
-			ct1 += 1;
-		}
-		if (GCOORD[i][1] <= -SY && abs(GCOORD[i][0] + SX) < 1e-6 && abs(GCOORD[i][2] + SZ / 2) < 1e-6) {
-			samplinec[1][ct2] = i + 1;
-			ct2 += 1;
-		}
-		if (GCOORD[i][1] <= -SY && abs(GCOORD[i][0]) < 1e-6 && abs(GCOORD[i][2] - SZ / 2) < 1e-6) {
-			samplinec[2][ct3] = i + 1;
-			ct3 += 1;
-		}
-		if (GCOORD[i][1] <= -SY && abs(GCOORD[i][0]) < 1e-6 && abs(GCOORD[i][2] + SZ / 2) < 1e-6) {
-			samplinec[3][ct4] = i + 1;
-			ct4 += 1;
-		}
-	}
-	//sort the arrary
-	int* sampline2;
-	int** samplinec2;
-	sampline2 = new int[count];
-	samplinec2 = new int*[4];
-	for (i = 0; i < 4; i++) {
-		samplinec2[i] = new int[count];
-	}
-	for (i = 0; i < count; i++) {
-		sampline2[i] = 0;
-	}
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < count; j++) {
-			samplinec2[i][j] = 0;
-		}
-	}
-	int count2 = 0; int count3 = 0; int count4 = 0; int count5 = 0; int count6 = 0;
-	while (count2 != count || count3 != count || count4 != count || count5 != count || count6 != count) {
-		for (i = 0; i < count; i++) {
-			if (abs(GCOORD[sampline[i] - 1][1] + ypt[count2]) < 1e-5) {
-				sampline2[count2] = sampline[i];
-				count2 += 1;
-			}
-			if (abs(GCOORD[samplinec[0][i] - 1][1] + ypt[count3]) < 1e-5) {
-				samplinec2[0][count3] = samplinec[0][i];
-				count3 += 1;
-			}
-			if (abs(GCOORD[samplinec[1][i] - 1][1] + ypt[count4]) < 1e-5) {
-				samplinec2[1][count4] = samplinec[1][i];
-				count4 += 1;
-			}
-			if (abs(GCOORD[samplinec[2][i] - 1][1] + ypt[count5]) < 1e-5) {
-				samplinec2[2][count5] = samplinec[2][i];
-				count5 += 1;
-			}
-			if (abs(GCOORD[samplinec[3][i] - 1][1] + ypt[count6]) < 1e-5) {
-				samplinec2[3][count6] = samplinec[3][i];
-				count6 += 1;
-			}
-		}
-	}
-
-	
-		//Generate the output files
-		std::vector <int> T_out;
-		int NDT_out = 0;
-		for (i = 0; i < NDT; i++) {
-			if (T[i] > output_int*NDT_out) {
-				T_out.push_back(i);
-				NDT_out += 1;
-			}
-		}
-		/*
-		std::string name = "PT_result_";
-		//std::ofstream outfstr[Count];
-		std::ofstream *outfstr;
-		outfstr = new std::ofstream[NDT_out];
-		std::string filename;
-		if (output == 1) {
-			for (i = 0; i < NDT_out; i++) {
-				filename = name + std::to_string(T_out[i] * DT * 1000) + "ms " + timestr + ".txt";
-				outfstr[i].open(filename);
-			}
-		}
-		*/
-
-		std::string name2 = "PT_line_result_";
-		std::ofstream *outline;
-		outline = new std::ofstream[NDT_out];
-		std::string filename2;
-		if (output == 1) {
-			for (i = 0; i < NDT_out; i++) {
-				filename2 = name2 + std::to_string(T_out[i] * DT * 1000) + "ms " + timestr + ".txt";
-				outline[i].open(filename2);
-			}
-		}
-		
+	in = interface_mapping(0, GCOORD, phi_fem);
 
 	//Generate the information file
 	std::string name3 = "parameters_" + timestr + ".txt";
@@ -700,9 +549,9 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 	myfile << "Code name: 3Dbarge_TFM_Abaqus_sym_mesh" << std::endl;
 	myfile << "Simulation date and time: " << timestr << std::endl;
 	myfile << "Mesh information:" << std::endl;
-	myfile << "N: " << N << " mesh size: " << " XHE: " << XHE << " YHE: " << YHE << " ZHE: " << ZHE << " AX: " << AX << " BZ: " << BZ << " DY: " << DY << " SX: " << SX << " SY: " << SY << " SZ: " << SZ << " SXNEL: " << SXNEL << " SYNEL: " << SYNEL << " SZNEL: " << SZNEL << " wetted surface number: " << owsfnumber << " Nodenumber: " << NNODE << " Element number: " << NEL << " h/p refinement rate: " << refine << std::endl;
+	myfile << "N: " << N << " mesh size: "  << " wetted surface number: " << owsfnumber << " Nodenumber: " << NNODE << " Element number: " << NEL << " h/p refinement rate: " << refine << std::endl;
 	myfile << "Explosive information: " << std::endl;
-	myfile << "stdoff point (spherical): " << XO << " " << YO << " " << ZO << " explosion center: " << XC << " " << YC << " " << ZC << " stdoff (plane wave): " << xo << " peak pressure (Mpa): " << PPEAK << " decay rate: " << TAU << " WAVE (1: plane, 2: spherical): " << WAVE << " Abaquswaveform (1: smoothed, 0: sharp exponential decay): " << Abaquswaveform << std::endl;
+	myfile << "stdoff point (spherical): " << XO << " " << YO << " " << ZO << " explosion center: " << XC << " " << YC << " " << ZC << " peak pressure (Mpa): " << PPEAK << " decay rate: " << TAU << " WAVE (1: plane, 2: spherical): " << WAVE << std::endl;
 	myfile << "Time integration information" << std::endl;
 	myfile << "CFL: " << CFLFRAC << " dt: " << DT << " dt scale factor: " << dtscale << " total time: " << TTERM << " damping: " << BETA << " explicit central difference (Leap frog)" << std::endl;
 	myfile << "Fluid properties: " << std::endl;
@@ -712,35 +561,7 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 	myfile << "debug mode: " << debug << std::endl;
 
 	double angle = 0.0; double R = 0.0;
-	double norm[4][3];
-	norm[0][0] = 0.0; norm[0][1] = -1.0; norm[0][2] = 0.0;  //bottom
-	norm[1][0] = 0.0; norm[1][1] = 0.0; norm[1][2] = -1.0;  //back
-	norm[2][0] = -1.0; norm[2][1] = 0.0; norm[2][2] = 0.0;  //left
-	norm[3][0] = 0.0; norm[3][1] = 0.0; norm[3][2] = 1.0;   //front
 
-	/*
-	//generate a debug file
-	std::string name4 = "pressure history at point 272572.txt";
-	std::ofstream myfiledebug;
-	myfiledebug.open(name4);
-	*/
-
-	//int*Wetnodes = new int[];
-	int nx = 0; int ny = 0; double lcx = 0.0; double lcy = 0.0; double nomx = 0.0; double denomx = 0.0; double nomy = 0.0; double denomy = 0.0; 
-	double phig = 0.0; 
-	//double basep[2] = { -1,1 };
-	double* basep; //points on base fluid mesh 
-	basep = new double[NINT];
-	if (FEM == 0) {
-		for (i = 0; i < NINT; i++) {
-			basep[i] = S[i];
-		}
-	}
-	else {
-		basep[0] = -1;
-		basep[1] = 1; 
-	}
-	
 	double* WPTEMP;
 	double* BFTEMP;
 	double* DISPTEMP;
@@ -852,14 +673,14 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 		//start = std::clock();
 		//=======================define double* nodeforce in fluid code==========================//
 		//mapping the fluid force ABF from user defined mesh to MpCCI defined mesh on coupling surface using interpolation
-		in = interface_mapping(1, IEN, LNA_3D, LNA_2D, ctbase.LNA, ctbase_algo5.LNA, Z, TIME, GCOORD, phi_fem, f.W);
+		in = interface_mapping(1, GCOORD, phi_fem);
 		//after this subroutine, the nodeforce should already be mapped onto coupling surface (data.h)
 		//int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int NNODE, double *Z
 	
 		dotransfer();
 
 		//=============map nodal displacement from coupled surface to fluid mesh===================//
-		in = interface_mapping(0, IEN, LNA_3D, LNA_2D, ctbase.LNA, ctbase_algo5.LNA, Z, TIME, GCOORD, phi_fem, f.W);
+		in = interface_mapping(0, GCOORD, phi_fem);
 		
 		if (tfm == 0) { //Scattered field model
 			//double angle = 0.0; //cos value
@@ -1257,15 +1078,6 @@ void TIME_INT(int NNODE, double** GCOORD, double* W, int**LNA_2D, int***LNA_3D, 
 			}
 		}
 
-		if (output == 1) {
-			for (k = 0; k < NDT_out; k++) {
-				if (i == T_out[k]) {
-					for (j = 0; j < count2; j++) {
-						outline[k] << GCOORD[sampline2[j] - 1][1] << " " << PT[sampline2[j] - 1][1] << " " << ds[sampline2[j] - 1][2] << " " << PT[samplinec2[0][j] - 1][1] << " " << ds[samplinec2[0][j] - 1][2] << " " << PT[samplinec2[1][j] - 1][1] << " " << ds[samplinec2[1][j] - 1][2] << " " << PT[samplinec2[2][j] - 1][1] << " " << ds[samplinec2[2][j] - 1][2] << " " << PT[samplinec2[3][j] - 1][1] << " " << ds[samplinec2[3][j] - 1][2] << std::endl;
-					}
-				}
-			}
-		}
 		//Output the pressure history under a specified point
 		//extern double BF_val[4];
 		//energyfilehd << current_time << " " << in.energy_sent << " " << in.energy_rec << " " << BF_val[0] << " " << BF_val[1] << " " << BF_val[2] << " " << BF_val[3] << " " << ol[0].OBF_val << " " << ol[1].OBF_val << " " << ol[2].OBF_val << " " << ol[3].OBF_val << std::endl;
