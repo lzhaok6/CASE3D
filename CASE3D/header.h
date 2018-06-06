@@ -56,7 +56,9 @@ typedef struct owetsurf {
 	int LNA_algo2[2][2]; //The local node orientation of the linear element in algorithm2
 	int FP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of FPMASTER
 	double** JACOB;
-	int Jacob_face[2]; //Used to identify which coordinate dimension (x,y or z) to be used for surface 2D Jacobian matrix calculation.   
+	int Jacob_face[2]; //Used to identify which coordinate dimension (x,y or z) to be used for surface 2D Jacobian matrix calculation.  
+	int LNA_norm[4];
+	int** IEN_py; //the linear element connectivity matrix of 2D physical groups (boundaries) separated from the original 2D high-order elements
 } OWETSURF;
 
 //Store the properties on NRB surface (currently just one)
@@ -74,7 +76,7 @@ typedef struct nrbsurf {
 	int* NRBA; 
 	int NRBNODE;
 	double**norm; 
-	//int LNA_norm[4];
+	int LNA_norm[4];
 } NRBSURF; 
 
 struct LOBATTOstruct {
@@ -221,5 +223,5 @@ const int TNT = 1;
 const int output = 0; 
 const int FEM = 0; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
-const int owsfnumber = 1; //For the FSP case, we defined 4 wetted surfaces. 
-const int nrbsurfnumber = 1; //The number of NRB surface. 
+const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
+const int nrbsurfnumber = 4; //The number of NRB surface. 

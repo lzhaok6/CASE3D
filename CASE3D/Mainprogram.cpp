@@ -44,7 +44,9 @@ int main()
 		std::cout << "the mapping algorithms other than 2 are not designed to transfer abosolute pressure" << std::endl;
 		system("PAUSE ");
 	}
-	
+	std::cout << "Have you properly configured owsfnumber and nrbsurfnumber?" << std::endl;
+	system("PAUSE "); 
+
 	meshgenerationstruct a;
 	a = meshgeneration();
 	std::cout << "mesh generation done" << std::endl;
