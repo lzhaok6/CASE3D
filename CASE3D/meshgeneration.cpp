@@ -241,6 +241,7 @@ struct meshgenerationstruct meshgeneration() {
 						if (wet == 1) {
 							ol[wet_ct].LNA_2D[j][k] = l + 1;
 							ol[wet_ct].FP[ct] = c.LNA[0][j][k];
+							ol[wet_ct].FP_2D[ct] = ol[wet_ct].LNA_2D[j][k];
 						}
 						else if (nrb == 1) {
 							nr[nrb_ct].LNA_2D[j][k] = l + 1;
@@ -259,6 +260,10 @@ struct meshgenerationstruct meshgeneration() {
 				nr[nrb_ct].LNA_norm[1] = nr[nrb_ct].LNA_2D[0][N];
 				nr[nrb_ct].LNA_norm[2] = nr[nrb_ct].LNA_2D[N][N];
 				nr[nrb_ct].LNA_norm[3] = nr[nrb_ct].LNA_2D[N][0];
+				nr[nrb_ct].LNA_JB2D[0] = 1;  //Take a look at the header file for more information of LNA_JB2D
+				nr[nrb_ct].LNA_JB2D[1] = 5;
+				nr[nrb_ct].LNA_JB2D[2] = 8;
+				nr[nrb_ct].LNA_JB2D[3] = 4;
 				nrb_ct += 1; 
 			}
 			if (wet == 1) {
@@ -266,6 +271,10 @@ struct meshgenerationstruct meshgeneration() {
 				ol[wet_ct].LNA_norm[1] = ol[wet_ct].LNA_2D[0][N];
 				ol[wet_ct].LNA_norm[2] = ol[wet_ct].LNA_2D[N][N];
 				ol[wet_ct].LNA_norm[3] = ol[wet_ct].LNA_2D[N][0];
+				ol[wet_ct].LNA_JB2D[0] = 1;
+				ol[wet_ct].LNA_JB2D[1] = 5;
+				ol[wet_ct].LNA_JB2D[2] = 8;
+				ol[wet_ct].LNA_JB2D[3] = 4;
 				ol[wet_ct].LNA_algo2[0][0] = 1;
 				ol[wet_ct].LNA_algo2[0][1] = 2;
 				ol[wet_ct].LNA_algo2[1][1] = 3;
@@ -285,6 +294,7 @@ struct meshgenerationstruct meshgeneration() {
 						if (wet == 1) {
 							ol[wet_ct].LNA_2D[j][k] = l + 1;
 							ol[wet_ct].FP[ct] = c.LNA[N][j][k];
+							ol[wet_ct].FP_2D[ct] = ol[wet_ct].LNA_2D[j][k];
 						}
 						else if (nrb == 1) {
 							nr[nrb_ct].LNA_2D[j][k] = l + 1;
@@ -303,6 +313,10 @@ struct meshgenerationstruct meshgeneration() {
 				nr[nrb_ct].LNA_norm[1] = nr[nrb_ct].LNA_2D[N][0];
 				nr[nrb_ct].LNA_norm[2] = nr[nrb_ct].LNA_2D[N][N];
 				nr[nrb_ct].LNA_norm[3] = nr[nrb_ct].LNA_2D[0][N];
+				nr[nrb_ct].LNA_JB2D[0] = 2;
+				nr[nrb_ct].LNA_JB2D[1] = 3;
+				nr[nrb_ct].LNA_JB2D[2] = 7;
+				nr[nrb_ct].LNA_JB2D[3] = 6;
 				nrb_ct += 1;
 			}
 			if (wet == 1) {
@@ -310,6 +324,10 @@ struct meshgenerationstruct meshgeneration() {
 				ol[wet_ct].LNA_norm[1] = ol[wet_ct].LNA_2D[N][0];
 				ol[wet_ct].LNA_norm[2] = ol[wet_ct].LNA_2D[N][N];
 				ol[wet_ct].LNA_norm[3] = ol[wet_ct].LNA_2D[0][N];
+				ol[wet_ct].LNA_JB2D[0] = 2;
+				ol[wet_ct].LNA_JB2D[1] = 3;
+				ol[wet_ct].LNA_JB2D[2] = 7;
+				ol[wet_ct].LNA_JB2D[3] = 6;
 				ol[wet_ct].LNA_algo2[0][0] = 1;
 				ol[wet_ct].LNA_algo2[1][0] = 2;
 				ol[wet_ct].LNA_algo2[1][1] = 3;
@@ -329,6 +347,7 @@ struct meshgenerationstruct meshgeneration() {
 						if (wet == 1) {
 							ol[wet_ct].LNA_2D[i][j] = l + 1;
 							ol[wet_ct].FP[ct] = c.LNA[i][j][0];
+							ol[wet_ct].FP_2D[ct] = ol[wet_ct].LNA_2D[i][j];
 						}
 						else if (nrb == 1) {
 							nr[nrb_ct].LNA_2D[i][j] = l + 1;
@@ -347,6 +366,10 @@ struct meshgenerationstruct meshgeneration() {
 				nr[nrb_ct].LNA_norm[1] = nr[nrb_ct].LNA_2D[0][N];
 				nr[nrb_ct].LNA_norm[2] = nr[nrb_ct].LNA_2D[N][N];
 				nr[nrb_ct].LNA_norm[3] = nr[nrb_ct].LNA_2D[N][0];
+				nr[nrb_ct].LNA_JB2D[0] = 1;
+				nr[nrb_ct].LNA_JB2D[1] = 4;
+				nr[nrb_ct].LNA_JB2D[2] = 3;
+				nr[nrb_ct].LNA_JB2D[3] = 2;
 				nrb_ct += 1; 
 			}
 			if (wet == 1) {
@@ -354,6 +377,10 @@ struct meshgenerationstruct meshgeneration() {
 				ol[wet_ct].LNA_norm[1] = ol[wet_ct].LNA_2D[0][N];
 				ol[wet_ct].LNA_norm[2] = ol[wet_ct].LNA_2D[N][N];
 				ol[wet_ct].LNA_norm[3] = ol[wet_ct].LNA_2D[N][0];
+				ol[wet_ct].LNA_JB2D[0] = 1;
+				ol[wet_ct].LNA_JB2D[1] = 4;
+				ol[wet_ct].LNA_JB2D[2] = 3;
+				ol[wet_ct].LNA_JB2D[3] = 2;
 				ol[wet_ct].LNA_algo2[0][0] = 1;
 				ol[wet_ct].LNA_algo2[0][1] = 2;
 				ol[wet_ct].LNA_algo2[1][1] = 3;
@@ -373,6 +400,7 @@ struct meshgenerationstruct meshgeneration() {
 						if (wet == 1) {
 							ol[wet_ct].LNA_2D[i][j] = l + 1;
 							ol[wet_ct].FP[ct] = c.LNA[i][j][N];
+							ol[wet_ct].FP_2D[ct] = ol[wet_ct].LNA_2D[i][j];
 						}
 						else if (nrb == 1) {
 							nr[nrb_ct].LNA_2D[i][j] = l + 1;
@@ -391,6 +419,10 @@ struct meshgenerationstruct meshgeneration() {
 				nr[nrb_ct].LNA_norm[1] = nr[nrb_ct].LNA_2D[N][0];
 				nr[nrb_ct].LNA_norm[2] = nr[nrb_ct].LNA_2D[N][N];
 				nr[nrb_ct].LNA_norm[3] = nr[nrb_ct].LNA_2D[0][N];
+				nr[nrb_ct].LNA_JB2D[0] = 5;
+				nr[nrb_ct].LNA_JB2D[1] = 6;
+				nr[nrb_ct].LNA_JB2D[2] = 7;
+				nr[nrb_ct].LNA_JB2D[3] = 8;
 				nrb_ct += 1; 
 			}
 			if (wet == 1) {
@@ -398,6 +430,10 @@ struct meshgenerationstruct meshgeneration() {
 				ol[wet_ct].LNA_norm[1] = ol[wet_ct].LNA_2D[N][0];
 				ol[wet_ct].LNA_norm[2] = ol[wet_ct].LNA_2D[N][N];
 				ol[wet_ct].LNA_norm[3] = ol[wet_ct].LNA_2D[0][N];
+				ol[wet_ct].LNA_JB2D[0] = 5;
+				ol[wet_ct].LNA_JB2D[1] = 6;
+				ol[wet_ct].LNA_JB2D[2] = 7;
+				ol[wet_ct].LNA_JB2D[3] = 8;
 				ol[wet_ct].LNA_algo2[0][0] = 1;
 				ol[wet_ct].LNA_algo2[1][0] = 2;
 				ol[wet_ct].LNA_algo2[1][1] = 3;
@@ -417,6 +453,7 @@ struct meshgenerationstruct meshgeneration() {
 						if (wet == 1) {
 							ol[wet_ct].LNA_2D[i][k] = l + 1;
 							ol[wet_ct].FP[ct] = c.LNA[i][0][k];
+							ol[wet_ct].FP_2D[ct] = ol[wet_ct].LNA_2D[i][k];
 						}
 						else if (nrb == 1) {
 							nr[nrb_ct].LNA_2D[i][k] = l + 1;
@@ -435,6 +472,10 @@ struct meshgenerationstruct meshgeneration() {
 				nr[nrb_ct].LNA_norm[1] = nr[nrb_ct].LNA_2D[N][0];
 				nr[nrb_ct].LNA_norm[2] = nr[nrb_ct].LNA_2D[N][N];
 				nr[nrb_ct].LNA_norm[3] = nr[nrb_ct].LNA_2D[0][N];
+				nr[nrb_ct].LNA_JB2D[0] = 1;
+				nr[nrb_ct].LNA_JB2D[1] = 2;
+				nr[nrb_ct].LNA_JB2D[2] = 6;
+				nr[nrb_ct].LNA_JB2D[3] = 5;
 				nrb_ct += 1; 
 			}
 			if (wet == 1) {
@@ -442,6 +483,10 @@ struct meshgenerationstruct meshgeneration() {
 				ol[wet_ct].LNA_norm[1] = ol[wet_ct].LNA_2D[N][0];
 				ol[wet_ct].LNA_norm[2] = ol[wet_ct].LNA_2D[N][N];
 				ol[wet_ct].LNA_norm[3] = ol[wet_ct].LNA_2D[0][N];
+				ol[wet_ct].LNA_JB2D[0] = 1;
+				ol[wet_ct].LNA_JB2D[1] = 2;
+				ol[wet_ct].LNA_JB2D[2] = 6;
+				ol[wet_ct].LNA_JB2D[3] = 5;
 				ol[wet_ct].LNA_algo2[0][0] = 1;
 				ol[wet_ct].LNA_algo2[1][0] = 2;
 				ol[wet_ct].LNA_algo2[1][1] = 3;
@@ -461,6 +506,7 @@ struct meshgenerationstruct meshgeneration() {
 						if (wet == 1) {
 							ol[wet_ct].LNA_2D[i][k] = l + 1;
 							ol[wet_ct].FP[ct] = c.LNA[i][N][k];
+							ol[wet_ct].FP_2D[ct] = ol[wet_ct].LNA_2D[i][k];
 						}
 						else if (nrb == 1) {
 							nr[nrb_ct].LNA_2D[i][k] = l + 1;
@@ -479,6 +525,10 @@ struct meshgenerationstruct meshgeneration() {
 				nr[nrb_ct].LNA_norm[1] = nr[nrb_ct].LNA_2D[0][N];
 				nr[nrb_ct].LNA_norm[2] = nr[nrb_ct].LNA_2D[N][N];
 				nr[nrb_ct].LNA_norm[3] = nr[nrb_ct].LNA_2D[N][0];
+				nr[nrb_ct].LNA_JB2D[0] = 4;
+				nr[nrb_ct].LNA_JB2D[1] = 8;
+				nr[nrb_ct].LNA_JB2D[2] = 7;
+				nr[nrb_ct].LNA_JB2D[3] = 3;
 				nrb_ct += 1;
 			}
 			if (wet == 1) {
@@ -486,6 +536,10 @@ struct meshgenerationstruct meshgeneration() {
 				ol[wet_ct].LNA_norm[1] = ol[wet_ct].LNA_2D[0][N];
 				ol[wet_ct].LNA_norm[2] = ol[wet_ct].LNA_2D[N][N];
 				ol[wet_ct].LNA_norm[3] = ol[wet_ct].LNA_2D[N][0];
+				ol[wet_ct].LNA_JB2D[0] = 4;
+				ol[wet_ct].LNA_JB2D[1] = 8;
+				ol[wet_ct].LNA_JB2D[2] = 7;
+				ol[wet_ct].LNA_JB2D[3] = 3;
 				ol[wet_ct].LNA_algo2[0][0] = 1;
 				ol[wet_ct].LNA_algo2[0][1] = 2;
 				ol[wet_ct].LNA_algo2[1][1] = 3;
@@ -605,6 +659,27 @@ struct meshgenerationstruct meshgeneration() {
 			for (i = 0; i < ol[z].GIDNct; i++) {
 				ol[z].GIDN[i] = dummy[i];
 			}
+			//Obtain GIDF
+			ol[z].GIDF = new int[ol[z].FSNEL];
+			for (i = 0; i < ol[z].FSNEL; i++) {
+				flag = 0; 
+				for (j = 0; j < t.NEL; j++) {
+					ct = 0; 
+					for (k = 0; k < NINT*NINT; k++) {
+						if (t.IEN[ol[z].FP[k] - 1][j] == ol[z].IEN_gb[ol[z].FP_2D[k] - 1][i]) {
+							ct += 1; 
+						}
+					}
+					if (ct == NINT*NINT) { //find the corresponding 3D element
+						ol[z].GIDF[i] = j + 1; 
+						flag = 1; 
+					}
+				}
+				if (flag == 0) {
+					std::cout << "Not corresponding 3D element is found" << std::endl;
+					system("PAUSE "); 
+				}
+			}
 
 			ol[z].norm = new double*[ol[z].FSNEL]; //store the normal direction of linear elements on the wetted surface
 			for (i = 0; i < ol[z].FSNEL; i++) {
@@ -700,6 +775,28 @@ struct meshgenerationstruct meshgeneration() {
 		for (i = 0; i < nr[z].NRBNODE; i++) {
 			nr[z].NRBA[i] = dummy2[i];
 		}
+
+		//obtain NRBELE_ARR
+		nr[z].NRBELE_ARR = new int[nr[z].NEL_nrb];
+		for (i = 0; i < nr[z].NEL_nrb; i++) {
+			flag = 0;
+			for (j = 0; j < t.NEL; j++) {
+				ct = 0;
+				for (k = 0; k < NINT*NINT; k++) {
+					if (t.IEN[nr[z].DP[k] - 1][j] == nr[z].IEN_gb[nr[z].DP_2D[k] - 1][i]) {
+						ct += 1;
+					}
+				}
+				if (ct == NINT*NINT) { //find the corresponding 3D element
+					nr[z].NRBELE_ARR[i] = j + 1;
+					flag = 1;
+				}
+			}
+			if (flag == 0) {
+				std::cout << "Not corresponding 3D element is found" << std::endl;
+				system("PAUSE ");
+			}
+		}
 		//obtain the normal vector corresponding to every NRB element (high-order)
 		nr[z].norm = new double*[nr[z].NEL_nrb]; //store the normal direction of linear elements on the wetted surface
 		for (i = 0; i < nr[z].NEL_nrb; i++) {
@@ -720,7 +817,9 @@ struct meshgenerationstruct meshgeneration() {
 			absn = sqrt(pow(n1, 2) + pow(n2, 2) + pow(n3, 2));
 			nr[z].norm[i][0] = n1 / absn; nr[z].norm[i][1] = n2 / absn; nr[z].norm[i][2] = n3 / absn;
 		}
+		//std::cout << " " << std::endl; 
 	}
 
+	std::cout << " " << std::endl;
 	return t;
 }

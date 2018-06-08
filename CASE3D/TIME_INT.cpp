@@ -15,7 +15,7 @@
 
 //NRB determines the NRB local node numbering and the associated NRB arrays
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT, 
-	double*** HMASTER, double* Q, double***phi_fem, double KAPPA, double PPEAK, double TAU, double XC, double YC, 
+	double*** HMASTER, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC, 
 	double ZC, double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn) {
 
 	int h, i, j, k, q, z, ii, jj, m;
@@ -132,25 +132,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	double HFTEMPn[(N + 1)*(N + 1)*(N + 1)];
 	double FEETEMP[(N + 1)*(N + 1)*(N + 1)]; //LOCAL DISP. POTENTIAL
 	double *DPS_ukn;
-	//double *XEST; //SOLUTION ARRAY FOR NRB  (ESTIMATED DISPLACEMENT???)
-	double **XEST; 
-	//double *XEST_kn;
-	double **XEST_kn;
-	//double *XEST_ukn;
-	double **XEST_ukn; 
 	double *XNRBORG; //SOLUTION ARRAY FOR NRBC DISPLACEMENT AT T=0 (ORG MEANS ORIGIN)
-	//double *XNRBORG2;
-	double **XNRBORG2; 
 	double *XCOR; //SOLUTION ARRAY FOR NRB
 	double *XCOR_kn;
 	double *XCOR_ukn;
-	//double **XNRB_kn;
-	double ***XNRB_kn;
-	//double **XNRB_ukn;
-	double ***XNRB_ukn;
 	double** PSI_inc;
-	//double **XNRB; 
-	double ***XNRB;
 	double *DPS;
 	//==============================================================================//
 	DSDOT = new double[NNODE];
@@ -191,56 +177,46 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	HFn = new double[NNODE];
 	//DPS_ukn = new double[u.NRBNODE];
 	DPS_ukn = new double[NNODE];
-	//XEST = new double[NNODE];
-	XEST = new double*[NINT*NINT];
-	for (i = 0; i < NINT*NINT; i++) {
-		XEST[i] = new double[nr[0].NEL_nrb];
-	}
+
 	//XEST_kn = new double[NNODE];
-	XEST_kn = new double*[NINT*NINT];
-	for (i = 0; i < NINT*NINT; i++) {
-		XEST_kn[i] = new double[nr[0].NEL_nrb];
+	for (z = 0; z < nrbsurfnumber; z++) {
+		nr[z].XEST_kn = new double*[NINT*NINT];
+		for (i = 0; i < NINT*NINT; i++) {
+			nr[z].XEST_kn[i] = new double[nr[z].NEL_nrb];
+		}
+		nr[z].XEST = new double*[NINT*NINT];
+		for (i = 0; i < NINT*NINT; i++) {
+			nr[z].XEST[i] = new double[nr[z].NEL_nrb];
+		}
+		nr[z].XEST_ukn = new double*[NINT*NINT];
+		for (i = 0; i < NINT*NINT; i++) {
+			nr[z].XEST_ukn[i] = new double[nr[z].NEL_nrb];
+		}
+		nr[z].XNRBORG2 = new double*[NINT*NINT];
+		for (i = 0; i < NINT*NINT; i++) {
+			nr[z].XNRBORG2[i] = new double[nr[z].NEL_nrb];
+		}
+		nr[z].XNRB_kn = new double**[NINT*NINT];
+		nr[z].XNRB_ukn = new double**[NINT*NINT];
+		for (i = 0; i < NINT*NINT; i++) {
+			nr[z].XNRB_kn[i] = new double*[nr[z].NEL_nrb];
+			nr[z].XNRB_ukn[i] = new double*[nr[z].NEL_nrb];
+			for (j = 0; j < nr[z].NEL_nrb; j++) {
+				nr[z].XNRB_kn[i][j] = new double[2];
+				nr[z].XNRB_ukn[i][j] = new double[2];
+			}
+		}
 	}
-	//XEST_ukn = new double[NNODE];
-	XEST_ukn = new double*[NINT*NINT];
-	for (i = 0; i < NINT*NINT; i++) {
-		XEST_ukn[i] = new double[nr[0].NEL_nrb];
-	}
+
 	//XNRBORG = new double[u.NRBNODE];
 	XNRBORG = new double[NNODE];
-	//XNRBORG2 = new double[NNODE];
-	XNRBORG2 = new double*[NINT*NINT];
-	for (i = 0; i < NINT*NINT; i++) {
-		XNRBORG2[i] = new double[nr[0].NEL_nrb];
-	}
 	//XCOR = new double[u.NRBNODE];
 	XCOR = new double[NNODE];
 	//XCOR_kn = new double[u.NRBNODE];
 	XCOR_kn = new double[NNODE];
 	//XCOR_ukn = new double[u.NRBNODE];
 	XCOR_ukn = new double[NNODE];
-	/*
-	XNRB_kn = new double*[NNODE];
-	for (i = 0; i < NNODE; i++) {
-		XNRB_kn[i] = new double[2];
-	}
-	*/
-	XNRB_kn = new double**[NINT*NINT];
-	XNRB_ukn = new double**[NINT*NINT];
-	for (i = 0; i < NINT*NINT; i++) {
-		XNRB_kn[i] = new double*[nr[0].NEL_nrb];
-		XNRB_ukn[i] = new double*[nr[0].NEL_nrb];
-		for (j = 0; j < nr[0].NEL_nrb; j++) {
-			XNRB_kn[i][j] = new double[2];
-			XNRB_ukn[i][j] = new double[2];
-		}
-	}
-	/*
-	XNRB_ukn = new double*[NNODE];
-	for (i = 0; i < NNODE; i++) {
-		XNRB_ukn[i] = new double[2];
-	}
-	*/
+	
 	//=======================================================================//
 	for (i = 0; i < NNODE; i++) {
 		DSDOT[i] = 0.0;
@@ -306,38 +282,28 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	
 	for (i = 0; i < NNODE; i++) {
 		DPS_ukn[i] = 0.0;
-		//XEST[i] = 0.0;
-		//XEST_kn[i] = 0.0;
-		//XEST_ukn[i] = 0.0;
 		XNRBORG[i] = 0.0;
-		//XNRBORG2[i] = 0.0;
 		XCOR[i] = 0.0;
 		XCOR_kn[i] = 0.0;
 		XCOR_ukn[i] = 0.0;
 	}
 
-	for (i = 0; i < NINT*NINT; i++) {
-		for (j = 0; j < nr[0].NEL_nrb; j++) {
-			XEST[i][j] = 0.0;
-			XEST_kn[i][j] = 0.0;
-			XEST_ukn[i][j] = 0.0;
-			XNRBORG2[i][j] = 0.0;
+	for (z = 0; z < nrbsurfnumber; z++) {
+		for (i = 0; i < NINT*NINT; i++) {
+			for (j = 0; j < nr[z].NEL_nrb; j++) {
+				nr[z].XEST[i][j] = 0.0;
+				nr[z].XEST_kn[i][j] = 0.0;
+				nr[z].XEST_ukn[i][j] = 0.0;
+				nr[z].XNRBORG2[i][j] = 0.0;
+			}
 		}
 	}
-	/*
-	for (i = 0; i < NNODE; i++) {
-		for (j = 0; j < 2; j++) {
-			XNRB_kn[i][j] = 0.0;
-			XNRB_ukn[i][j] = 0.0;
-		}
-	}
-	*/
 
 	for (i = 0; i < NINT*NINT; i++) {
-		for (j = 0; j < nr[0].NEL_nrb; j++) {
+		for (j = 0; j < nr[z].NEL_nrb; j++) {
 			for (k = 0; k < 2; k++) {
-				XNRB_kn[i][j][k] = 0.0; 
-				XNRB_ukn[i][j][k] = 0.0;
+				nr[z].XNRB_kn[i][j][k] = 0.0; 
+				nr[z].XNRB_ukn[i][j][k] = 0.0;
 			}
 		}
 	}
@@ -357,17 +323,20 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				ol[z].DISPI[j] = new double[2];
 			}
 		}
-		/*
-		XNRB = new double*[NNODE];
-		for (i = 0; i < NNODE; i++) {
-			XNRB[i] = new double[2];
-		}
-		*/
-		XNRB = new double**[NINT*NINT];
-		for (i = 0; i < NINT*NINT; i++) {
-			XNRB[i] = new double*[nr[0].NEL_nrb];
-			for (j = 0; j < nr[0].NEL_nrb; j++) {
-				XNRB[i][j] = new double[2];
+		for (z = 0; z < nrbsurfnumber; z++) {
+			nr[z].XNRB = new double**[NINT*NINT];
+			for (i = 0; i < NINT*NINT; i++) {
+				nr[z].XNRB[i] = new double*[nr[z].NEL_nrb];
+				for (j = 0; j < nr[z].NEL_nrb; j++) {
+					nr[z].XNRB[i][j] = new double[2];
+				}
+			}
+			for (i = 0; i < NINT*NINT; i++) {
+				for (j = 0; j < nr[z].NEL_nrb; j++) {
+					for (k = 0; k < 2; k++) {
+						nr[z].XNRB[i][j][k] = 0.0;
+					}
+				}
 			}
 		}
 		DPS = new double[NNODE];
@@ -387,20 +356,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 			}
 		}
-		/*
-		for (i = 0; i < NNODE; i++) {
-			for (j = 0; j < 2; j++) {
-				XNRB[i][j] = 0.0;
-			}
-		}
-		*/
-		for (i = 0; i < NINT*NINT; i++) {
-			for (j = 0; j < nr[0].NEL_nrb; j++) {
-				for (k = 0; k < 2; k++) {
-					XNRB[i][j][k] = 0.0;
-				}
-			}
-		}
+
 		for (i = 0; i < NNODE; i++) {
 			DPS[i] = 0.0;
 		}
@@ -537,9 +493,9 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	f = GLLQUAD(b.Z, b.WL, hprefg, 0); //obtain Gauss-Legendre nodes (Not Gauss-Lobatto nodes)
 
 	interface_mappingstruct in;
-	in = interface_mapping(1, GCOORD, phi_fem);
+	in = interface_mapping(1, GCOORD);
 	dotransfer();
-	in = interface_mapping(0, GCOORD, phi_fem);
+	in = interface_mapping(0, GCOORD);
 
 	//Generate the information file
 	std::string name3 = "parameters_" + timestr + ".txt";
@@ -590,23 +546,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	//=================================Start the time integration routine=================================//
 	int oc = 0;
 	double lastDT = 0.0;
-
-	int** wetnorm;
-	if (tfm == 0) {
-		wetnorm = new int*[4];
-		for (i = 0; i < 4; i++) {
-			wetnorm[i] = new int[3];
-		}
-		for (i = 0; i < 4; i++) {
-			for (j = 0; j < 3; j++) {
-				wetnorm[i][j] = 0;
-			}
-		}
-		wetnorm[0][0] = 0; wetnorm[0][1] = 0; wetnorm[0][2] = 1;
-		wetnorm[1][0] = 1; wetnorm[1][1] = 0; wetnorm[1][2] = 0;
-		wetnorm[2][0] = 0; wetnorm[2][1] = 1; wetnorm[2][2] = 0;
-		wetnorm[3][0] = 0; wetnorm[3][1] = 0; wetnorm[3][2] = -1;
-	}
 
 	std::string energyfile = "energy_history.txt";
 	std::ofstream energyfilehd;
@@ -673,14 +612,14 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//start = std::clock();
 		//=======================define double* nodeforce in fluid code==========================//
 		//mapping the fluid force ABF from user defined mesh to MpCCI defined mesh on coupling surface using interpolation
-		in = interface_mapping(1, GCOORD, phi_fem);
+		in = interface_mapping(1, GCOORD);
 		//after this subroutine, the nodeforce should already be mapped onto coupling surface (data.h)
 		//int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int NNODE, double *Z
 	
 		dotransfer();
 
 		//=============map nodal displacement from coupled surface to fluid mesh===================//
-		in = interface_mapping(0, GCOORD, phi_fem);
+		in = interface_mapping(0, GCOORD);
 		
 		if (tfm == 0) { //Scattered field model
 			//double angle = 0.0; //cos value
@@ -696,16 +635,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						ol[z].PSI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]
 							= (DT / 2.0)*(ol[z].WPIN[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]); //INCIDENT DISP. PREDICTOR by time integration	
 						PSI_inc[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] = ol[z].PSI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1];
-						angle = (wetnorm[z][0] * (GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] - XC) / r + wetnorm[z][1] * (GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] - YC) / r + wetnorm[z][2] * (GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][2] - ZC) / r);
+						angle = (ol[z].norm[j][0] * (GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] - XC) / r + ol[z].norm[j][1] * (GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] - YC) / r + ol[z].norm[j][2] * (GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][2] - ZC) / r);
 						ol[z].DI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]
 							= ol[z].PSI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1] / (RHO*C) + (PSI_inc[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] + PSI_inc[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1]) * (DT / 2) / (RHO * r);  //trapezoidal integration of the double integrator
 						ol[z].DISPI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1]
 							= ol[z].DISPI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] + angle*ol[z].DI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1]; //UPDATED INCIDENT STRUCUTRE DISPLACEMENT 
-						/*
-						if (abs(GCOORD[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][ol[z].dir] - ol[z].location) > 1e-5) {
-							std::cout << "initial displacement DISPI is given to wrong points on fluid surface: " << z << std::endl;
-						}
-						*/
 					}
 				}
 			}
@@ -769,24 +703,24 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					for (k = 0; k < NINT*NINT; k++) {
 						R = pow(pow(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] - XC, 2) + pow(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1] - YC, 2) + pow(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][2] - ZC, 2), 0.5);
 						angle = (nr[z].norm[j][0] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] - XC) + nr[z].norm[j][1] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1] - YC) + nr[z].norm[j][2] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][2] - ZC)) / R;
-						XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*((0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) +
+						nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*((0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) +
 							(0.5 * DT / (RHO*R))*(FEEDOT_inc[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + FEEDOT_inc[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1])) -
 							(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
-						XEST_ukn[nr[z].DP_2D[k] - 1][j] = (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0]; //plane wave approximation (PWA)
-						XNRBORG2[nr[z].DP_2D[k] - 1][j] = angle*XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
+						nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0]; //plane wave approximation (PWA)
+						nr[z].XNRBORG2[nr[z].DP_2D[k] - 1][j] = angle*XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
 					}
 				}
 				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 					for (k = 0; k < NINT*NINT; k++) {
-						XNRB_kn[nr[z].DP_2D[k] - 1][j][1] = XNRB_kn[nr[z].DP_2D[k] - 1][j][0] + XEST_kn[nr[z].DP_2D[k] - 1][j];
-						XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] = XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] + XEST_ukn[nr[z].DP_2D[k] - 1][j];
+						nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][0] + nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j];
+						nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] + nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j];
 					}
 				}
 				for (j = 0; j < nr[z].NEL_nrb; j++) { //IEN_gb needs to be changed (NINT*N)
 					for (h = 0; h < NINT*NINT; h++) {
 						BNRBTEMP[h] = 0.0;
 						for (k = 0; k < NINT*NINT; k++) {
-							BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (XNRB_kn[nr[z].DP_2D[k] - 1][j][1] + XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] + XNRBORG2[nr[z].DP_2D[k] - 1][j]);
+							BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRBORG2[nr[z].DP_2D[k] - 1][j]);
 						}
 					}
 					for (k = 0; k < NINT*NINT; k++) {
@@ -800,12 +734,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				//NRB PREDICTOR
 				for (j = 0; j < nr[z].NEL_nrb; j++) { 
 					for (k = 0; k < NINT*NINT; k++) {
-						XEST[nr[z].DP_2D[k] - 1][j] = (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];  //SOLUTION ARRAY FOR NRB (DX)
+						nr[z].XEST[nr[z].DP_2D[k] - 1][j] = (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];  //SOLUTION ARRAY FOR NRB (DX)
 					}
 				}
 				for (j = 0; j < nr[z].NEL_nrb; j++) { 
 					for (k = 0; k < NINT*NINT; k++) {
-						XNRB[nr[z].DP_2D[k] - 1][j][1] = XNRB[nr[z].DP_2D[k] - 1][j][0] + XEST[nr[z].DP_2D[k] - 1][j]; //0 IS BEFORE MODIFICATION, 1 IS AFTER MODIFICATION
+						nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][0] + nr[z].XEST[nr[z].DP_2D[k] - 1][j]; //0 IS BEFORE MODIFICATION, 1 IS AFTER MODIFICATION
 					}
 				}
 				//XNRB is the predicted displacement normal to the structure (since P is normal to the surface)
@@ -813,7 +747,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					for (h = 0; h < NINT*NINT; h++) {
 						BNRBTEMP[h] = 0.0;
 						for (k = 0; k < NINT*NINT; k++) {
-							BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (XNRB[nr[z].DP_2D[k] - 1][j][1] - XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1]);
+							BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1]);
 						}
 					}
 					for (k = 0; k < NINT*NINT; k++) {
@@ -996,19 +930,13 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 					for (k = 0; k < NINT*NINT; k++) {
-						XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] = XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] + XCOR_ukn[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
+						nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] + XCOR_ukn[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
 					}
 				}
-				/*
-				for (j = 0; j < nr[z].NRBNODE; j++) {
-					XNRB_kn[nr[z].NRBA[j] - 1][0] = XNRB_kn[nr[z].NRBA[j] - 1][1];
-					XNRB_ukn[nr[z].NRBA[j] - 1][0] = XNRB_ukn[nr[z].NRBA[j] - 1][1];
-				}
-				*/
 				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 					for (k = 0; k < NINT*NINT; k++) {
-						XNRB_kn[nr[z].DP_2D[k] - 1][j][0] = XNRB_kn[nr[z].DP_2D[k] - 1][j][1];
-						XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] = XNRB_ukn[nr[z].DP_2D[k] - 1][j][1];
+						nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][0] = nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1];
+						nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] = nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1];
 					}
 				}
 			}
@@ -1029,7 +957,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				*/
 				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 					for (k = 0; k < NINT*NINT; k++) {
-						XNRB[nr[z].DP_2D[k] - 1][j][1] = XNRB[nr[z].DP_2D[k] - 1][j][0] + XCOR[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
+						nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][0] + XCOR[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
 					}
 				}
 			}
@@ -1065,7 +993,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				*/
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
 					for (k = 0; k < NINT*NINT; k++) {
-						XNRB[nr[z].DP_2D[k] - 1][j][0] = XNRB[nr[z].DP_2D[k] - 1][j][1];
+						nr[z].XNRB[nr[z].DP_2D[k] - 1][j][0] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1];
 					}
 				}
 

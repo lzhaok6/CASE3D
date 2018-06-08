@@ -23,17 +23,15 @@ struct TIMINTstruct TIMINT(double LMAX);
 void NRB(int NNODE, double **GCOORD, int*** LNA);
 double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO);
 void FSILINK(int*** LNA);
-struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD, double ***phi_fem);
+struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD);
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT,
-	double*** HMASTER, double* Q, double*** phi_fem, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
+	double*** HMASTER, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
 	double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
 const int N = 1;    //N is the element order of fluid mesh 
-const int NINT = N + 1; //NINT=N+1;
-
+const int NINT = N + 1; //NINT=N+1;s
 typedef struct owetsurf {
-	int *GIDF;   //Coupled fluid element array (numbering)
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
 	double *PSI; //integrated incident pressure 
 	double *DI;  //displacement predictor 
@@ -48,6 +46,7 @@ typedef struct owetsurf {
 	int **IEN_algo2; //
 	int **IEN_gb; //connectivity matrix on 2D surface pointing to global points.
 	int FSNEL; 
+	int *GIDF;   //Coupled fluid element array (numbering)
 	int *GIDN; //wet nodes on coupling surfaces
 	int GIDNct; //wet nodes number on coupling surfaces
 	double** norm; //store the normal direction of linear elements 
@@ -55,10 +54,18 @@ typedef struct owetsurf {
 	int LNA_2D[NINT][NINT];
 	int LNA_algo2[2][2]; //The local node orientation of the linear element in algorithm2
 	int FP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of FPMASTER
+	int FP_2D[NINT*NINT];
 	double** JACOB;
 	int Jacob_face[2]; //Used to identify which coordinate dimension (x,y or z) to be used for surface 2D Jacobian matrix calculation.  
 	int LNA_norm[4];
 	int** IEN_py; //the linear element connectivity matrix of 2D physical groups (boundaries) separated from the original 2D high-order elements
+	double**** xs;
+	double****xs_2D; //for the 2D elements on wetted surface
+	double ***phi_fem;
+	int LNA_JB2D[4]; 
+	//LNA_JB2D is the node numbering of the wetted surface 2D element in the linear element numbering scheme. Used to derive the 2D Jacobian matrix. The numbering sequence set to be the same as LNA_norm which is the local numbering of the 2D element used to obtain the coordinate. 
+	//LNA_norm is originally devised for mapping algorithm 2. However, it is leveraged in 2D Jacobian determinant derivation (assuming linear geometric mapping) because it numbering is the corner nodes of the 2D wetted surface element.  
+	double****GSHL_2D;
 } OWETSURF;
 
 //Store the properties on NRB surface (currently just one)
@@ -77,6 +84,16 @@ typedef struct nrbsurf {
 	int NRBNODE;
 	double**norm; 
 	int LNA_norm[4];
+	double**** xs;
+	double **XEST_kn;
+	double **XEST;
+	double **XEST_ukn;
+	double **XNRBORG2;
+	double ***XNRB_kn;
+	double ***XNRB_ukn;
+	double ***XNRB;
+	int* NRBELE_ARR; 
+	int LNA_JB2D[4];
 } NRBSURF; 
 
 struct LOBATTOstruct {
@@ -130,12 +147,12 @@ struct LOCAL_SHAPEstruct {
 
 struct LOCAL_GSHAPEstruct {
 	double***** GSHL;
-	double****GSHL_2D; 
+	//double****GSHL_2D; 
+	double MCOORD[8][3];
 };
 
 struct JACOBIANstruct {
 	double****XS;
-	double****XS_2D; //for the 2D elements on wetted surface
 	double**JACOB; 
 };
 

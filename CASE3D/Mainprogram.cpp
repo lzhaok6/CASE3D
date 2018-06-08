@@ -36,7 +36,7 @@ int main()
 		std::cout << "FEM doesn't need more integration point" << std::endl;
 		system("PAUSE ");
 	}
-	if (FEM==0 && Nq!=N+1 && (mappingalgo == 1 || mappingalgo == 5)) {
+	if (FEM == 0 && Nq != N + 1 && (mappingalgo == 1 || mappingalgo == 5)) {
 		std::cout << "Are you sure you don't want to use full integration for the boundary forces?" << std::endl;
 		system("PAUSE ");
 	}
@@ -75,6 +75,7 @@ int main()
 	JACOBIANstruct m;
 	//m = JACOBIAN(a.NEL, a.GCOORD, a.IEN, c.LNA, NINT, f.S);
 	m = JACOBIAN(a.NEL, a.GCOORD, a.IEN, c.LNA);
+	/*
 	for (i = 0; i < 4; i++) {
 		for (j = 0; j < 8; j++) {
 			for (k = 0; k < NINT; k++) {
@@ -88,7 +89,7 @@ int main()
 		delete[] l.GSHL[i];
 	}
 	delete[] l.GSHL;
-
+	*/
 	//std::cout << "JACOBIAN done" << std::endl;
 	GLOBAL_SHAPEstruct n;
 	n = GLOBAL_SHAPE(a.NEL, g.SHL, m.XS, m.JACOB);
@@ -101,6 +102,8 @@ int main()
 	//std::cout << "MATRIX done" << std::endl;
 	//DETERMINE MAXIMUM MESH EIGENVALUE TO FIND CFL TIMESTEP
 	LMAX = EIGENMAX(o.QMASTER, o.HMASTER, a.NEL);
+
+	//Derive the integration weight of the wetted surface elements
 	FSILINK(c.LNA);
 
 	//read the model file to MpCCI adapter
@@ -127,7 +130,6 @@ int main()
 	T[t.NDT] = TTERM;
 
 	//define mapping functions for interface mapping
-	double ***phi_fem;
 	double* basep; //points on base fluid mesh 
 	double* origp; //points on original fluid mesh 
 	double nomx, nomy, nomz;
@@ -149,43 +151,45 @@ int main()
 			origp[i*N + j] = origp[i*N] + (2.0 / refine)*((b.Z[j - 1] + 1) / 2);
 		}
 	}
-	phi_fem = new double**[4];
-	for (i = 0; i < 4; i++) { //for all the points in that element
-		phi_fem[i] = new double*[NINT];
-		for (j = 0; j < NINT; j++) {
-			phi_fem[i][j] = new double[NINT];
-		}
-	}
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < NINT; j++) {
-			for (k = 0; k < NINT; k++) {
-				phi_fem[i][j][k] = 0.0;
+
+	for (z = 0; z < owsfnumber; z++) {
+		ol[z].phi_fem = new double**[4];
+		for (i = 0; i < 4; i++) { //for all the points in that element
+			ol[z].phi_fem[i] = new double*[NINT];
+			for (j = 0; j < NINT; j++) {
+				ol[z].phi_fem[i][j] = new double[NINT];
 			}
 		}
-	}
-	for (h = 0; h < 2; h++) { //stands for every fem point, LNA[u][v][w](shape function is based on those points)
-		for (k = 0; k < 2; k++) {
-			for (i = 0; i < NINT; i++) {  //i j k are the independent variable in basis function(sem points)
-				for (j = 0; j < NINT; j++) {
-					nomx = 1.0; nomy = 1.0; //multiplier initialization
-					denomx = 1.0; denomy = 1.0; //multiplier initialization
-					for (z = 0; z < 2; z++) { //loop through nominator and denominator in basis function expression
-						if (z != h) {
-							nomx *= (origp[i] - basep[z]);
-							denomx *= (basep[h] - basep[z]);
+		for (i = 0; i < 4; i++) {
+			for (j = 0; j < NINT; j++) {
+				for (k = 0; k < NINT; k++) {
+					ol[z].phi_fem[i][j][k] = 0.0;
+				}
+			}
+		}
+		for (h = 0; h < 2; h++) { //stands for every fem point, LNA[u][v][w](shape function is based on those points)
+			for (k = 0; k < 2; k++) {
+				for (i = 0; i < NINT; i++) {  //i j k are the independent variable in basis function(sem points)
+					for (j = 0; j < NINT; j++) {
+						nomx = 1.0; nomy = 1.0; //multiplier initialization
+						denomx = 1.0; denomy = 1.0; //multiplier initialization
+						for (z = 0; z < 2; z++) { //loop through nominator and denominator in basis function expression
+							if (z != h) {
+								nomx *= (origp[i] - basep[z]);
+								denomx *= (basep[h] - basep[z]);
+							}
+							if (z != k) {
+								nomy *= (origp[j] - basep[z]);
+								denomy *= (basep[k] - basep[z]);
+							}
 						}
-						if (z != k) {
-							nomy *= (origp[j] - basep[z]);
-							denomy *= (basep[k] - basep[z]);
-						}
+						ol[z].phi_fem[ol[z].LNA_algo2[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
+						//the coordinate definition dof u,v is the same with i,j
 					}
-					phi_fem[ol[0].LNA_algo2[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
-					//the coordinate definition dof u,v is the same with i,j
 				}
 			}
 		}
 	}
-
 	//derive the peak wave pressure and decay rate
 	double XC = 0.0; double YC = 0.0; double ZC = 0.0;
 	double XO = 0.0; double YO = 0.0; double ZO = 0.0; //stand-off point
@@ -229,7 +233,7 @@ int main()
 
 	double KAPPA = 0.0;
 	
-	TIME_INT(a.NNODE, a.GCOORD, c.LNA, a.IEN, a.NEL, TIME, T, t.DT, t.NDT, o.HMASTER, o.Q, phi_fem, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamman, o.gamma_tn, o.Gn);
+	TIME_INT(a.NNODE, a.GCOORD, c.LNA, a.IEN, a.NEL, TIME, T, t.DT, t.NDT, o.HMASTER, o.Q, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamman, o.gamma_tn, o.Gn);
 
 	printf("Cleaning up...\n");
 	/* clean up */
