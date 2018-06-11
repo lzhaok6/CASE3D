@@ -43,9 +43,9 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					for (l = 0; l < ol[z].FSNEL; l++) { //loop through each element
 						for (i = 0; i < 2; i++) {
 							for (j = 0; j < 2; j++) {
-								wsflist[ct]->nodeforce[3 * (ol[z].IEN_algo2[ol[z].LNA_algo2[i][j] - 1][l] - 1) + 0] = 0.0;
-								wsflist[ct]->nodeforce[3 * (ol[z].IEN_algo2[ol[z].LNA_algo2[i][j] - 1][l] - 1) + 1] = 0.0;
-								wsflist[ct]->nodeforce[3 * (ol[z].IEN_algo2[ol[z].LNA_algo2[i][j] - 1][l] - 1) + 2] = 0.0;
+								wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + 0] = 0.0;
+								wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + 1] = 0.0;
+								wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + 2] = 0.0;
 							}
 						}
 					}
@@ -63,7 +63,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								for (u = 0; u < NINT; u++) { //u v stands for y x
 									for (v = 0; v < NINT; v++) {
 										for (n = 0; n < 3; n++) {
-											wsflist[ct]->nodeforce[3 * (ol[z].IEN_algo2[ol[z].LNA_algo2[i][j] - 1][l] - 1) + n] //force in z direction
+											wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + n] //force in z direction
 												+= ol[z].norm[l][n] * ol[z].WP[ol[z].IEN_gb[ol[z].LNA_2D[u][v] - 1][l] - 1] * ol[z].FPMASTER_2D[l][ol[z].LNA_algo2[i][j] - 1][ol[z].LNA_2D[u][v] - 1];
 										}
 									}
@@ -94,7 +94,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								for (u = 0; u < 2; u++) { //u,v stands for fem points 
 									for (v = 0; v < 2; v++) {
 										for (n = 0; n < 3; n++) {
-											DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_2D[u][v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_2D[u][v] - 1][l] - 1][n];
+											DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_2D[u][v] - 1][l] - 1][n];
 											ol[z].DISP[ol[z].IEN_gb[ol[z].LNA_2D[i][j] - 1][l] - 1][n] += DISPTEMP * ol[z].phi_fem[ol[z].LNA_algo2[u][v] - 1][i][j];
 										}
 									}

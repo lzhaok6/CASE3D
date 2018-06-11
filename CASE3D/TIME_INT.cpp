@@ -489,10 +489,10 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	//Update the current MpCCI time
 	current_time = T[0];
 
-	//interface_mappingstruct in;
-	//in = interface_mapping(1, GCOORD);
-	//dotransfer();
-	//in = interface_mapping(0, GCOORD);
+	interface_mappingstruct in;
+	in = interface_mapping(1, GCOORD);
+	dotransfer();
+	in = interface_mapping(0, GCOORD);
 
 	//Generate the information file
 	std::string name3 = "parameters_" + timestr + ".txt";
@@ -650,16 +650,14 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//start = std::clock();
 		//=======================define double* nodeforce in fluid code==========================//
 		//mapping the fluid force ABF from user defined mesh to MpCCI defined mesh on coupling surface using interpolation
-		//in = interface_mapping(1, GCOORD);
+		in = interface_mapping(1, GCOORD);
 		//after this subroutine, the nodeforce should already be mapped onto coupling surface (data.h)
 		//int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int NNODE, double *Z
 	
-		//dotransfer();
+		dotransfer();
 
 		//=============map nodal displacement from coupled surface to fluid mesh===================//
-		//in = interface_mapping(0, GCOORD);
-		
-		std::cout << "debug point 1" << std::endl;
+		in = interface_mapping(0, GCOORD);
 
 		if (tfm == 0) { //Scattered field model
 			//double angle = 0.0; //cos value
@@ -729,8 +727,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			BNRB[j] = 0.0;
 		}
 
-		std::cout << "debug point 2" << std::endl;
-
 		//NRB PREDICTOR
 		//NRBA was originally designed to store all the NRB nodes on all NRB surfaces in FSP code
 		//We want to make NRBA local within each NRB surface in the current code 
@@ -798,8 +794,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 			}
 		}
-
-		std::cout << "debug point 3" << std::endl;
 
 		//time integration
 		for (j = 0; j < NNODE; j++) {
@@ -908,8 +902,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 		//The combination of FFORCE passes the test
 		
-		std::cout << "debug point 4" << std::endl;
-
 		for (j = 0; j < fspt_num; j++) {
 			Q[fspt[j] - 1] = 1.0;
 			FFORCE[fspt[j] - 1] = 0.0 / pow(C, 2.0);
@@ -1065,8 +1057,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 			}
 		}
-		std::cout << "debug point 5" << std::endl;
-		std::cout << " " << std::endl;
 		//Output the pressure history under a specified point
 		//extern double BF_val[4];
 		//energyfilehd << current_time << " " << in.energy_sent << " " << in.energy_rec << " " << BF_val[0] << " " << BF_val[1] << " " << BF_val[2] << " " << BF_val[3] << " " << ol[0].OBF_val << " " << ol[1].OBF_val << " " << ol[2].OBF_val << " " << ol[3].OBF_val << std::endl;

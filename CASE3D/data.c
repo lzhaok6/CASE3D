@@ -31,7 +31,7 @@ void readfile(const char* filename){
   printf("Reading file >>%s<<...\n",filename);
   
   wetsurfnumber = 0;
-  while(! feof(fhandle)){   
+  while(! feof(fhandle)){
 	//Checks whether the end-of-File indicator associated with stream is set, returning a value different from zero if it is.
 	//This indicator is generally set by a previous operation on the stream that attempted to read at or past the end-of-file
 	WETSURF* fptr = malloc(sizeof(WETSURF));

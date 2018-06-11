@@ -107,8 +107,8 @@ int main()
 	FSILINK(c.LNA);
 
 	//read the model file to MpCCI adapter
-	//char* modelfile = "model.txt";
-	//readfile(modelfile);
+	char* modelfile = "model.txt";
+	readfile(modelfile);
 
 	TIMINTstruct t;
 	t = TIMINT(LMAX);
