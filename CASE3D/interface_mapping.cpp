@@ -105,8 +105,8 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					ct += 1;
 				}
 			}	
-			std::cout << " " << std::endl; 
 		}
+		std::cout << " " << std::endl;
 		break;
 	}
 	t.energy_rec = 0;

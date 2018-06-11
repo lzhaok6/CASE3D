@@ -45,24 +45,41 @@ void FSILINK(int*** LNA) {
 				}
 			}
 		}
-
+		
 		for (e = 0; e < ol[z].FSNEL; e++) {
 			for (m = 0; m < NINT*NINT; m++) {
 				for (l = 0; l < NINT*NINT; l++) {
 					FUNC = 0.0; //accumulator 
 					for (i = 0; i < NqINT; i++) {
-						for (j = 0; j < NqINT; j++) {
-						//for (j = 0; j < 1; j++) {
+						//for (j = 0; j < NqINT; j++) {
 							for (k = 0; k < NqINT; k++) {
-							//for (k = NqINT; k < NqINT + 1; k++) {
-								FUNC += gq.W[i] * gq.W[j] * gq.W[k] * ls.SHL[3][ol[z].FP[m] - 1][i*NqINT*NqINT + j * NqINT + k] * ls.SHL[3][ol[z].FP[l] - 1][i*NqINT*NqINT + j * NqINT + k] * ol[z].JACOB[e][i*NqINT*NqINT + j*NqINT + k];
+								//FUNC += gq.W[i] * gq.W[k] * ls.SHL[3][ol[z].FP[m] - 1][i*NqINT*NqINT + j * NqINT + k] * ls.SHL[3][ol[z].FP[l] - 1][i*NqINT*NqINT + j * NqINT + k] * ol[z].JACOB[e][i*NqINT*NqINT + j*NqINT + k];
+								FUNC += gq.W[i] * gq.W[k] * ls.SHL[3][ol[0].FP[m] - 1][i*NqINT*NqINT + 0 * NqINT + k] * ls.SHL[3][ol[0].FP[l] - 1][i*NqINT*NqINT + 0 * NqINT + k] * (XHE / 2.0)*(YHE / 2.0);
 							}
+						//}
+					}
+					ol[z].FPMASTER[e][m][l] += FUNC;
+				}
+			}
+		}
+		
+		/*
+		for (e = 0; e < ol[z].FSNEL; e++) {
+			for (m = 0; m < NINT*NINT; m++) {
+				for (l = 0; l < NINT*NINT; l++) {
+					FUNC = 0.0; //accumulator 
+					for (i = 0; i < NqINT; i++) {
+						for (k = 0; k < NqINT; k++) {
+							FUNC += gq.W[i] * gq.W[k] * ls.SHL[3][ol[z].FP[m] - 1][i*NqINT*NqINT + 0 * NqINT + k] * ls.SHL[3][ol[z].FP[l] - 1][i*NqINT*NqINT + 0 * NqINT + k] * ol[z].JACOB[e][i*NqINT*NqINT + 0 * NqINT + k];
+							//FUNC += gq.W[i] * gq.W[k] * ls.SHL[3][ol[z].FP[m] - 1][i*NqINT*NqINT + 0 * NqINT + k] * ls.SHL[3][ol[z].FP[l] - 1][i*NqINT*NqINT + 0 * NqINT + k] * (0.3048 / 2.0)*(0.3048 / 2.0);
 						}
 					}
 					ol[z].FPMASTER[e][m][l] += FUNC;
 				}
 			}
 		}
+		*/
+
 		std::cout << " " << std::endl; 
 	}
 
@@ -72,6 +89,21 @@ void FSILINK(int*** LNA) {
 	ls_ln = LOCAL_SHAPE(LNA, 1, Nq); //one order higher than the interpolation order
 	//LNA is useless here. It only allows us to run the LOCAL_SHAPE function. We are just gonna use the SHOD from that function. 2
 	for (z = 0; z < owsfnumber; z++) {
+		ol[z].FPMASTER_2D = new double**[ol[z].FSNEL];
+		for (i = 0; i < ol[z].FSNEL; i++) {
+			ol[z].FPMASTER_2D[i] = new double*[4];
+			for (j = 0; j < 4; j++) {
+				ol[z].FPMASTER_2D[i][j] = new double[NINT*NINT];
+			}
+		}
+		for (i = 0; i < ol[z].FSNEL; i++) {
+			for (j = 0; j < 4; j++) {
+				for (k = 0; k < NINT*NINT; k++) {
+					ol[z].FPMASTER_2D[i][j][k] = 0.0; 
+				}
+			}
+		}
+
 		for (e = 0; e < ol[z].FSNEL; e++) {
 			for (m = 0; m < 2; m++) {
 				for (n = 0; n < 2; n++) {
@@ -80,8 +112,9 @@ void FSILINK(int*** LNA) {
 							FUNC = 0.0; //accumulator 
 							for (i = 0; i < NqINT; i++) {
 								for (j = 0; j < NqINT; j++) {
-									FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * ol[z].Jacob_2D[e][i*NqINT + j];
+									//FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * ol[z].Jacob_2D[e][i*NqINT + j];
 									//FUNC += gq.W[i] * gq.W[j] * (linear 2D shape function defined on Nq order GLL quadrature points) * (Nth order 2D shape function defined on Nq order GLL quadrature points) * ol[z].Jacob_2D[e][i*NqINT*NqINT + j*NqINT];
+									FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * (XHE / 2.0)*(YHE / 2.0);
 								}
 							}
 							ol[z].FPMASTER_2D[e][ol[z].LNA_algo2[m][n] - 1][ol[z].LNA_2D[l][o] - 1] += FUNC;

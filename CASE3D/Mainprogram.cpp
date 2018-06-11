@@ -26,7 +26,7 @@ int main()
 	//extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	//extern NRBSURF nr[owsfnumber];
 	double LMAX;
-	int h, i, j, k, q, z, ii, jj; //error prone: cannot be the same with data structure type (z is the same as Z)
+	int h, i, j, k, q, z, e, ii, jj; //error prone: cannot be the same with data structure type (z is the same as Z)
 	int TIME = 0;     //CONTROL TIME
 	if (FEM == 1 && N != 1) {
 		std::cout << "the current code doesn't support high-order FEM" << std::endl;
@@ -45,7 +45,7 @@ int main()
 		system("PAUSE ");
 	}
 	std::cout << "Have you properly configured owsfnumber and nrbsurfnumber?" << std::endl;
-	system("PAUSE "); 
+	//system("PAUSE "); 
 
 	meshgenerationstruct a;
 	a = meshgeneration();
@@ -173,14 +173,14 @@ int main()
 					for (j = 0; j < NINT; j++) {
 						nomx = 1.0; nomy = 1.0; //multiplier initialization
 						denomx = 1.0; denomy = 1.0; //multiplier initialization
-						for (z = 0; z < 2; z++) { //loop through nominator and denominator in basis function expression
-							if (z != h) {
-								nomx *= (origp[i] - basep[z]);
-								denomx *= (basep[h] - basep[z]);
+						for (e = 0; e < 2; e++) { //loop through nominator and denominator in basis function expression
+							if (e != h) {
+								nomx *= (origp[i] - basep[e]);
+								denomx *= (basep[h] - basep[e]);
 							}
-							if (z != k) {
-								nomy *= (origp[j] - basep[z]);
-								denomy *= (basep[k] - basep[z]);
+							if (e != k) {
+								nomy *= (origp[j] - basep[e]);
+								denomy *= (basep[k] - basep[e]);
 							}
 						}
 						ol[z].phi_fem[ol[z].LNA_algo2[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product

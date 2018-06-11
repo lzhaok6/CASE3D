@@ -207,7 +207,7 @@ struct meshgenerationstruct meshgeneration() {
 	int nrb_pys_num[4] = { 4,5,6,7 };
 	//If the wet surface is the left face of the local element (i.e., i=0). 
 	std::cout << "Have you configured the wetted surface and NRB surface physical group number for this mesh? If so, hit Enter to proceed." << std::endl;
-	system("PAUSE ");
+	//system("PAUSE ");
 	
 	int wet = 0; 
 	int nrb = 0; 
@@ -231,7 +231,7 @@ struct meshgenerationstruct meshgeneration() {
 		}
 		if (wet == 1 && nrb == 1) {
 			std::cout << "a physical group cannot be both wetted surface and nrb!";
-			system("PAUSE ");
+			//system("PAUSE ");
 		}
 		ct = 0;
 		for (j = 0; j < NINT; j++) {
@@ -585,7 +585,7 @@ struct meshgenerationstruct meshgeneration() {
 			//track the element number of the wetted surface elements
 			//If any node of the element is on the free surface, then this element is excluded from the wetted surface.
 			std::cout << "The wetted surface element identification needs to be changed before proceeding with FSP" << std::endl;
-			system("PAUSE ");
+			//system("PAUSE ");
 			int flag;
 			std::vector<int>ele_num; 
 			for (e = 0; e < elenum; e++) {

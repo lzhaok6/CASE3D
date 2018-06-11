@@ -20,7 +20,7 @@ struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double****XS, doub
 struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double****XS, double****SHG, double**JACOB);
 double EIGENMAX(double** QMASTER, double*** HMASTER, int NEL);
 struct TIMINTstruct TIMINT(double LMAX);
-void NRB(int NNODE, double **GCOORD, int*** LNA);
+struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA);
 double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO);
 void FSILINK(int*** LNA);
 struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD);
@@ -72,11 +72,11 @@ typedef struct owetsurf {
 //Different from the wetted surface, the element on the NRB surface is high-order
 typedef struct nrbsurf {
 	double*** ADMASTER; //The boundary force integration weight for each element on NRB surface
-	double* ADMASTERG; //the lumped boundary force integration weight for each node on NRB surface
+	//double* ADMASTERG; //the lumped boundary force integration weight for each node on NRB surface
 	double** JACOB; //3D Jacobian determinant with one additional quadrature point (Dedicated for boundary force integration on boundaries). 
 	int** IEN_gb; //connectivity matrix on 2D surface pointing to global points. (From the physical group definition of the mesh file)
 	int NEL_nrb; //the element number of the 2D element 
-	int NNODE_nrb; //The total number of node on NRBC
+	//int NNODE_nrb; //The total number of node on NRBC
 	int LNA_2D[NINT][NINT]; 
 	int DP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of ADMASTER
 	int DP_2D[NINT*NINT];
@@ -94,6 +94,8 @@ typedef struct nrbsurf {
 	double ***XNRB;
 	int* NRBELE_ARR; 
 	int LNA_JB2D[4];
+	//double* ADMASTERG; 
+	//double *BNRB; 
 } NRBSURF; 
 
 struct LOBATTOstruct {
@@ -174,16 +176,9 @@ struct MATRIXstruct {
 };
 
 struct NRBstruct {
-	double **AD;
 	double *ADMASTERG;
-	int *NRBA;
-	int **nloc; //local node numbering on NRB surfaces (sequentially)
-	int NRBNODE;
-	int* NRBNODE_loc;
-	//double **ADMASTER;
-	int NRBELE;
-	int **NRBELE_ARR;
-	int *nrbele;
+	int* NRBA_t;
+	int NNODE_nrb;
 };
 
 struct TIMINTstruct {
@@ -242,3 +237,5 @@ const int FEM = 0; //Is this a first order FEM code?
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
 const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
 const int nrbsurfnumber = 4; //The number of NRB surface. 
+const double XHE = 0.3048;
+const double YHE = 0.3048; 

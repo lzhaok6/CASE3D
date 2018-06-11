@@ -96,8 +96,9 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 	}
 
-	NRB(NNODE, GCOORD, LNA_3D);
-	//int NNODE, double **GCOORD, int*** LNA
+	NRBstruct nrb; 
+	nrb = NRB(NNODE, GCOORD, LNA_3D);
+	//NRB(NNODE, GCOORD, LNA_3D);
 
 	//time history record
 	std::clock_t start;
@@ -171,8 +172,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	}
 	BS = new double[NNODE];
 	FFORCE = new double[NNODE];
-	//BNRB = new double[u.NRBNODE];
 	BNRB = new double[NNODE];
+	//BNRB = new double[u.NRBNODE];
 	HF = new double[NNODE];
 	HFn = new double[NNODE];
 	//DPS_ukn = new double[u.NRBNODE];
@@ -265,7 +266,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	for (i = 0; i < NNODE; i++) {
 		FFORCE[i] = 0.0;
 	}
-	
+
 	for (i = 0; i < NNODE; i++) {
 		BNRB[i] = 0.0;
 	}
@@ -299,11 +300,13 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 	}
 
-	for (i = 0; i < NINT*NINT; i++) {
-		for (j = 0; j < nr[z].NEL_nrb; j++) {
-			for (k = 0; k < 2; k++) {
-				nr[z].XNRB_kn[i][j][k] = 0.0; 
-				nr[z].XNRB_ukn[i][j][k] = 0.0;
+	for (z = 0; z < nrbsurfnumber; z++) {
+		for (i = 0; i < NINT*NINT; i++) {
+			for (j = 0; j < nr[z].NEL_nrb; j++) {
+				for (k = 0; k < 2; k++) {
+					nr[z].XNRB_kn[i][j][k] = 0.0;
+					nr[z].XNRB_ukn[i][j][k] = 0.0;
+				}
 			}
 		}
 	}
@@ -486,12 +489,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	//Update the current MpCCI time
 	current_time = T[0];
 
-	//Perform the initial interface mapping
-	LOBATTOstruct b;
-	b = LOBATTO(hprefg);
-	GLLQUADstruct f;
-	f = GLLQUAD(b.Z, b.WL, hprefg, 0); //obtain Gauss-Legendre nodes (Not Gauss-Lobatto nodes)
-
 	interface_mappingstruct in;
 	in = interface_mapping(1, GCOORD);
 	dotransfer();
@@ -550,6 +547,47 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	std::string energyfile = "energy_history.txt";
 	std::ofstream energyfilehd;
 	energyfilehd.open(energyfile);
+
+
+	//Get the sample points on a line to observe the wave propagation pressure distribution
+	std::vector<int> sampline;
+	count = 0;
+	for (i = 0; i < NNODE; i++) {
+		if (abs(GCOORD[i][0] - 0.0) < 1e-6 && abs(GCOORD[i][2] - 0.0) < 1e-6) {
+			sampline.push_back(i + 1);
+			count += 1;
+		}
+	}
+	//sort the arrary sampline and store it in sampline2
+	int* hold;
+	hold = new int[sampline.size()];
+	for (i = 0; i < sampline.size(); i++) {
+		hold[i] = round(abs(GCOORD[sampline[i] - 1][1]) / YHE) - round(SY / YHE);
+	}
+	int* sampline2;
+	sampline2 = new int[sampline.size()];
+	for (i = 0; i < sampline.size(); i++) {
+		sampline2[hold[i]] = sampline[i];
+	}
+
+	std::vector <int> T_out;
+	int NDT_out = 0;
+	for (i = 0; i < NDT; i++) {
+		if (T[i] > output_int*NDT_out) {
+			T_out.push_back(i);
+			NDT_out += 1;
+		}
+	}
+	std::string name2 = "PT_line_result_";
+	std::ofstream *outline;
+	outline = new std::ofstream[NDT_out];
+	std::string filename2;
+	if (output == 1) {
+		for (i = 0; i < NDT_out; i++) {
+			filename2 = name2 + std::to_string(T_out[i] * DT * 1000) + "ms " + timestr + ".txt";
+			outline[i].open(filename2);
+		}
+	}
 
 	//for (i = 0; i < NDT - 1; i++) { //error prone: i other than time should not present in this loop
 	for (i = 0; i < NDT; i++) {
@@ -621,6 +659,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//=============map nodal displacement from coupled surface to fluid mesh===================//
 		in = interface_mapping(0, GCOORD);
 		
+		std::cout << "debug point 1" << std::endl;
+
 		if (tfm == 0) { //Scattered field model
 			//double angle = 0.0; //cos value
 			double r = 0.0;
@@ -689,6 +729,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			BNRB[j] = 0.0;
 		}
 
+		std::cout << "debug point 2" << std::endl;
+
 		//NRB PREDICTOR
 		//NRBA was originally designed to store all the NRB nodes on all NRB surfaces in FSP code
 		//We want to make NRBA local within each NRB surface in the current code 
@@ -756,6 +798,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 			}
 		}
+
+		std::cout << "debug point 3" << std::endl;
 
 		//time integration
 		for (j = 0; j < NNODE; j++) {
@@ -859,11 +903,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 		}
 
-		for (z = 0; z < nrbsurfnumber; z++) {
-			for (j = 0; j < nr[z].NRBNODE; j++) {
-				FFORCE[nr[z].NRBA[j] - 1] += BNRB[nr[z].NRBA[j] - 1];
-			}
+		for (j = 0; j < nrb.NNODE_nrb; j++) {
+			FFORCE[nrb.NRBA_t[j] - 1] += BNRB[nrb.NRBA_t[j] - 1];
 		}
+		//The combination of FFORCE passes the test
+		
+		std::cout << "debug point 4" << std::endl;
 
 		for (j = 0; j < fspt_num; j++) {
 			Q[fspt[j] - 1] = 1.0;
@@ -873,14 +918,20 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		for (j = 0; j < NNODE; j++) {
 			ds[j][2] = FFORCE[j] / Q[j];
 		}
+		//The combination of ds[j][2] passes the test
+		//The combination of nr[z].ADMASTERG passes the tests
 
 		//PRESSURE CORRECTION ON NRB NODES
-		for (z = 0; z < nrbsurfnumber; z++) {
-			for (j = 0; j < nr[z].NRBNODE; j++) { //UPDATE CONDENSATION AT TIME T=0
-				KAPPA = (DT*C*nr[z].ADMASTERG[nr[z].NRBA[j] - 1]) / (2 * Q[nr[z].NRBA[j] - 1]);
-				//PRESSURE CORRECTION FACTOR
-				ds[nr[z].NRBA[j] - 1][2] = ds[nr[z].NRBA[j] - 1][1] + ((ds[nr[z].NRBA[j] - 1][2] - ds[nr[z].NRBA[j] - 1][1]) / (1 + KAPPA));
-			} //after ds is updated, P can be updated.
+		for (j = 0; j < nrb.NNODE_nrb; j++) {
+			KAPPA = (DT*C*nrb.ADMASTERG[nrb.NRBA_t[j] - 1]) / (2 * Q[nrb.NRBA_t[j] - 1]);
+			//PRESSURE CORRECTION FACTOR
+			ds[nrb.NRBA_t[j] - 1][2] = ds[nrb.NRBA_t[j] - 1][1] + ((ds[nrb.NRBA_t[j] - 1][2] - ds[nrb.NRBA_t[j] - 1][1]) / (1 + KAPPA));
+		} //after ds is updated, P can be updated.
+		
+		//the combination of ds[][2] passes the test
+		double hd = 0.0;
+		for (j = 0; j < NNODE; j++) {
+			hd += ds[j][2];
 		}
 
 		//======================NODE-BY-NODE CAVITATION CHECK=========================//
@@ -927,7 +978,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					XCOR_ukn[nr[z].NRBA[j] - 1] = DPS_ukn[nr[z].NRBA[j] - 1] / (RHO*C);
 					//XNRB_ukn[nr[z].NRBA[j] - 1][1] = XNRB_ukn[nr[z].NRBA[j] - 1][0] + XCOR_ukn[nr[z].NRBA[j] - 1];
 				}
-
 				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 					for (k = 0; k < NINT*NINT; k++) {
 						nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] + XCOR_ukn[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
@@ -1006,6 +1056,17 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 		}
 
+		if (output == 1) {
+			for (k = 0; k < NDT_out; k++) {
+				if (i == T_out[k]) {
+					for (j = 0; j < sampline.size(); j++) {
+						outline[k] << GCOORD[sampline2[j] - 1][1] << " " << PT[sampline2[j] - 1][1] << " " << ds[sampline2[j] - 1][2] << std::endl;
+					}
+				}
+			}
+		}
+		std::cout << "debug point 5" << std::endl;
+		std::cout << " " << std::endl;
 		//Output the pressure history under a specified point
 		//extern double BF_val[4];
 		//energyfilehd << current_time << " " << in.energy_sent << " " << in.energy_rec << " " << BF_val[0] << " " << BF_val[1] << " " << BF_val[2] << " " << BF_val[3] << " " << ol[0].OBF_val << " " << ol[1].OBF_val << " " << ol[2].OBF_val << " " << ol[3].OBF_val << std::endl;
