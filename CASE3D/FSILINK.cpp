@@ -47,38 +47,24 @@ void FSILINK(int*** LNA) {
 		}
 		
 		for (e = 0; e < ol[z].FSNEL; e++) {
-			for (m = 0; m < NINT*NINT; m++) {
-				for (l = 0; l < NINT*NINT; l++) {
-					FUNC = 0.0; //accumulator 
-					for (i = 0; i < NqINT; i++) {
-						//for (j = 0; j < NqINT; j++) {
-							for (k = 0; k < NqINT; k++) {
-								//FUNC += gq.W[i] * gq.W[k] * ls.SHL[3][ol[z].FP[m] - 1][i*NqINT*NqINT + j * NqINT + k] * ls.SHL[3][ol[z].FP[l] - 1][i*NqINT*NqINT + j * NqINT + k] * ol[z].JACOB[e][i*NqINT*NqINT + j*NqINT + k];
-								FUNC += gq.W[i] * gq.W[k] * ls.SHL[3][ol[0].FP[m] - 1][i*NqINT*NqINT + 0 * NqINT + k] * ls.SHL[3][ol[0].FP[l] - 1][i*NqINT*NqINT + 0 * NqINT + k] * (XHE / 2.0)*(YHE / 2.0);
+			for (m = 0; m < NINT; m++) {
+				for (n = 0; n < NINT; n++) {
+					for (l = 0; l < NINT; l++) {
+						for (o = 0; o < NINT; o++) {
+							FUNC = 0.0; //accumulator 
+							for (i = 0; i < NqINT; i++) {
+								for (j = 0; j < NqINT; j++) {
+									FUNC += gq.W[i] * gq.W[j] * (ls.SHOD[0][m][i] * ls.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * ol[z].Jacob_2D[e][i*NqINT + j];
+									//FUNC += gq.W[i] * gq.W[j] * (linear 2D shape function defined on Nq order GLL quadrature points) * (Nth order 2D shape function defined on Nq order GLL quadrature points) * ol[z].Jacob_2D[e][i*NqINT*NqINT + j*NqINT];
+									//FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * (XHE / 2.0)*(YHE / 2.0);
+								}
 							}
-						//}
-					}
-					ol[z].FPMASTER[e][m][l] += FUNC;
-				}
-			}
-		}
-		
-		/*
-		for (e = 0; e < ol[z].FSNEL; e++) {
-			for (m = 0; m < NINT*NINT; m++) {
-				for (l = 0; l < NINT*NINT; l++) {
-					FUNC = 0.0; //accumulator 
-					for (i = 0; i < NqINT; i++) {
-						for (k = 0; k < NqINT; k++) {
-							FUNC += gq.W[i] * gq.W[k] * ls.SHL[3][ol[z].FP[m] - 1][i*NqINT*NqINT + 0 * NqINT + k] * ls.SHL[3][ol[z].FP[l] - 1][i*NqINT*NqINT + 0 * NqINT + k] * ol[z].JACOB[e][i*NqINT*NqINT + 0 * NqINT + k];
-							//FUNC += gq.W[i] * gq.W[k] * ls.SHL[3][ol[z].FP[m] - 1][i*NqINT*NqINT + 0 * NqINT + k] * ls.SHL[3][ol[z].FP[l] - 1][i*NqINT*NqINT + 0 * NqINT + k] * (0.3048 / 2.0)*(0.3048 / 2.0);
+							ol[z].FPMASTER[e][ol[z].LNA_2D[m][n] - 1][ol[z].LNA_2D[l][o] - 1] += FUNC;
 						}
 					}
-					ol[z].FPMASTER[e][m][l] += FUNC;
 				}
 			}
 		}
-		*/
 
 		std::cout << " " << std::endl; 
 	}
@@ -112,9 +98,9 @@ void FSILINK(int*** LNA) {
 							FUNC = 0.0; //accumulator 
 							for (i = 0; i < NqINT; i++) {
 								for (j = 0; j < NqINT; j++) {
-									//FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * ol[z].Jacob_2D[e][i*NqINT + j];
+									FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * ol[z].Jacob_2D[e][i*NqINT + j];
 									//FUNC += gq.W[i] * gq.W[j] * (linear 2D shape function defined on Nq order GLL quadrature points) * (Nth order 2D shape function defined on Nq order GLL quadrature points) * ol[z].Jacob_2D[e][i*NqINT*NqINT + j*NqINT];
-									FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * (XHE / 2.0)*(YHE / 2.0);
+									//FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * (XHE / 2.0)*(YHE / 2.0);
 								}
 							}
 							ol[z].FPMASTER_2D[e][ol[z].LNA_algo2[m][n] - 1][ol[z].LNA_2D[l][o] - 1] += FUNC;

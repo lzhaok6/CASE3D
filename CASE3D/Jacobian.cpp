@@ -200,6 +200,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 			}
 		}
 
+		//GSHL_2D is the 2D shape function and its derivative with respect to 2D local coordinate 
 		ol[z].GSHL_2D = new double***[3];
 		for (i = 0; i < 3; i++) {
 			ol[z].GSHL_2D[i] = new double**[4]; //4 points
@@ -231,8 +232,8 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 		}
 		ol[z].xs_2D = new double***[ol[z].FSNEL];
 		for (i = 0; i < ol[z].FSNEL; i++) {
-			ol[z].xs_2D[i] = new double**[2];
-			for (j = 0; j < 2; j++) {
+			ol[z].xs_2D[i] = new double**[3];
+			for (j = 0; j < 3; j++) {
 				ol[z].xs_2D[i][j] = new double*[2];
 				for (k = 0; k < 2; k++) {
 					ol[z].xs_2D[i][j][k] = new double[NqINT*NqINT];
@@ -240,7 +241,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 			}
 		}
 		for (i = 0; i < ol[z].FSNEL; i++) {
-			for (j = 0; j < 2; j++) {
+			for (j = 0; j < 3; j++) {
 				for (k = 0; k < 2; k++) {
 					for (l = 0; l < NqINT*NqINT; l++) {
 						ol[z].xs_2D[i][j][k][l] = 0.0;
@@ -256,12 +257,16 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				for (j = 0; j < NqINT; j++) {
 					for (l = 0; l < 4; l++) { //4 nodes on the linear element
 						//Is the l in ol[z].GSHL_2D[0][l][i][j] and in ol[z].LNA_norm[l] must be consistent (the same surface). 
-						ol[z].xs_2D[m][0][0][i * NqINT + j] = ol[z].xs_2D[m][0][0][i * NqINT + j] + ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][ol[z].Jacob_face[0]]; //dx/dxi
-						ol[z].xs_2D[m][1][0][i * NqINT + j] = ol[z].xs_2D[m][1][0][i * NqINT + j] + ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][ol[z].Jacob_face[1]]; //dz/dxi
-						ol[z].xs_2D[m][0][1][i * NqINT + j] = ol[z].xs_2D[m][0][1][i * NqINT + j] + ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][ol[z].Jacob_face[0]]; //dx/dzeta
-						ol[z].xs_2D[m][1][1][i * NqINT + j] = ol[z].xs_2D[m][1][1][i * NqINT + j] + ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][ol[z].Jacob_face[1]]; //dz/dzeta
+						ol[z].xs_2D[m][0][0][i * NqINT + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dnu
+						ol[z].xs_2D[m][1][0][i * NqINT + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dnu
+						ol[z].xs_2D[m][2][0][i * NqINT + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dnu
+						ol[z].xs_2D[m][0][1][i * NqINT + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dmu
+						ol[z].xs_2D[m][1][1][i * NqINT + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dmu
+						ol[z].xs_2D[m][2][1][i * NqINT + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dmu
 					}
-					ol[z].Jacob_2D[m][i * NqINT + j] = ol[z].xs_2D[m][0][0][i * NqINT + j] * ol[z].xs_2D[m][1][1][i * NqINT + j] - ol[z].xs_2D[m][1][0][i * NqINT + j] * ol[z].xs_2D[m][0][1][i * NqINT + j];
+					ol[z].Jacob_2D[m][i * NqINT + j] = pow(pow((ol[z].xs_2D[m][0][0][i * NqINT + j] * ol[z].xs_2D[m][1][1][i * NqINT + j] - ol[z].xs_2D[m][0][1][i * NqINT + j] * ol[z].xs_2D[m][1][0][i * NqINT + j]), 2) +
+						pow((ol[z].xs_2D[m][0][0][i * NqINT + j] * ol[z].xs_2D[m][2][1][i * NqINT + j] - ol[z].xs_2D[m][0][1][i * NqINT + j] * ol[z].xs_2D[m][2][0][i * NqINT + j]), 2) +
+						pow((ol[z].xs_2D[m][1][0][i * NqINT + j] * ol[z].xs_2D[m][2][1][i * NqINT + j] - ol[z].xs_2D[m][1][1][i * NqINT + j] * ol[z].xs_2D[m][2][0][i * NqINT + j]), 2), 0.5);
 				}
 			}
 		}

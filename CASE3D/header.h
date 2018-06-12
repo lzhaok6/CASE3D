@@ -51,6 +51,7 @@ typedef struct owetsurf {
 	int GIDNct; //wet nodes number on coupling surfaces
 	double** norm; //store the normal direction of linear elements 
 	double** Jacob_2D; //the Jacobian value of 2D element on wetted surface
+	double** Jacob_test; 
 	int LNA_2D[NINT][NINT];
 	int LNA_algo2[2][2]; //The local node orientation of the linear element in algorithm2
 	int FP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of FPMASTER
@@ -237,5 +238,5 @@ const int FEM = 0; //Is this a first order FEM code?
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
 const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
 const int nrbsurfnumber = 4; //The number of NRB surface. 
-const double XHE = 0.3048;
+const double XHE = 0.3048; 
 const double YHE = 0.3048; 
