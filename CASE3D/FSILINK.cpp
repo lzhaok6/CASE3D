@@ -71,8 +71,10 @@ void FSILINK(int*** LNA) {
 
 	//Derive the integration weight of 2D linear element (4 nodes) FPMASTER_2D. The size should be [4][NINT^2]
 	//Initialize FPMASTER_2D first
+	LOCAL_NODEstruct c;
+	c = LOCAL_NODE(1);
 	LOCAL_SHAPEstruct ls_ln; //ln means linear
-	ls_ln = LOCAL_SHAPE(LNA, 1, Nq); //one order higher than the interpolation order
+	ls_ln = LOCAL_SHAPE(c.LNA, 1, Nq); //one order higher than the interpolation order
 	//LNA is useless here. It only allows us to run the LOCAL_SHAPE function. We are just gonna use the SHOD from that function. 2
 	for (z = 0; z < owsfnumber; z++) {
 		ol[z].FPMASTER_2D = new double**[ol[z].FSNEL];

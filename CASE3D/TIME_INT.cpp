@@ -548,7 +548,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	std::ofstream energyfilehd;
 	energyfilehd.open(energyfile);
 
-
+	
 	//Get the sample points on a line to observe the wave propagation pressure distribution
 	std::vector<int> sampline;
 	count = 0;
@@ -558,6 +558,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			count += 1;
 		}
 	}
+
+	/*
 	//sort the arrary sampline and store it in sampline2
 	int* hold;
 	hold = new int[sampline.size()];
@@ -568,6 +570,74 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	sampline2 = new int[sampline.size()];
 	for (i = 0; i < sampline.size(); i++) {
 		sampline2[hold[i]] = sampline[i];
+	}
+	*/
+	int* sampline2;
+	int** samplinec2;
+	sampline2 = new int[count];
+	samplinec2 = new int*[4];
+	for (i = 0; i < 4; i++) {
+		samplinec2[i] = new int[count];
+	}
+	for (i = 0; i < count; i++) {
+		sampline2[i] = 0;
+	}
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < count; j++) {
+			samplinec2[i][j] = 0;
+		}
+	}
+	int YNEL = round((SY + DY) / YHE);
+	double** AYIN;
+	AYIN = new double*[YNEL];
+	for (i = 0; i < YNEL; i++) {
+		AYIN[i] = new double[N + 1];
+	}
+
+	LOBATTOstruct b;
+	if (N > 1) {
+		b = LOBATTO(N);
+	}
+
+	double*YE;
+	YE = new double[YNEL + 1];
+	for (i = 0; i < YNEL + 1; i++) {
+		YE[i] = i*YHE;
+	}
+	double MY; double dY;
+	for (i = 0; i < YNEL; i++) {
+		MY = 0.5*(YE[i + 1] + YE[i]);
+		dY = 0.5*(YE[i + 1] - YE[i]);
+		AYIN[i][0] = YE[i];
+		if (N > 1) {
+			for (j = 0; j < N - 1; j++) {
+				AYIN[i][j + 1] = MY + b.Z[j] * dY;
+			}
+		}
+		AYIN[i][N] = YE[i + 1];
+	}
+	double* ypt;
+	ypt = new double[count];
+	int cnt = 0;
+	for (i = 0; i < round(DY / YHE); i++) {
+		for (j = 0; j < NINT; j++) {
+			ypt[cnt] = AYIN[SYNEL + i][j];
+			cnt += 1;
+		}
+		cnt -= 1;
+	}
+	if (cnt + 1 != count) {
+		std::cout << "ypt is wrong" << std::endl;
+		system("PAUSE ");
+	}
+	int count2 = 0;
+	while (count2 != count) {
+		for (i = 0; i < count; i++) {
+			if (abs(GCOORD[sampline[i] - 1][1] + ypt[count2]) < 1e-5) {
+				sampline2[count2] = sampline[i];
+				count2 += 1;
+			}
+		}
 	}
 
 	std::vector <int> T_out;

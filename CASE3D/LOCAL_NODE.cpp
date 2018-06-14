@@ -95,9 +95,19 @@ struct LOCAL_NODEstruct LOCAL_NODE(int n) {
 			FGCOORD[i] = new double[3];
 		}
 
+		//In the current LNA template file, the origin is (-1,-1,0). It is supposed to start at (0,0,0). We shift the coordinate here but need to 
+		//be alerted that we might need to change it in the future.
 		for (i = 0; i < NNODE; i++) {
 			for (j = 0; j < 3; j++) {
-				FGCOORD[i][j] = stod(output[nodestart + i][1 + j]);
+				if (j == 0) {
+					FGCOORD[i][j] = stod(output[nodestart + i][1 + j]);
+				}
+				if (j == 1) {
+					FGCOORD[i][j] = stod(output[nodestart + i][1 + j]);
+				}
+				if (j == 2) {
+					FGCOORD[i][j] = stod(output[nodestart + i][1 + j]);
+				}
 			}
 		}
 
@@ -107,10 +117,11 @@ struct LOCAL_NODEstruct LOCAL_NODE(int n) {
 			}
 		}
 
+		double elementsize = 1.0;
 		for (i = 0; i < NINT*NINT*NINT; i++) {
-			u = round(FGCOORD[ELEMENT_POINT[i] - 1][0] / (1.0 / N));
-			v = round(FGCOORD[ELEMENT_POINT[i] - 1][1] / (1.0 / N));
-			w = round(FGCOORD[ELEMENT_POINT[i] - 1][2] / (1.0 / N));
+			u = round(FGCOORD[ELEMENT_POINT[i] - 1][0] / (elementsize / N));
+			v = round(FGCOORD[ELEMENT_POINT[i] - 1][1] / (elementsize / N));
+			w = round(FGCOORD[ELEMENT_POINT[i] - 1][2] / (elementsize / N));
 			t.L[i][0] = u; t.L[i][1] = v; t.L[i][2] = w;
 			t.LNA[u][v][w] = i + 1;
 		}

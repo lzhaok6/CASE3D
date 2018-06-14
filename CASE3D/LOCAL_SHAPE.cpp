@@ -12,6 +12,7 @@
 struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD) {
 	int i, j, k, l, m, o;
 	LOCAL_SHAPEstruct t;
+
 	int nint = n + 1; 
 	t.SHL = new double**[4];
 	for (i = 0; i < 4; i++) {
@@ -159,6 +160,7 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD) {
 		}
 	}
 
+	std::cout << " " << std::endl; 
 	//check point: if the shape function value at the corresponding point is 0 
 	//std::cout << "shape function value on the corresponding point is: " << t.SHL[3][LNA[1][1][1] - 1][1][1][1] << std::endl;
 

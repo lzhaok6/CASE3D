@@ -29,7 +29,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
-const int N = 1;    //N is the element order of fluid mesh 
+const int N = 2;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;s
 typedef struct owetsurf {
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
@@ -122,7 +122,7 @@ struct meshgenerationstruct {
 	int **IEN;
 	int NNODE;
 	int NEL;
-	double** AYIN;
+	//double** AYIN;
 	//int wetnodenum;
 	//int*wetnode;
 	std::vector<std::vector<std::vector<int>>> BCIEN;
@@ -231,7 +231,7 @@ const double W = 60; //charge weight (lb)
 const double output_int = 5e-4; //output file time interval
 const int debug = 0; //is the code in debug mode?
 const int tfm = 1; //is total field model used? 
-const int tensorfactorization = 1;
+const int tensorfactorization = 0;
 const int TNT = 1;
 const int output = 1; 
 const int FEM = 0; //Is this a first order FEM code? 
@@ -239,4 +239,6 @@ const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal fo
 const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
 const int nrbsurfnumber = 4; //The number of NRB surface. 
 const double XHE = 0.3048; 
-const double YHE = 0.3048; 
+const double YHE = 0.3048;
+const double DY = 2 * SY;
+const int SYNEL = 4 * refine;

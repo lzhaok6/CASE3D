@@ -29,7 +29,9 @@ struct meshgenerationstruct meshgeneration() {
 	int i, j, k, l, m, n, e, z;
 	std::string filename;
 	std::cout << "reading the mesh file: " << std::endl;
-	std::ifstream infile("FSP_N=1.msh");
+	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
+	system("PAUSE "); 
+	std::ifstream infile("FSP_N=2.msh");
 	if (!infile) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -231,7 +233,7 @@ struct meshgenerationstruct meshgeneration() {
 		}
 		if (wet == 1 && nrb == 1) {
 			std::cout << "a physical group cannot be both wetted surface and nrb!";
-			//system("PAUSE ");
+			system("PAUSE ");
 		}
 		ct = 0;
 		for (j = 0; j < NINT; j++) {
