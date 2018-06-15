@@ -25,7 +25,7 @@ A new algorithm 4 is added.
 
 struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD) {
 	interface_mappingstruct t;
-	int i, j, l, n, z;
+	int i, j, k, l, n, z;
 	int u, v;
 	extern OWETSURF ol[owsfnumber];
 	double accu = 0.0;
@@ -75,12 +75,53 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 				}
 			}
 		}
+
+		double BF_val[4];
+		ct = 0;
+		for (i = 0; i < owsfnumber; i++) {
+			if (ol[i].FSNEL > 0) {
+				BF_val[i] = 0.0;
+				for (j = 0; j < wsflist[ct]->nnodes; j++) {
+					for (k = 0; k < 3; k++) {
+						BF_val[i] += wsflist[ct]->nodeforce[j * 3 + k];
+					}
+				}
+				/*
+				if (abs(BF_val[i] - ol[i].OBF_val) > 1) {
+					std::cout << "the force mapping is inconsistent on wet surface: " << i << std::endl;
+					//system("PAUSE ");
+				}
+				*/
+				ct += 1;
+			}
+		}
 		std::cout << " " << std::endl;
 		break;
 
 	case 0: //map disp from coupling mesh(fem mesh) to user defined mesh(sem mesh)
 		//The displacement is mapped from the linear element to the corresponding high-order element
 		if (mappingalgo == 2) {
+			if (debug == 1) {
+				ol[0].dir = 2;
+				ol[1].dir = 1;
+				ol[2].dir = 2;
+				ol[3].dir = 0;
+				ct = 0;
+				for (z = 0; z < owsfnumber; z++) {
+					if (ol[z].FSNEL > 0) {
+						for (l = 0; l < ol[z].FSNEL; l++) {
+							for (u = 0; u < 2; u++) { //u,v stands for fem points 
+								for (v = 0; v < 2; v++) {
+									//wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + ol[z].dir] = 1.1 * wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + ol[z].dir];
+									wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + ol[z].dir] = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + ol[z].dir] + 1;
+								}
+							}
+						}
+						ct += 1;
+					}
+				}
+			}
+
 			double DISPTEMP = 0.0;
 			ct = 0;
 			for (z = 0; z < owsfnumber; z++) {
@@ -104,7 +145,22 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					}
 					ct += 1;
 				}
-			}	
+			}
+			/*
+			if (debug == 1) {
+				ol[0].DISP[375][2] = 1.0;
+			}
+			*/
+			double hd = 0.0;
+			for (z = 0; z < owsfnumber; z++) {
+				for (i = 0; i < ol[z].GIDNct; i++) {
+					for (n = 0; n < 3; n++) {
+						hd += ol[z].DISP[ol[z].GIDN[i] - 1][n];
+					}
+				}
+			}
+
+			std::cout << " " << std::endl;
 		}
 		std::cout << " " << std::endl;
 		break;

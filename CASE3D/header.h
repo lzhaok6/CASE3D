@@ -29,7 +29,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
-const int N = 2;    //N is the element order of fluid mesh 
+const int N = 1;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;s
 typedef struct owetsurf {
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
@@ -67,6 +67,7 @@ typedef struct owetsurf {
 	//LNA_JB2D is the node numbering of the wetted surface 2D element in the linear element numbering scheme. Used to derive the 2D Jacobian matrix. The numbering sequence set to be the same as LNA_norm which is the local numbering of the 2D element used to obtain the coordinate. 
 	//LNA_norm is originally devised for mapping algorithm 2. However, it is leveraged in 2D Jacobian determinant derivation (assuming linear geometric mapping) because it numbering is the corner nodes of the 2D wetted surface element.  
 	double****GSHL_2D;
+	int dir; 
 } OWETSURF;
 
 //Store the properties on NRB surface (currently just one)

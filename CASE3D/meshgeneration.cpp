@@ -31,7 +31,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	system("PAUSE "); 
-	std::ifstream infile("FSP_N=2.msh");
+	std::ifstream infile("FSP_N=1.msh");
 	if (!infile) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -156,6 +156,7 @@ struct meshgenerationstruct meshgeneration() {
 
 	//Since the current mesh is a little twisted (e.g, y and z directions are switched)
 	double hd = 0.0; //place holder
+	/*
 	if (debug == 1) {
 		//exchange y and z axis and revert the z coordinate
 		for (i = 0; i < t.NNODE; i++) {
@@ -166,7 +167,7 @@ struct meshgenerationstruct meshgeneration() {
 			t.GCOORD[i][1] -= 6.0;
 		}
 	}
-
+	*/
 	//Need to be modified, localnode needs to corresponds each physical group! we cannot make the assumption anymore
 	//int localnode[NINT*NINT]; 
 	int **localnode; 
@@ -703,7 +704,7 @@ struct meshgenerationstruct meshgeneration() {
 				ol[z].norm[i][0] = n1 / absn; ol[z].norm[i][1] = n2 / absn; ol[z].norm[i][2] = n3 / absn;
 			}
 			//check if the separated element has the same normal direction as the original mesh (N=1)
-			//std::cout << " " << std::endl; 
+			std::cout << " " << std::endl; 
 		}
 		//================================Write the model file for MpCCI here================================//
 		std::ofstream myfile;
@@ -726,6 +727,7 @@ struct meshgenerationstruct meshgeneration() {
 				myfile << std::endl;
 			}
 		}
+		std::cout << " " << std::endl; 
 	}
 
 	//==============Extract the connectivity matrix on NRB surface (glue all physical groups corresponding to the NRB together)==============//

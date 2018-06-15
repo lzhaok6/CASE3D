@@ -548,7 +548,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	std::ofstream energyfilehd;
 	energyfilehd.open(energyfile);
 
-	
 	//Get the sample points on a line to observe the wave propagation pressure distribution
 	std::vector<int> sampline;
 	count = 0;
@@ -572,6 +571,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		sampline2[hold[i]] = sampline[i];
 	}
 	*/
+
+	/*
 	int* sampline2;
 	int** samplinec2;
 	sampline2 = new int[count];
@@ -628,9 +629,10 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	}
 	if (cnt + 1 != count) {
 		std::cout << "ypt is wrong" << std::endl;
-		system("PAUSE ");
+		//system("PAUSE ");
 	}
 	int count2 = 0;
+	/*
 	while (count2 != count) {
 		for (i = 0; i < count; i++) {
 			if (abs(GCOORD[sampline[i] - 1][1] + ypt[count2]) < 1e-5) {
@@ -639,6 +641,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 		}
 	}
+	*/
 
 	std::vector <int> T_out;
 	int NDT_out = 0;
@@ -767,11 +770,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						WBSTEMP[h] = 0.0;
 						for (k = 0; k < NINT*NINT; k++) {
 							ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][2];
-							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * RHO * (ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] + (ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] - ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0]));
+							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] + (ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] - ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0]));
 						}
 					}
 					for (k = 0; k < NINT*NINT; k++) {
 						ol[z].WBS[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1] += WBSTEMP[k];
+						std::cout << "" << std::endl;
 					}
 				}
 			}
@@ -783,7 +787,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						WBSTEMP[h] = 0.0;
 						for (k = 0; k < NINT*NINT; k++) {
 							ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][2];
-							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * RHO * (ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] + (ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] - ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0]) - ol[z].DISPI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1]); //Error prone: Get the normal vector for DISPI??? 
+							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] + (ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1] - ol[z].DISP_norm[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][0]) - ol[z].DISPI[IEN[ol[z].FP[k] - 1][ol[z].GIDF[j] - 1] - 1][1]); //Error prone: Get the normal vector for DISPI??? 
 						}
 					}
 					for (k = 0; k < NINT*NINT; k++) {
@@ -792,6 +796,24 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 			}
 		}
+
+		/*
+		double hd = 0.0;
+		for (z = 0; z < owsfnumber; z++) {
+			for (j = 0; j< ol[z].GIDNct; j++) {
+				//hd += ol[z].DISP_norm[ol[z].GIDN[j] - 1][1];
+				hd += ol[z].DISP[ol[z].GIDN[j] - 1][ol[z].dir];
+			}
+		}
+		*/
+
+		int hd = 0;
+		for (z = 0; z < owsfnumber; z++) {
+			for (j = 0; j < NNODE; j++) {
+				hd += ol[z].WBS[j];
+			}
+		}
+		std::cout << " " << std::endl;
 
 		for (j = 0; j < NNODE; j++) {
 			BNRB[j] = 0.0;
@@ -989,12 +1011,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			//PRESSURE CORRECTION FACTOR
 			ds[nrb.NRBA_t[j] - 1][2] = ds[nrb.NRBA_t[j] - 1][1] + ((ds[nrb.NRBA_t[j] - 1][2] - ds[nrb.NRBA_t[j] - 1][1]) / (1 + KAPPA));
 		} //after ds is updated, P can be updated.
-		
-		//the combination of ds[][2] passes the test
-		double hd = 0.0;
-		for (j = 0; j < NNODE; j++) {
-			hd += ds[j][2];
-		}
+	
 
 		//======================NODE-BY-NODE CAVITATION CHECK=========================//
 		if (tfm == 1) {
@@ -1118,6 +1135,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 		}
 
+		/*
 		if (output == 1) {
 			for (k = 0; k < NDT_out; k++) {
 				if (i == T_out[k]) {
@@ -1127,6 +1145,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 			}
 		}
+		*/
 		//Output the pressure history under a specified point
 		//extern double BF_val[4];
 		//energyfilehd << current_time << " " << in.energy_sent << " " << in.energy_rec << " " << BF_val[0] << " " << BF_val[1] << " " << BF_val[2] << " " << BF_val[3] << " " << ol[0].OBF_val << " " << ol[1].OBF_val << " " << ol[2].OBF_val << " " << ol[3].OBF_val << std::endl;
