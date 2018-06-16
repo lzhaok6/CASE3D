@@ -662,6 +662,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 	}
 
+	double hd = 0;
 	//for (i = 0; i < NDT - 1; i++) { //error prone: i other than time should not present in this loop
 	for (i = 0; i < NDT; i++) {
 		TIME = i + 2;
@@ -684,7 +685,14 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 		
 		PIN = WAVE_IN(NNODE, GCOORD, T, TIME, PIN, DT, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO); //USED TO UPDATE PIN IN THIS SUBROUTINE
-		//int NNODE, double** GCOORD, double* T, int TIME, double** PIN, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO
+		
+		hd = 0.0;
+		for (j = 0; j < NNODE; j++) {
+			hd += PIN[j][0];
+		}
+		//}
+		std::cout << " " << std::endl;
+
 		for (z = 0; z < owsfnumber; z++) {
 			//for (k = 0; k < NNODE; k++) {
 			for (k = 0; k < ol[z].GIDNct; k++) {
@@ -697,9 +705,9 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			for (z = 0; z < owsfnumber; z++) {
 				for (j = 0; j < ol[z].GIDNct; j++) {
 					if (nodeforcemap2 == 1) {
-						ol[z].WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM; //correct version with structural gravity
+						//ol[z].WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM; //correct version with structural gravity
 						//ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
-						//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
+						ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
 					}
 					else { //absolute pressure
 						ol[z].WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM;
@@ -797,6 +805,14 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 		}
 
+		hd = 0.0;
+		for (z = 0; z < owsfnumber; z++) {
+			for (j = 0; j < NNODE; j++) {
+				hd += ol[z].WBS[j];
+			}
+		}
+		std::cout << " " << std::endl;
+
 		/*
 		double hd = 0.0;
 		for (z = 0; z < owsfnumber; z++) {
@@ -807,12 +823,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 		*/
 
-		int hd = 0;
-		for (z = 0; z < owsfnumber; z++) {
-			for (j = 0; j < NNODE; j++) {
-				hd += ol[z].WBS[j];
-			}
-		}
+	
 		std::cout << " " << std::endl;
 
 		for (j = 0; j < NNODE; j++) {

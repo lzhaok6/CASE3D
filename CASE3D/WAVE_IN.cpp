@@ -47,5 +47,11 @@ double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, 
 			}
 		}
 	}
+
+	double hd = 0.0;
+	for (i = 0; i < NNODE; i++) {
+		hd += PIN[i][1];
+	}
+	std::cout << " " << std::endl;
 	return (PIN);
 }

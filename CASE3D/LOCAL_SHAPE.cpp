@@ -80,8 +80,8 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD) {
 		//USE LEGENDRE POLYNOMIAL TO EVALUATE LOCAL SHAPE FUNCTION AT EACH NODE
 		LEGENDREstruct hi;
 		LEGENDREstruct hq;
-		hi = LEGENDRE(n);
-		hq = LEGENDRE(NQUAD);
+		hi = LEGENDRE(n, n); //the value of Legendre polynomial on interpolation nodes
+		hq = LEGENDRE(NQUAD, n); //the value of first derivative of Legendre polynomial on NQUAD nodes
 		LOBATTOstruct bi;
 		LOBATTOstruct bq;
 		bi = LOBATTO(n);

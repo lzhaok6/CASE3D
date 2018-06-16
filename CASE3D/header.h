@@ -13,7 +13,7 @@ struct TD_ELE_GENstruct TD_ELE_GEN(int NEL, int XNODE, int NNODE, int XNEL, int 
 //used to generate mesh on wet surface (identical with the model file read by data.c)
 struct GLLQUADstruct GLLQUAD(double* Z, double* WL, int n, int SEM);
 struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD);
-struct LEGENDREstruct LEGENDRE(int N);
+struct LEGENDREstruct LEGENDRE(int Nq, int n);
 struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT);
 struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA);
 struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double****XS, double**JACOB);
@@ -29,7 +29,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
-const int N = 1;    //N is the element order of fluid mesh 
+const int N = 2;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;s
 typedef struct owetsurf {
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
@@ -47,8 +47,10 @@ typedef struct owetsurf {
 	int **IEN_gb; //connectivity matrix on 2D surface pointing to global points.
 	int FSNEL; 
 	int *GIDF;   //Coupled fluid element array (numbering)
-	int *GIDN; //wet nodes on coupling surfaces
-	int GIDNct; //wet nodes number on coupling surfaces
+	int *GIDN_MpCCI; //wet nodes on coupling surfaces
+	int GIDNct_MpCCI; //wet nodes number on coupling surfaces
+	int *GIDN; 
+	int GIDNct; 
 	double** norm; //store the normal direction of linear elements 
 	double** Jacob_2D; //the Jacobian value of 2D element on wetted surface
 	double** Jacob_test; 
@@ -230,7 +232,7 @@ const double W = 60; //charge weight (lb)
 //const double ZO = SZ / 2;
 //the parameter to control whether a tabulated smoothed waveform is used 
 const double output_int = 5e-4; //output file time interval
-const int debug = 0; //is the code in debug mode?
+const int debug = 1; //is the code in debug mode?
 const int tfm = 1; //is total field model used? 
 const int tensorfactorization = 0;
 const int TNT = 1;

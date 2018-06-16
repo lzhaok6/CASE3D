@@ -30,8 +30,8 @@ struct meshgenerationstruct meshgeneration() {
 	std::string filename;
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
-	system("PAUSE "); 
-	std::ifstream infile("FSP_N=1.msh");
+	//system("PAUSE "); 
+	std::ifstream infile("FSP_N=2.msh");
 	if (!infile) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -653,16 +653,18 @@ struct meshgenerationstruct meshgeneration() {
 					if (flag == 1) {
 						ct += 1;
 						dummy.push_back(ol[z].IEN_algo2[j][i]); //associate the local 2D node with the global node numbering 
-						ol[z].IEN_2D[j][i] = ct;
+						ol[z].IEN_2D[j][i] = ct; //assign a new number to MpCCI element connectivity
 					}
+
 				}
 			}
-			ol[z].GIDNct = dummy.size();
-			ol[z].GIDN = new int[ol[z].GIDNct];
-			for (i = 0; i < ol[z].GIDNct; i++) {
-				ol[z].GIDN[i] = dummy[i];
+			ol[z].GIDNct_MpCCI = dummy.size(); 
+			ol[z].GIDN_MpCCI = new int[ol[z].GIDNct_MpCCI];
+			for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
+				ol[z].GIDN_MpCCI[i] = dummy[i];
 			}
-			//Obtain GIDF
+
+			//Obtain GIDF (the global element number of each wetted surface)
 			ol[z].GIDF = new int[ol[z].FSNEL];
 			for (i = 0; i < ol[z].FSNEL; i++) {
 				flag = 0; 
@@ -682,6 +684,32 @@ struct meshgenerationstruct meshgeneration() {
 					std::cout << "Not corresponding 3D element is found" << std::endl;
 					system("PAUSE "); 
 				}
+			}
+
+			//Get the high-order global nodes on wetted surface (GIDN)
+			std::vector<int>dummy3;
+			for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
+				for (j = 0; j < NINT*NINT; j++) { //the nodes in current element
+					flag = 1; //Initiate the flag to 1 
+					for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
+						for (l = 0; l < NINT*NINT; l++) {
+							if (ol[z].IEN_gb[l][k] == ol[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
+								flag = 0; //turn off the flag to assgin new number
+							}
+							else {
+								//If the number has not assigned yet the flag is still 1, thus a new number could be assigned. 
+							}
+						}
+					}
+					if (flag == 1) {
+						dummy3.push_back(ol[z].IEN_gb[j][i]); //associate the local 2D node with the global node numbering 
+					}
+				}
+			}
+			ol[z].GIDNct = dummy3.size();
+			ol[z].GIDN = new int[ol[z].GIDNct];
+			for (i = 0; i < ol[z].GIDNct; i++) {
+				ol[z].GIDN[i] = dummy3[i];
 			}
 
 			ol[z].norm = new double*[ol[z].FSNEL]; //store the normal direction of linear elements on the wetted surface
@@ -713,9 +741,9 @@ struct meshgenerationstruct meshgeneration() {
 			std::string wetsurface_name; 
 			wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1"; 
 			myfile << wetsurface_name << std::endl;
-			myfile << "NODES " << ol[z].GIDNct << std::endl;
-			for (i = 0; i < ol[z].GIDNct; i++) {
-				myfile << i << " " << t.GCOORD[ol[z].GIDN[i] - 1][0] << " " << t.GCOORD[ol[z].GIDN[i] - 1][1] << " " << t.GCOORD[ol[z].GIDN[i] - 1][2] << " " << std::endl;
+			myfile << "NODES " << ol[z].GIDNct_MpCCI << std::endl;
+			for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
+				myfile << i << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][0] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][1] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][2] << " " << std::endl;
 			}
 			myfile << "ELEMENTS " << ol[z].FSNEL << std::endl;
 			//Output connectivity matrix

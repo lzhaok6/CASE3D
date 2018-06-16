@@ -8,23 +8,34 @@ using namespace std;
 
 //LN[][0] is the value of Legendre polynomial and LN[][1] is the value of the derivative of Legendre polynomial
 
-struct LEGENDREstruct LEGENDRE(int Nq) {
+struct LEGENDREstruct LEGENDRE(int Nq, int n) {
 	LEGENDREstruct t;
 	int i;
 	t.LN = new double*[2];
 	for (i = 0; i < 2; i++) {
-		t.LN[i] = new double[N + 1];
+		t.LN[i] = new double[Nq + 1];
 	}
 
-	if (N == 1) {
-		if (Nq == N) {
+	if (n == 1) {
+		if (Nq == n) {
 			t.LN[0][0] = -1.0;
 			t.LN[0][1] = 1.0;
 
 			t.LN[1][0] = 1.0;
 			t.LN[1][1] = t.LN[1][0];
 		}
-		else if (Nq == N + 1) { //If one more Lobatto point is inserted
+		else if (Nq > n) {
+			t.LN[0][0] = -1.0;
+			t.LN[0][Nq] = 1.0;
+			for (i = 1; i < Nq; i++) {
+				t.LN[0][i] = 0.0;
+			}
+			for (i = 0; i < Nq + 1; i++) {
+				t.LN[1][i] = 1.0;
+			}
+		}
+		/*
+		else if (Nq == n + 1) { //If one more Lobatto point is inserted
 			t.LN[0][0] = -1.0;
 			t.LN[0][1] = 0.0;
 			t.LN[0][2] = 1.0;
@@ -33,12 +44,24 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			t.LN[1][1] = 1.0; 
 			t.LN[1][2] = 1.0;
 		}
+		else if (Nq == n + 2) {
+			t.LN[0][0] = -1.0;
+			t.LN[0][1] = 0.0;
+			t.LN[0][2] = 0.0;
+			t.LN[0][3] = 1.0;
+
+			t.LN[1][0] = 1.0;
+			t.LN[1][1] = 1.0;
+			t.LN[1][2] = 1.0;
+			t.LN[1][3] = 1.0;
+		}
+		*/
 		else {
 			std::cout << "LN is not defined" << std::endl;
 		}
 	}
-	else if (N == 2) {
-		if (Nq == N) {
+	else if (n == 2) {
+		if (Nq == n) {
 			t.LN[0][0] = 1.0;
 			t.LN[0][1] = -0.5;
 			t.LN[0][2] = t.LN[0][0];
@@ -47,7 +70,7 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			t.LN[1][1] = 0.0;
 			t.LN[1][2] = -t.LN[1][0];
 		}
-		else if (Nq == N + 1) {
+		else if (Nq == n + 1) {
 			t.LN[0][0] = 1.000000000000000;
 			t.LN[0][1] = -0.200000000000000;
 			t.LN[0][2] = -0.200000000000000;
@@ -62,8 +85,8 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			std::cout << "LN is not defined" << std::endl;
 		}
 	}
-	else if (N == 3) {
-		if (Nq == N) {
+	else if (n == 3) {
+		if (Nq == n) {
 			t.LN[0][0] = -1.0;
 			t.LN[0][1] = 0.44721359549996;
 			t.LN[0][2] = -t.LN[0][1];
@@ -74,7 +97,7 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			t.LN[1][2] = 0.0;
 			t.LN[1][3] = 6.0;
 		}
-		else if (Nq == N + 1) {
+		else if (Nq == n + 1) {
 			t.LN[0][0] = -1.000000000000000;
 			t.LN[0][1] = 0.280565858874847;
 			t.LN[0][2] = 0.0;
@@ -91,8 +114,8 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			std::cout << "LN is not defined" << std::endl;
 		}
 	}
-	else if (N == 4) {
-		if (Nq == N) {
+	else if (n == 4) {
+		if (Nq == n) {
 			t.LN[0][0] = 1.0;
 			t.LN[0][1] = -0.42857142857143;
 			t.LN[0][2] = 0.375;
@@ -105,7 +128,7 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			t.LN[1][3] = 0.0;
 			t.LN[1][4] = -t.LN[1][0];
 		}
-		else if (Nq == N + 1) {
+		else if (Nq == n + 1) {
 			t.LN[0][0] = 1.000000000000000;
 			t.LN[0][1] = -0.321091373894025;
 			t.LN[0][2] = 0.098869151671802;
@@ -124,8 +147,8 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			std::cout << "LN is not defined" << std::endl;
 		}
 	}
-	else if (N == 5) {
-		if (Nq == N) {
+	else if (n == 5) {
+		if (Nq == n) {
 			t.LN[0][0] = -1.0;
 			t.LN[0][1] = 0.41969693413129;
 			t.LN[0][2] = -0.34662772505542;
@@ -140,7 +163,7 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			t.LN[1][4] = t.LN[1][1];
 			t.LN[1][5] = t.LN[1][0];
 		}
-		else if (Nq == N + 1) {
+		else if (Nq == n + 1) {
 			t.LN[0][0] = -1.000000000000000;
 			t.LN[0][1] = 0.344335743198449;
 			t.LN[0][2] = -0.155707418768582;
@@ -161,8 +184,8 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			std::cout << "LN is not defined" << std::endl;
 		}
 	}
-	else if (N == 6) {
-		if (Nq == N) {
+	else if (n == 6) {
+		if (Nq == n) {
 			t.LN[0][0] = 1.0;
 			t.LN[0][1] = -0.41475046037813;
 			t.LN[0][2] = 0.33210583227895;
@@ -179,7 +202,7 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			t.LN[1][5] = -t.LN[1][1];
 			t.LN[1][6] = -t.LN[1][0];
 		}
-		else if (Nq == N + 1) {
+		else if (Nq == n + 1) {
 			t.LN[0][0] = 1.000000000000000;
 			t.LN[0][1] = -0.358898305790205;
 			t.LN[0][2] = 0.191455294719785;
@@ -202,8 +225,8 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			std::cout << "LN is not defined" << std::endl;
 		}
 	}
-	else if (N == 7) {
-		if (Nq == N) {
+	else if (n == 7) {
+		if (Nq == n) {
 			t.LN[0][0] = -1.0;
 			t.LN[0][1] = 0.41170331136384;
 			t.LN[0][2] = -0.32356808520163;
@@ -222,7 +245,7 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			t.LN[1][6] = t.LN[1][1];
 			t.LN[1][7] = t.LN[1][0];
 		}
-		else if (Nq == N + 1) {
+		else if (Nq == n + 1) {
 			t.LN[0][0] = -1.000000000000000;
 			t.LN[0][1] = 0.368622254677538;
 			t.LN[0][2] = -0.215404664516627;
@@ -247,8 +270,8 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			std::cout << "LN is not defined" << std::endl;
 		}
 	}
-	else if (N == 8) {
-		if (Nq == N) {
+	else if (n == 8) {
+		if (Nq == n) {
 			t.LN[0][0] = 1.0;
 			t.LN[0][1] = -0.40969044627268;
 			t.LN[0][2] = 0.31808775669859;
@@ -269,7 +292,7 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			t.LN[1][7] = -t.LN[1][1];
 			t.LN[1][8] = -t.LN[1][0];
 		}
-		else if (Nq == N + 1) {
+		else if (Nq == n + 1) {
 			t.LN[0][0] = 1.000000000000000;
 			t.LN[0][1] = -0.375436643142831;
 			t.LN[0][2] = 0.232231340794229;
@@ -296,7 +319,7 @@ struct LEGENDREstruct LEGENDRE(int Nq) {
 			std::cout << "LN is not defined" << std::endl;
 		}
 	}
-	else if (N == 16) {
+	else if (n == 16) {
 		t.LN[0][0] = 1.0;
 		t.LN[0][1] = -0.00404577094794E2;
 		t.LN[0][2] = 0.00304700170288E2;

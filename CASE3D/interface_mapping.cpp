@@ -96,10 +96,12 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			}
 		}
 		std::cout << " " << std::endl;
+
 		break;
 
 	case 0: //map disp from coupling mesh(fem mesh) to user defined mesh(sem mesh)
 		//The displacement is mapped from the linear element to the corresponding high-order element
+		double hd = 0.0; 
 		if (mappingalgo == 2) {
 			if (debug == 1) {
 				ol[0].dir = 2;
@@ -122,6 +124,16 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 				}
 			}
 
+			hd = 0.0;
+			for (z = 0; z < owsfnumber; z++) {
+				for (j = 0; j < wsflist[z]->nnodes; j++) {
+					for (k = 0; k < 3; k++) {
+						hd += wsflist[z]->nodecoord[j * 3 + k];
+					}
+				}
+			}
+			std::cout << " " << std::endl;
+
 			double DISPTEMP = 0.0;
 			ct = 0;
 			for (z = 0; z < owsfnumber; z++) {
@@ -135,7 +147,8 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								for (u = 0; u < 2; u++) { //u,v stands for fem points 
 									for (v = 0; v < 2; v++) {
 										for (n = 0; n < 3; n++) {
-											DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_2D[u][v] - 1][l] - 1][n];
+											//DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_2D[u][v] - 1][l] - 1][n];
+											DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[ol[z].LNA_algo2[u][v] - 1] - 1][l] - 1][n];
 											ol[z].DISP[ol[z].IEN_gb[ol[z].LNA_2D[i][j] - 1][l] - 1][n] += DISPTEMP * ol[z].phi_fem[ol[z].LNA_algo2[u][v] - 1][i][j];
 										}
 									}
@@ -151,7 +164,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 				ol[0].DISP[375][2] = 1.0;
 			}
 			*/
-			double hd = 0.0;
+			hd = 0.0;
 			for (z = 0; z < owsfnumber; z++) {
 				for (i = 0; i < ol[z].GIDNct; i++) {
 					for (n = 0; n < 3; n++) {
