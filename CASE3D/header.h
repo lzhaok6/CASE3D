@@ -232,7 +232,7 @@ const double W = 60; //charge weight (lb)
 //const double ZO = SZ / 2;
 //the parameter to control whether a tabulated smoothed waveform is used 
 const double output_int = 5e-4; //output file time interval
-const int debug = 1; //is the code in debug mode?
+const int debug = 0; //is the code in debug mode?
 const int tfm = 1; //is total field model used? 
 const int tensorfactorization = 0;
 const int TNT = 1;
