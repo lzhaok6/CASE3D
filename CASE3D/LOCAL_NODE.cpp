@@ -97,16 +97,24 @@ struct LOCAL_NODEstruct LOCAL_NODE(int n) {
 
 		//In the current LNA template file, the origin is (-1,-1,0). It is supposed to start at (0,0,0). We shift the coordinate here but need to 
 		//be alerted that we might need to change it in the future.
+		double xoff = 0.0; 
+		double yoff = 0.0; 
+		double zoff = 0.0; 
+		if (N == 3) {
+			xoff = 1.0;
+			yoff = 1.0;
+		}
+
 		for (i = 0; i < NNODE; i++) {
 			for (j = 0; j < 3; j++) {
 				if (j == 0) {
-					FGCOORD[i][j] = stod(output[nodestart + i][1 + j]);
+					FGCOORD[i][j] = stod(output[nodestart + i][1 + j]) + xoff;
 				}
 				if (j == 1) {
-					FGCOORD[i][j] = stod(output[nodestart + i][1 + j]);
+					FGCOORD[i][j] = stod(output[nodestart + i][1 + j]) + yoff;
 				}
 				if (j == 2) {
-					FGCOORD[i][j] = stod(output[nodestart + i][1 + j]);
+					FGCOORD[i][j] = stod(output[nodestart + i][1 + j]) + zoff;
 				}
 			}
 		}
@@ -117,7 +125,14 @@ struct LOCAL_NODEstruct LOCAL_NODE(int n) {
 			}
 		}
 
-		double elementsize = 1.0;
+		double elementsize = 0.0;
+		if (N == 2) {
+			elementsize = 1.0;
+		}
+		else if (N == 3) {
+			elementsize = 2.0;
+		}
+
 		for (i = 0; i < NINT*NINT*NINT; i++) {
 			u = round(FGCOORD[ELEMENT_POINT[i] - 1][0] / (elementsize / N));
 			v = round(FGCOORD[ELEMENT_POINT[i] - 1][1] / (elementsize / N));
@@ -125,6 +140,7 @@ struct LOCAL_NODEstruct LOCAL_NODE(int n) {
 			t.L[i][0] = u; t.L[i][1] = v; t.L[i][2] = w;
 			t.LNA[u][v][w] = i + 1;
 		}
+
 	}
 	std::cout << " " << std::endl;
 	return t;

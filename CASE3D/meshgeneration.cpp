@@ -26,7 +26,7 @@ struct meshgenerationstruct meshgeneration() {
 	c = LOCAL_NODE(N);
 
 	//We are assuming there is only one wetted surface. Thus, ol[0] is used throughout the loop below. 
-	int i, j, k, l, m, n, e, z;
+	int i, j, k, l, m, n, o, e, z;
 	std::string filename;
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
@@ -153,6 +153,46 @@ struct meshgenerationstruct meshgeneration() {
 		}
 	}
 	//std::cout << " " << std::endl;
+
+	//=====================Changing the coordinate of GCOORD to SEM (shift the internal nodes)=====================//
+	LOCAL_NODEstruct c_ln;
+	c_ln = LOCAL_NODE(1);
+	LOCAL_SHAPEstruct ls_ln; //ln means linear
+	ls_ln = LOCAL_SHAPE(c_ln.LNA, 1, N); //Get the 3D linear shape function value on Nth order SEM nodes
+	//t.SHL[3][LNA[i][j][k] - 1][l*(NQUAD + 1)*(NQUAD + 1) + m*(NQUAD + 1) + o]
+	int LNA_ln[2][2][2];
+	LNA_ln[0][0][0] = c.LNA[0][0][0]; LNA_ln[1][0][0] = c.LNA[N][0][0];
+	LNA_ln[1][1][0] = c.LNA[N][N][0]; LNA_ln[0][1][0] = c.LNA[0][N][0];
+	LNA_ln[0][0][1] = c.LNA[0][0][N]; LNA_ln[1][0][1] = c.LNA[N][0][N];
+	LNA_ln[1][1][1] = c.LNA[N][N][N]; LNA_ln[0][1][1] = c.LNA[0][N][N];
+	for (i = 0; i < t.NEL; i++) { //loop through all the elements
+		ct = 0;
+		for (m = 0; m < NINT; m++) { //m, n, o stands for internal nodes in one element (all but except for corner nodes)
+			for (n = 0; n < NINT; n++) {
+				for (o = 0; o < NINT; o++) {
+					//jump over the corner points
+					if (!((m == 0 && n == 0 && o == 0) || (m == N && n == 0 && o == 0) || (m == N && n == N && o == 0)
+						|| (m == 0 && n == N && o == 0) || (m == 0 && n == 0 && o == N) || (m == N && n == 0 && o == N)
+						|| (m == N && n == N && o == N) || (m == 0 && n == N && o == N))) {
+						t.GCOORD[t.IEN[c.LNA[m][n][o] - 1][i] - 1][0] = 0.0;
+						t.GCOORD[t.IEN[c.LNA[m][n][o] - 1][i] - 1][1] = 0.0;
+						t.GCOORD[t.IEN[c.LNA[m][n][o] - 1][i] - 1][2] = 0.0;
+						for (j = 0; j < 2; j++) { //j, k, l stands for corner nodes
+							for (k = 0; k < 2; k++) {
+								for (l = 0; l < 2; l++) {
+									t.GCOORD[t.IEN[c.LNA[m][n][o] - 1][i] - 1][0] += t.GCOORD[t.IEN[LNA_ln[j][k][l] - 1][i] - 1][0] * ls_ln.SHL[3][c_ln.LNA[j][k][l] - 1][m*NINT*NINT + n*NINT + o];
+									t.GCOORD[t.IEN[c.LNA[m][n][o] - 1][i] - 1][1] += t.GCOORD[t.IEN[LNA_ln[j][k][l] - 1][i] - 1][1] * ls_ln.SHL[3][c_ln.LNA[j][k][l] - 1][m*NINT*NINT + n*NINT + o];
+									t.GCOORD[t.IEN[c.LNA[m][n][o] - 1][i] - 1][2] += t.GCOORD[t.IEN[LNA_ln[j][k][l] - 1][i] - 1][2] * ls_ln.SHL[3][c_ln.LNA[j][k][l] - 1][m*NINT*NINT + n*NINT + o];
+								}
+							}
+						}
+						ct += 1;
+					}
+				}
+			}
+		}
+		//std::cout << " " << std::endl;
+	}
 
 	//Since the current mesh is a little twisted (e.g, y and z directions are switched)
 	double hd = 0.0; //place holder
