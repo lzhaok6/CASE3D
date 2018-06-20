@@ -689,7 +689,23 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		if (debug == 1) {
 			hd = 0.0;
 			for (j = 0; j < NNODE; j++) {
-				hd += PIN[j][0];
+				hd += GCOORD[j][0];
+			}
+			//}
+			std::cout << " " << std::endl;
+		}
+		if (debug == 1) {
+			hd = 0.0;
+			for (j = 0; j < NNODE; j++) {
+				hd += GCOORD[j][1];
+			}
+			//}
+			std::cout << " " << std::endl;
+		}
+		if (debug == 1) {
+			hd = 0.0;
+			for (j = 0; j < NNODE; j++) {
+				hd += GCOORD[j][2];
 			}
 			//}
 			std::cout << " " << std::endl;
