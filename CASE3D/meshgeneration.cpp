@@ -42,25 +42,31 @@ struct meshgenerationstruct meshgeneration() {
 	int ele_line = 0;
 	std::vector<std::vector<std::string>> output;
 	int ct = -1;
-	std::string csvLine;
 	int physicalgroups = 1; //starting from the first physical group
 	int endfile = 0;
 	std::vector<int> phygrp_start; //the starting line number of the physical group
 	int elestart = 0; //the flag denote the start of element connectivity definition
 
-	//std::clock_t start;
-	//start = std::clock();
+	std::clock_t start;
+	start = std::clock();
 	std::string csvElement;
+	std::vector<std::string> csvColumn;
+	std::string csvLine;
 	while (getline(infile, csvLine))
 	{
 		ct = ct + 1; //the current line number (starting from 0)
-		std::istringstream csvStream(csvLine);
-		std::vector<std::string> csvColumn;
-		//std::string csvElement;
-		while (getline(csvStream, csvElement, ' '))
+		std::istringstream csvStream(csvLine); //csvStream is a stream (turn the string csvLine to stream csvStream)
+		csvColumn.clear();
+		while (getline(csvStream, csvElement, ' ')) //Get line from stream (csvStream) into string (csvElement)
 		{
 			csvColumn.push_back(csvElement);
 		}
+		/*
+		//About the same time as the code above (commented) but we will stick to that for now
+		for (csvElement; csvStream >> csvElement; ) {
+			csvColumn.push_back(csvElement);
+		}
+		*/
 		output.push_back(csvColumn);
 		if (csvColumn[0] == "$EndElements") {
 			endfile = ct;
@@ -93,6 +99,7 @@ struct meshgenerationstruct meshgeneration() {
 		}
 	}
 	//double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
+	double duration = (std::clock() - start);
 
 	//The physical groups except for the last one are the surface mesh (NINT*NINT). 
 	//The last physical group is the volumn mesh (NINT*NINT*NINT) connectivity matrix
