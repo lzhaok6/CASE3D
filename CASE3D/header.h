@@ -29,7 +29,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
-const int N = 3;    //N is the element order of fluid mesh 
+const int N = 1;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;s
 typedef struct owetsurf {
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
@@ -222,8 +222,8 @@ const double PSAT = 0.0; //saturated pressure
 const double pi = 3.141593;
 const double grav = 9.81;
 const double PATM = 101.3e3; //pa 
-const double stdoff = 10; //ft
-const double depth = 30; //ft
+const double stdoff = 20; //ft
+const double depth = 25; //ft
 const double W = 60; //charge weight (lb)
 
 //standoff point in spherical wave case 

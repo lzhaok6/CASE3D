@@ -203,6 +203,7 @@ int main()
 	//determine the stand-off point (nearest structural node or free surface node depending on which one is closer)
 	dists = sqrt(pow(XC - 0.0, 2) + pow(YC - (-SY), 2) + pow(ZC - SZ / 2, 2));
 	distf = -YC;
+	
 	if (dists > distf) {
 		XO = XC;
 		YO = 0;

@@ -870,7 +870,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0]; //plane wave approximation (PWA)
 						nr[z].XNRBORG2[nr[z].DP_2D[k] - 1][j] = angle*XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
 					}
-				}
+				}	
 				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 					for (k = 0; k < NINT*NINT; k++) {
 						nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][0] + nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j];
@@ -1025,9 +1025,17 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 		//The combination of FFORCE passes the test
 		
-		for (j = 0; j < fspt_num; j++) {
-			Q[fspt[j] - 1] = 1.0;
-			FFORCE[fspt[j] - 1] = 0.0 / pow(C, 2.0);
+		if (tfm == 1) {
+			for (j = 0; j < fspt_num; j++) {
+				Q[fspt[j] - 1] = 1.0;
+				FFORCE[fspt[j] - 1] = 0.0 / pow(C, 2.0);
+			}
+		}
+		else {
+			for (j = 0; j < fspt_num; j++) {
+				Q[fspt[j] - 1] = 1.0;
+				FFORCE[fspt[j] - 1] = -PIN[fspt[j] - 1][1] / pow(C, 2.0); //PIN[][1] error prone
+			}
 		}
 
 		for (j = 0; j < NNODE; j++) {
