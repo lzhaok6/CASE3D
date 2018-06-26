@@ -272,6 +272,71 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 		}
 		std::cout << " " << std::endl;
 		//check if the value is positive and check if i and j is exchanged, would the value of FPMASTER_2D be changed!!!
+
+
+		nr[z].GSHL_2D = new double***[3];
+		for (i = 0; i < 3; i++) {
+			nr[z].GSHL_2D[i] = new double**[4]; //4 points
+			for (j = 0; j < 4; j++) {
+				nr[z].GSHL_2D[i][j] = new double*[NqINT];
+				for (k = 0; k < NqINT; k++) {
+					nr[z].GSHL_2D[i][j][k] = new double[NqINT];
+				}
+			}
+		}
+		for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
+			for (j = 0; j < NqINT; j++) { // j k l are integration point where discrete value of shape function is derived
+				for (k = 0; k < NqINT; k++) {
+					nr[z].GSHL_2D[2][i][j][k] = (1.0 / 4.0)*(1 + lg.MCOORD[nr[z].LNA_JB2D[i] - 1][nr[z].Jacob_face[0]] * gq.S[j])*(1 + lg.MCOORD[nr[z].LNA_JB2D[i] - 1][nr[z].Jacob_face[1]] * gq.S[k]);
+					//not derivative
+					nr[z].GSHL_2D[0][i][j][k] = (1.0 / 4.0)*lg.MCOORD[nr[z].LNA_JB2D[i] - 1][nr[z].Jacob_face[0]] * (1 + lg.MCOORD[nr[z].LNA_JB2D[i] - 1][nr[z].Jacob_face[1]] * gq.S[k]);
+					//X direction derivative
+					nr[z].GSHL_2D[1][i][j][k] = (1.0 / 4.0)*lg.MCOORD[nr[z].LNA_JB2D[i] - 1][nr[z].Jacob_face[1]] * (1 + lg.MCOORD[nr[z].LNA_JB2D[i] - 1][nr[z].Jacob_face[0]] * gq.S[j]);
+					//Z direction derivative
+				}
+			}
+		}
+		nr[z].Jacob_2D = new double*[nr[z].NEL_nrb];
+		for (i = 0; i < nr[z].NEL_nrb; i++) {
+			nr[z].Jacob_2D[i] = new double[NqINT*NqINT];
+		}
+		nr[z].xs_2D = new double***[nr[z].NEL_nrb];
+		for (i = 0; i < nr[z].NEL_nrb; i++) {
+			nr[z].xs_2D[i] = new double**[3];
+			for (j = 0; j < 3; j++) {
+				nr[z].xs_2D[i][j] = new double*[2];
+				for (k = 0; k < 2; k++) {
+					nr[z].xs_2D[i][j][k] = new double[NqINT*NqINT];
+				}
+			}
+		}
+		for (i = 0; i < nr[z].NEL_nrb; i++) {
+			for (j = 0; j < 3; j++) {
+				for (k = 0; k < 2; k++) {
+					for (l = 0; l < NqINT*NqINT; l++) {
+						nr[z].xs_2D[i][j][k][l] = 0.0;
+					}
+				}
+			}
+		}
+		for (m = 0; m < nr[z].NEL_nrb; m++) { //loop through each element on wetted surface
+			for (i = 0; i < NqINT; i++) {
+				for (j = 0; j < NqINT; j++) {
+					for (l = 0; l < 4; l++) { //4 nodes on the linear element
+											  //Is the l in nr[z].GSHL_2D[0][l][i][j] and in nr[z].LNA_norm[l] must be consistent (the same surface). 
+						nr[z].xs_2D[m][0][0][i * NqINT + j] += nr[z].GSHL_2D[0][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dnu
+						nr[z].xs_2D[m][1][0][i * NqINT + j] += nr[z].GSHL_2D[0][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dnu
+						nr[z].xs_2D[m][2][0][i * NqINT + j] += nr[z].GSHL_2D[0][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dnu
+						nr[z].xs_2D[m][0][1][i * NqINT + j] += nr[z].GSHL_2D[1][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dmu
+						nr[z].xs_2D[m][1][1][i * NqINT + j] += nr[z].GSHL_2D[1][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dmu
+						nr[z].xs_2D[m][2][1][i * NqINT + j] += nr[z].GSHL_2D[1][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dmu
+					}
+					nr[z].Jacob_2D[m][i * NqINT + j] = pow(pow((nr[z].xs_2D[m][0][0][i * NqINT + j] * nr[z].xs_2D[m][1][1][i * NqINT + j] - nr[z].xs_2D[m][0][1][i * NqINT + j] * nr[z].xs_2D[m][1][0][i * NqINT + j]), 2) +
+						pow((nr[z].xs_2D[m][0][0][i * NqINT + j] * nr[z].xs_2D[m][2][1][i * NqINT + j] - nr[z].xs_2D[m][0][1][i * NqINT + j] * nr[z].xs_2D[m][2][0][i * NqINT + j]), 2) +
+						pow((nr[z].xs_2D[m][1][0][i * NqINT + j] * nr[z].xs_2D[m][2][1][i * NqINT + j] - nr[z].xs_2D[m][1][1][i * NqINT + j] * nr[z].xs_2D[m][2][0][i * NqINT + j]), 2), 0.5);
+				}
+			}
+		}
 	}
 
 	std::cout << " " << std::endl;

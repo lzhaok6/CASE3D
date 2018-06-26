@@ -103,27 +103,6 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 		//The displacement is mapped from the linear element to the corresponding high-order element
 		double hd = 0.0; 
 		if (mappingalgo == 2) {
-			if (debug == 1) {
-				ol[0].dir = 2;
-				ol[1].dir = 1;
-				ol[2].dir = 2;
-				ol[3].dir = 0;
-				ct = 0;
-				for (z = 0; z < owsfnumber; z++) {
-					if (ol[z].FSNEL > 0) {
-						for (l = 0; l < ol[z].FSNEL; l++) {
-							for (u = 0; u < 2; u++) { //u,v stands for fem points 
-								for (v = 0; v < 2; v++) {
-									//wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + ol[z].dir] = 1.1 * wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + ol[z].dir];
-									wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + ol[z].dir] = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + ol[z].dir] + 1;
-								}
-							}
-						}
-						ct += 1;
-					}
-				}
-			}
-
 			hd = 0.0;
 			for (z = 0; z < owsfnumber; z++) {
 				for (j = 0; j < wsflist[z]->nnodes; j++) {

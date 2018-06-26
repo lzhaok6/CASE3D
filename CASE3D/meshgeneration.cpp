@@ -31,7 +31,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	//system("PAUSE "); 
-	std::ifstream infile("FSP_N=3.msh");
+	std::ifstream infile("Bleich_Sandler_unit.msh");
 	if (!infile) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -252,8 +252,11 @@ struct meshgenerationstruct meshgeneration() {
 	//int LNA_norm[4];
 	
 	//The physical group number of wetted surface and NRB surfaces (Needs to be set up by the user)
-	int wt_pys_num[4] = { 0,1,2,3 };  //the physical group number that corresponds to the wet surface (physical group 3)
-	int nrb_pys_num[4] = { 4,5,6,7 };
+	//int wt_pys_num[4] = { 0,1,2,3 };  //the physical group number that corresponds to the wet surface (physical group 3)
+	//int nrb_pys_num[4] = { 4,5,6,7 };
+	int wt_pys_num[1] = { 0 };
+	int nrb_pys_num[1] = { 1 };
+	
 	//If the wet surface is the left face of the local element (i.e., i=0). 
 	std::cout << "Have you configured the wetted surface and NRB surface physical group number for this mesh? If so, hit Enter to proceed." << std::endl;
 	//system("PAUSE ");
@@ -313,6 +316,8 @@ struct meshgenerationstruct meshgeneration() {
 				nr[nrb_ct].LNA_JB2D[1] = 5;
 				nr[nrb_ct].LNA_JB2D[2] = 8;
 				nr[nrb_ct].LNA_JB2D[3] = 4;
+				nr[nrb_ct].Jacob_face[0] = 1; //y coordinate
+				nr[nrb_ct].Jacob_face[1] = 2;
 				nrb_ct += 1; 
 			}
 			if (wet == 1) {
@@ -366,6 +371,8 @@ struct meshgenerationstruct meshgeneration() {
 				nr[nrb_ct].LNA_JB2D[1] = 3;
 				nr[nrb_ct].LNA_JB2D[2] = 7;
 				nr[nrb_ct].LNA_JB2D[3] = 6;
+				nr[nrb_ct].Jacob_face[0] = 1; //y coordinate
+				nr[nrb_ct].Jacob_face[1] = 2;
 				nrb_ct += 1;
 			}
 			if (wet == 1) {
@@ -419,6 +426,8 @@ struct meshgenerationstruct meshgeneration() {
 				nr[nrb_ct].LNA_JB2D[1] = 4;
 				nr[nrb_ct].LNA_JB2D[2] = 3;
 				nr[nrb_ct].LNA_JB2D[3] = 2;
+				nr[nrb_ct].Jacob_face[0] = 0; //x coordinate
+				nr[nrb_ct].Jacob_face[1] = 1; //y coordinate
 				nrb_ct += 1; 
 			}
 			if (wet == 1) {
@@ -472,6 +481,8 @@ struct meshgenerationstruct meshgeneration() {
 				nr[nrb_ct].LNA_JB2D[1] = 6;
 				nr[nrb_ct].LNA_JB2D[2] = 7;
 				nr[nrb_ct].LNA_JB2D[3] = 8;
+				nr[nrb_ct].Jacob_face[0] = 0; //x coordinate
+				nr[nrb_ct].Jacob_face[1] = 1; //y coordinate
 				nrb_ct += 1; 
 			}
 			if (wet == 1) {
@@ -525,6 +536,8 @@ struct meshgenerationstruct meshgeneration() {
 				nr[nrb_ct].LNA_JB2D[1] = 2;
 				nr[nrb_ct].LNA_JB2D[2] = 6;
 				nr[nrb_ct].LNA_JB2D[3] = 5;
+				nr[nrb_ct].Jacob_face[0] = 0; //x coordinate
+				nr[nrb_ct].Jacob_face[1] = 2; //z coordinate
 				nrb_ct += 1; 
 			}
 			if (wet == 1) {
@@ -578,6 +591,8 @@ struct meshgenerationstruct meshgeneration() {
 				nr[nrb_ct].LNA_JB2D[1] = 8;
 				nr[nrb_ct].LNA_JB2D[2] = 7;
 				nr[nrb_ct].LNA_JB2D[3] = 3;
+				nr[nrb_ct].Jacob_face[0] = 0; //x coordinate
+				nr[nrb_ct].Jacob_face[1] = 2; //z coordinate
 				nrb_ct += 1;
 			}
 			if (wet == 1) {

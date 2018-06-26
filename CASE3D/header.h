@@ -26,10 +26,10 @@ void FSILINK(int*** LNA);
 struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD);
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT,
 	double*** HMASTER, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
-	double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn);
+	double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn, double****SHG);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
-const int N = 3;    //N is the element order of fluid mesh 
+const int N = 1;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;s
 typedef struct owetsurf {
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
@@ -59,7 +59,7 @@ typedef struct owetsurf {
 	int FP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of FPMASTER
 	int FP_2D[NINT*NINT];
 	double** JACOB;
-	int Jacob_face[2]; //Used to identify which coordinate dimension (x,y or z) to be used for surface 2D Jacobian matrix calculation.  
+	int Jacob_face[2]; //Used to identify which coordinate dimension (x,y or z/xi,eta,zeta?) to be used for surface 2D Jacobian matrix calculation.  
 	int LNA_norm[4];
 	int** IEN_py; //the linear element connectivity matrix of 2D physical groups (boundaries) separated from the original 2D high-order elements
 	double**** xs;
@@ -96,8 +96,14 @@ typedef struct nrbsurf {
 	double ***XNRB_kn;
 	double ***XNRB_ukn;
 	double ***XNRB;
+	double **XCOR_ukn;
 	int* NRBELE_ARR; 
 	int LNA_JB2D[4];
+	double ***P_dev; //The gradient of the pressure of NRB element points [NEL_nr][NINT*NINT][3]
+	double** Jacob_2D;
+	double****GSHL_2D;
+	double****xs_2D;
+	int Jacob_face[2];
 	//double* ADMASTERG; 
 	//double *BNRB; 
 } NRBSURF; 
@@ -192,13 +198,11 @@ struct TIMINTstruct {
 };
 
 //Input values
-const double SX = 8.5344 / 2; //14ft
-//const double SY = (0.9144 + 0.3048) * 2; //8ft
-const double SY = (0.9144 + 0.3048); //4ft
-//const double SY = 0.3048; //1ft
-const double SZ = 4.8768; //16ft
-//const int N = 2;    //N is the element order of fluid mesh 
-//const int NINT = N + 1; //NINT=N+1;
+const double SX = 1.0;
+//const double SX = 8.5344 / 2; //14ft
+const double SY = 0.141;
+//const double SZ = 4.8768; //16ft
+const double SZ = 1.0;
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;
 const int Nq = N + 1; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
@@ -208,22 +212,23 @@ const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
 const int hprefg = 1;
 const int mappingalgo = 2; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
-const double RHO = 1025.0; //original
-//const double RHO = 989.0; //Bleich-Sandler
-const int WAVE = 2; //1 for plane wave; 2 for spherical wave 
+//const double RHO = 1025.0; //original
+const double RHO = 989.0; //Bleich-Sandler
+const int WAVE = 1; //1 for plane wave; 2 for spherical wave 
 const int wavdirc[3] = { 0,1,0 }; //the direction of incident plane wave (positive y axis) 
-const double C = 1500.0; //original  
+//const double C = 1500.0; //original  
+const double C = 1450.0; //Bleich_Sandler
 const double CFLFRAC = 0.5;  //original 
 const int dtscale = 1;
 const double BETA = 0.25;   //original 
-const double TTERM = 0.08;    //SIMULATION END TIME 
+const double TTERM = 0.012;    //SIMULATION END TIME 
 const int CAV = 1; //1 for cavitation, 0 for non-cavitation 
 const double PSAT = 0.0; //saturated pressure 
 const double pi = 3.141593;
 const double grav = 9.81;
 const double PATM = 101.3e3; //pa 
-const double stdoff = 10; //ft
-const double depth = 30; //ft
+const double stdoff = 20; //ft
+const double depth = 25; //ft
 const double W = 60; //charge weight (lb)
 
 //standoff point in spherical wave case 
@@ -239,9 +244,11 @@ const int TNT = 1;
 const int output = 0; 
 const int FEM = 0; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
-const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
-const int nrbsurfnumber = 4; //The number of NRB surface. 
+const int owsfnumber = 1; //For the FSP case, we defined 4 wetted surfaces. 
+const int nrbsurfnumber = 1; //The number of NRB surface. 
 const double XHE = 0.3048; 
 const double YHE = 0.3048;
 const double DY = 2 * SY;
 const int SYNEL = 4 * refine;
+const double xo = SY; 
+const int Bleich = 1; 

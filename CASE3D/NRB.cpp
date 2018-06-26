@@ -9,7 +9,7 @@
 //NRB determines the NRB local node numbering and the associated NRB arrays
 struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA) {
 	NRBstruct t;
-	int i, j, k, l, m, e, z;
+	int i, j, k, l, m, n, e, z, o;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[nrbsurfnumber];
 	LOBATTOstruct bq;
@@ -51,35 +51,22 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA) {
 
 		double DUNC;
 		//Check out Evernote "Some thoughts on boundary force integration" 
-		/*
 		for (e = 0; e < nr[z].NEL_nrb; e++) {
-			for (m = 0; m < NINT*NINT; m++) {
-				for (l = 0; l < NINT*NINT; l++) {
-					DUNC = 0.0; //accumulator
-					for (i = 0; i < NqINT; i++) {
-						for (j = 0; j < NqINT; j++) {
-							for (k = 0; k < NqINT; k++) {
-								DUNC += gq.W[i] * gq.W[j] * gq.W[k] * ls.SHL[3][nr[z].DP[m] - 1][i*NqINT*NqINT + j * NqINT + k] * ls.SHL[3][nr[z].DP[l] - 1][i*NqINT*NqINT + j * NqINT + k] * nr[z].JACOB[e][i*NqINT*NqINT + j*NqINT + k];
+			for (m = 0; m < NINT; m++) {
+				for (n = 0; n < NINT; n++) {
+					for (l = 0; l < NINT; l++) {
+						for (o = 0; o < NINT; o++) {
+							DUNC = 0.0; //accumulator 
+							for (i = 0; i < NqINT; i++) {
+								for (j = 0; j < NqINT; j++) {
+									DUNC += gq.W[i] * gq.W[j] * (ls.SHOD[0][m][i] * ls.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * nr[z].Jacob_2D[e][i*NqINT + j];
+									//FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * (XHE / 2.0)*(YHE / 2.0);
+								}
 							}
+							//ol[z].FPMASTER[e][ol[z].LNA_2D[m][n] - 1][ol[z].LNA_2D[l][o] - 1] += FUNC;
+							nr[z].ADMASTER[e][m*NINT + n][l*NINT + o] += DUNC;
 						}
 					}
-					nr[z].ADMASTER[e][m][l] += DUNC;
-				}
-			}
-		}
-		*/
-		for (e = 0; e < nr[z].NEL_nrb; e++) {
-			for (m = 0; m < NINT*NINT; m++) {
-				for (l = 0; l < NINT*NINT; l++) {
-					DUNC = 0.0; //accumulator 
-					for (i = 0; i < NqINT; i++) {
-						//for (j = 0; j < NqINT; j++) {
-						for (k = 0; k < NqINT; k++) {
-							DUNC += gq.W[i] * gq.W[k] * ls.SHL[3][nr[0].DP[m] - 1][i*NqINT*NqINT + Nq * NqINT + k] * ls.SHL[3][nr[0].DP[l] - 1][i*NqINT*NqINT + Nq * NqINT + k] * (XHE / 2.0)*(YHE / 2.0);
-						}
-						//}
-					}
-					nr[z].ADMASTER[e][m][l] += DUNC;
 				}
 			}
 		}

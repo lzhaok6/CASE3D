@@ -203,6 +203,7 @@ int main()
 	//determine the stand-off point (nearest structural node or free surface node depending on which one is closer)
 	dists = sqrt(pow(XC - 0.0, 2) + pow(YC - (-SY), 2) + pow(ZC - SZ / 2, 2));
 	distf = -YC;
+	
 	if (dists > distf) {
 		XO = XC;
 		YO = 0;
@@ -232,8 +233,13 @@ int main()
 	double TAU = pow(W*0.453592, 1.0 / 3.0)*0.084*pow(pow(W*0.453592, 1.0 / 3.0) / dist, -B) / 1000; //sec
 
 	double KAPPA = 0.0;
-	
-	TIME_INT(a.NNODE, a.GCOORD, c.LNA, a.IEN, a.NEL, TIME, T, t.DT, t.NDT, o.HMASTER, o.Q, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamman, o.gamma_tn, o.Gn);
+
+	if (Bleich == 1) {
+		PPEAK = 0.712e6;
+		TAU = 0.999e-3;
+	}
+
+	TIME_INT(a.NNODE, a.GCOORD, c.LNA, a.IEN, a.NEL, TIME, T, t.DT, t.NDT, o.HMASTER, o.Q, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamman, o.gamma_tn, o.Gn, n.SHG);
 
 	printf("Cleaning up...\n");
 	/* clean up */
