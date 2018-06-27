@@ -138,11 +138,6 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					ct += 1;
 				}
 			}
-			/*
-			if (debug == 1) {
-				ol[0].DISP[375][2] = 1.0;
-			}
-			*/
 			hd = 0.0;
 			for (z = 0; z < owsfnumber; z++) {
 				for (i = 0; i < ol[z].GIDNct; i++) {

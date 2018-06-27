@@ -194,6 +194,14 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		for (i = 0; i < NINT*NINT; i++) {
 			nr[z].XEST_ukn[i] = new double[nr[z].NEL_nrb];
 		}
+		nr[z].angle_disp1 = new double*[NINT*NINT];
+		for (i = 0; i < NINT*NINT; i++) {
+			nr[z].angle_disp1[i] = new double[nr[z].NEL_nrb];
+		}
+		nr[z].angle_disp2 = new double*[NINT*NINT];
+		for (i = 0; i < NINT*NINT; i++) {
+			nr[z].angle_disp2[i] = new double[nr[z].NEL_nrb];
+		}
 		nr[z].XNRBORG2 = new double*[NINT*NINT];
 		for (i = 0; i < NINT*NINT; i++) {
 			nr[z].XNRBORG2[i] = new double[nr[z].NEL_nrb];
@@ -298,6 +306,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				nr[z].XEST[i][j] = 0.0;
 				nr[z].XEST_kn[i][j] = 0.0;
 				nr[z].XEST_ukn[i][j] = 0.0;
+				nr[z].angle_disp1[i][j] = 1.0;
+				nr[z].angle_disp2[i][j] = 1.0;
 				nr[z].XNRBORG2[i][j] = 0.0;
 			}
 		}
@@ -737,7 +747,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 	}
 
-	double angle_disp = 1.0; 
 	if (Bleich == 1) {
 		int wavdirc[3] = { 0,1,0 };
 	}
@@ -959,19 +968,20 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					angle = -1.0;
 					for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 						for (k = 0; k < NINT*NINT; k++) {
-							nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) 
+							nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1])
 								- (0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
 							//nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = (DT / (RHO*C))*P[nr[z].NRBA[j] - 1][0];
 							if (debug == 1) {
 								//modify the value base on the angle between normal displacement direction and normal surface direction
 								if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5) != 0) {
-									angle_disp = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+									nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+									std::cout << " " << std::endl;
 								}
 								else {
-									angle_disp = 1.0;
+									nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = 1.0;
 								}
 							}
-							nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = angle_disp * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
+							nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
 						}
 					}
 					for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
@@ -995,13 +1005,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						}
 					}
 				}
-				std::cout << " " << std::endl;
-				hd = 0.0;
-				for (j = 0; j < NNODE; j++) {
-					hd += XNRBORG[j];
-				}
-
-
 			}
 			else { //Spherical wave
 				for (z = 0; z < nrbsurfnumber; z++) { //from bottom to front surface (k=0 means all node case) 
@@ -1019,14 +1022,14 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 							if (debug == 1) {
 								//modify the value base on the angle between normal displacement direction and normal surface direction
 								if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5) != 0) {
-									angle_disp = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-									std::cout << " " << std::endl;
+									nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+									//std::cout << " " << std::endl;
 								}
 								else {
-									angle_disp = 1.0;
+									nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = 1.0;
 								}
 							}
-							nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = angle_disp * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0]; //plane wave approximation (PWA)
+							nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0]; //plane wave approximation (PWA)
 							nr[z].XNRBORG2[nr[z].DP_2D[k] - 1][j] = angle*XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
 						}
 					}
@@ -1057,13 +1060,13 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						if (debug == 1) {
 							//modify the value base on the angle between normal displacement direction and normal surface direction
 							if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5) != 0) {
-								angle_disp = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+								nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
 							}
 							else {
-								angle_disp = 1.0;
+								nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = 1.0;
 							}
 						}
-						nr[z].XEST[nr[z].DP_2D[k] - 1][j] = angle_disp * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
+						nr[z].XEST[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
 					}
 				}
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
@@ -1293,6 +1296,34 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 		}
 
+		if (debug == 1) {
+			for (z = 0; z < nrbsurfnumber; z++) {
+				for (ii = 0; ii < nr[z].NEL_nrb; ii++) {
+					for (jj = 0; jj < NINT*NINT; jj++) {
+						for (kk = 0; kk < 3; kk++) {
+							nr[z].P_dev[ii][jj][kk] = 0.0;
+						}
+					}
+				}
+			}
+			for (z = 0; z < nrbsurfnumber; z++) {
+				for (j = 0; j < nr[z].NEL_nrb; j++) {
+					for (k = 0; k < NINT*NINT; k++) {
+						//loop through each point in element and accumulate the value
+						for (ii = 0; ii < NINT; ii++) {
+							for (jj = 0; jj < NINT; jj++) {
+								for (kk = 0; kk < NINT; kk++) {
+									for (h = 0; h < 3; h++) { //the three directions (x y z )
+										nr[z].P_dev[j][nr[z].DP_2D[k] - 1][h] += SHG[nr[z].NRBELE_ARR[j] - 1][h][LNA_3D[ii][jj][kk] - 1][nr[z].DP[k] - 1] * FEE[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][1];
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
 		if (tfm == 1) {
 			for (z = 0; z < nrbsurfnumber; z++) {
 				//XNRB corrector
@@ -1300,25 +1331,22 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					DPS_ukn[nr[z].NRBA[j] - 1] = 0.5*DT*(P[nr[z].NRBA[j] - 1][1] + P[nr[z].NRBA[j] - 1][0]);
 					//XCOR_ukn[nr[z].NRBA[j] - 1] = DPS_ukn[nr[z].NRBA[j] - 1] / (RHO*C);
 				}
-				
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
 					for (k = 0; k < NINT*NINT; k++) {
-
 						if (debug == 1) {
 							//modify the value base on the angle between normal displacement direction and normal surface direction
 							if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5) != 0) {
-								angle_disp = (nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0] * (-nr[z].norm[j][0]) + nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1] * (-nr[z].norm[j][1]) + nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2] * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+								nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+								//std::cout << " " << std::endl;
 							}
 							else {
-								angle_disp = 1.0;
+								nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = 1.0;
 							}
 						}
-
-						nr[z].XCOR_ukn[nr[z].DP_2D[k] - 1][j] = angle_disp*(DPS_ukn[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1] / (RHO*C));
-						std::cout << " " << std::endl;
+						nr[z].XCOR_ukn[nr[z].DP_2D[k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) / (RHO*C);
+						//std::cout << " " << std::endl;
 					}
 				}
-				
 				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 					for (k = 0; k < NINT*NINT; k++) {
 						//nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] + XCOR_ukn[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
@@ -1338,7 +1366,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				for (j = 0; j < nr[z].NRBNODE; j++) {
 					DPS[nr[z].NRBA[j] - 1] = 0.5*DT*(P[nr[z].NRBA[j] - 1][1] + P[nr[z].NRBA[j] - 1][0]); // PRESSURE CORRECTOR FOR NRB
 				}
-
 				for (j = 0; j < nr[z].NRBNODE; j++) {
 					XCOR[nr[z].NRBA[j] - 1] = DPS[nr[z].NRBA[j] - 1] / (RHO*C);  //DISPLACEMENT CORRECTOR
 				}
