@@ -31,7 +31,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	//system("PAUSE "); 
-	std::ifstream infile("Bleich_Sandler_unit.msh");
+	std::ifstream infile("FSP_N=1.msh");
 	if (!infile) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -254,8 +254,8 @@ struct meshgenerationstruct meshgeneration() {
 	//The physical group number of wetted surface and NRB surfaces (Needs to be set up by the user)
 	//int wt_pys_num[4] = { 0,1,2,3 };  //the physical group number that corresponds to the wet surface (physical group 3)
 	//int nrb_pys_num[4] = { 4,5,6,7 };
-	int wt_pys_num[1] = { 0 };
-	int nrb_pys_num[1] = { 1 };
+	//int wt_pys_num[1] = { 0 };
+	//int nrb_pys_num[1] = { 1 };
 	
 	//If the wet surface is the left face of the local element (i.e., i=0). 
 	std::cout << "Have you configured the wetted surface and NRB surface physical group number for this mesh? If so, hit Enter to proceed." << std::endl;
