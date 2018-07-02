@@ -30,7 +30,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
 const int N = 1;    //N is the element order of fluid mesh 
-const int NINT = N + 1; //NINT=N+1;s
+const int NINT = N + 1; //NINT=N+1;
 typedef struct owetsurf {
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
 	double *PSI; //integrated incident pressure 
@@ -243,7 +243,7 @@ const double W = 60; //charge weight (lb)
 //the parameter to control whether a tabulated smoothed waveform is used 
 const double output_int = 5e-4; //output file time interval
 const int debug = 1; //is the code in debug mode?
-const int tfm = 1; //is total field model used? 
+const int tfm = 0; //is total field model used? 
 const int tensorfactorization = 0;
 const int TNT = 1;
 const int output = 0; 
