@@ -1,7 +1,7 @@
 Code name: 3Dbarge_TFM_Abaqus_sym_mesh
-Simulation date and time: 02-07-2018 15-46-50
+Simulation date and time: 03-07-2018 19-18-26
 Mesh information:
-N: 1 mesh size:  wetted surface number: 1 Nodenumber: 48069 Element number: 5400 h/p refinement rate: 1
+N: 1 mesh size:  wetted surface number: 1 Nodenumber: 6655 Element number: 5400 h/p refinement rate: 1
 Explosive information: 
 stdoff point (spherical): 0 0 6.596 explosion center: 0 -7.62 6.596 peak pressure (Mpa): 712000 decay rate: 0.000999 WAVE (1: plane, 2: spherical): 1
 Time integration information

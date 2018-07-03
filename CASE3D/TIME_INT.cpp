@@ -585,8 +585,15 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	//=========================Get free surface points=========================//
 	int fspt_num = 0;
 	for (j = 0; j < NNODE; j++) {
-		if (abs(GCOORD[j][1]) <= 1e-6) {
-			fspt_num += 1;
+		if (debug == 0) {
+			if (abs(GCOORD[j][1]) <= 1e-6) {
+				fspt_num += 1;
+			}
+		}
+		else {
+			if (abs(GCOORD[j][1]) <= 1e-6) {
+				fspt_num += 1;
+			}
 		}
 	}
 	int *fspt;
@@ -596,9 +603,17 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	}
 	int count = 0;
 	for (j = 0; j < NNODE; j++) {
-		if (abs(GCOORD[j][1]) <= 1e-6) {
-			fspt[count] = j + 1;
-			count += 1;
+		if (debug == 0) {
+			if (abs(GCOORD[j][1]) <= 1e-6) {
+				fspt[count] = j + 1;
+				count += 1;
+			}
+		}
+		else {
+			if (abs(GCOORD[j][1]) <= 1e-6) {
+				fspt[count] = j + 1;
+				count += 1;
+			}
 		}
 	}
 	if (count != fspt_num || count == 0) {
@@ -666,7 +681,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	int oc = 0;
 	double lastDT = 0.0;
 
-	std::string energyfile = "energy_history.txt";
+	std::string energyfile = "history.txt";
 	std::ofstream energyfilehd;
 	energyfilehd.open(energyfile);
 
@@ -825,12 +840,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			current_time = TTERM;
 		}
 		*/
-		
+
 		if (i == NDT - 1) { //the last time step
 			time_step_size = TTERM - DT*(NDT - 1);
 			current_time = TTERM;
 		}
-		
+
 		PIN = WAVE_IN(NNODE, GCOORD, T, TIME, PIN, DT, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO); //USED TO UPDATE PIN IN THIS SUBROUTINE
 
 		for (z = 0; z < owsfnumber; z++) {
@@ -840,7 +855,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				ol[z].WBS[ol[z].GIDN[k] - 1] = 0.0;
 			}
 		}
-		
+
 		if (tfm == 1) {
 			for (z = 0; z < owsfnumber; z++) {
 				for (j = 0; j < ol[z].GIDNct; j++) {
@@ -932,7 +947,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				PSI_inc[j][0] = PSI_inc[j][1];
 			}
 		}
-		
+
 		if (tfm == 1) { //Total field model
 			for (z = 0; z < owsfnumber; z++) {
 				for (j = 0; j < ol[z].FSNEL; j++) { //for every fluid element linked to structure
@@ -986,6 +1001,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					}
 				}
 			}
+
 			for (z = 0; z < nrbsurfnumber; z++) {
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
 					for (k = 0; k < NINT*NINT; k++) {
@@ -1004,7 +1020,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 											//nr[z].P_dev[j][nr[z].DP_2D[k] - 1][h] += SHG[nr[z].NRBELE_ARR[j] - 1][h][LNA_3D[ii][jj][kk] - 1][nr[z].DP[k] - 1] * (P[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][0] - PIN[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][0]);
 											//nr[z].P_dev[j][nr[z].DP_2D[k] - 1][h] += SHG[nr[z].NRBELE_ARR[j] - 1][h][LNA_3D[ii][jj][kk] - 1][nr[z].DP[k] - 1] * (FEE[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][0] - FEE_inc[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][0]) / RHO;
 											//nr[z].P_dev[j][nr[z].DP_2D[k] - 1][h] += SHG[nr[z].NRBELE_ARR[j] - 1][h][LNA_3D[ii][jj][kk] - 1][nr[z].DP[k] - 1] * FEE[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][0] / RHO;
-											nr[z].P_dev[j][nr[z].DP_2D[k] - 1][h] += SHG[nr[z].NRBELE_ARR[j] - 1][h][LNA_3D[ii][jj][kk] - 1][nr[z].DP[k] - 1] * FEEDOT[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][0] / RHO;
+											nr[z].P_dev[j][nr[z].DP_2D[k] - 1][h] += SHG[nr[z].NRBELE_ARR[j] - 1][h][LNA_3D[ii][jj][kk] - 1][nr[z].DP[k] - 1] * abs(FEEDOT[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][0]) / RHO;
 										}
 									}
 								}
@@ -1029,8 +1045,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 										nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
 									}
 									else {
-										nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-										//std::cout << " " << std::endl;
+										nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+										std::cout << "" << std::endl;
 									}
 									//std::cout << " " << std::endl;
 								}
@@ -1165,13 +1181,23 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						if (improvednrb == 1) {
 							//modify the value base on the angle between normal displacement direction and normal surface direction
 							if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5) != 0) {
-								nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+								if (debug == 0) {
+									nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+								}
+								else {
+									nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+								}
 							}
 							else {
 								nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = 1.0;
 							}
 						}
-						nr[z].XEST[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
+						if (debug == 0) {
+							nr[z].XEST[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
+						}
+						else {
+							nr[z].XEST[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
+						}
 					}
 				}
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
@@ -1234,7 +1260,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 		}
 		/*
-		hd = 0.0; 
+		hd = 0.0;
 		for (j = 0; j < NNODE; j++) {
 			hd += ol[0].WBS[j];
 		}
@@ -1294,7 +1320,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 							gamman[counter2[ctt1]][1] = 0.0;
 							gamman[counter3[ctt1]][2] = 0.0;
 							for (q = 0; q < NINT; q++) { //q (recurrent addition in this dimension) //takes NEL*NINT^3*(2*NINT+2) operations	
-								gamman[counter1[ctt1]][0] += SHOD1[q*NINT + ii] * FEE[IENct1[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1]; 
+								gamman[counter1[ctt1]][0] += SHOD1[q*NINT + ii] * FEE[IENct1[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
 								gamman[counter2[ctt1]][1] += SHOD1[q*NINT + ii] * FEE[IENct2[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
 								gamman[counter3[ctt1]][2] += SHOD1[q*NINT + ii] * FEE[IENct3[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
 								ctt2 += 1;
@@ -1306,8 +1332,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 				//takes 15*NINT^3*NEL FLOP
 				for (ii = 0; ii < NINT*NINT*NINT; ii++) { //takes NEL*(2 * NINT + 2) operations
-					gamma_tn[ii][0] = Gn[j][0][0][ii] * gamman[ii][0] + Gn[j][0][1][ii] * gamman[ii][1] + Gn[j][0][2][ii] * gamman[ii][2]; 
-																																  //ipk
+					gamma_tn[ii][0] = Gn[j][0][0][ii] * gamman[ii][0] + Gn[j][0][1][ii] * gamman[ii][1] + Gn[j][0][2][ii] * gamman[ii][2];
+					//ipk
 					gamma_tn[ii][1] = Gn[j][1][1][ii] * gamman[ii][1] + Gn[j][0][1][ii] * gamman[ii][0] + Gn[j][1][2][ii] * gamman[ii][2];
 					//ijp
 					gamma_tn[ii][2] = Gn[j][2][2][ii] * gamman[ii][2] + Gn[j][0][2][ii] * gamman[ii][0] + Gn[j][1][2][ii] * gamman[ii][1];
@@ -1321,7 +1347,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						for (z = 0; z < NINT; z++) { //k //takes NEL*NINT^3*(2*NINT+2) operations
 							HFTEMPn[LNAct3[ctt2]] = 0.0;
 							for (ii = 0; ii < NINT; ii++) { //p (recurrent addition) //p NEL*(2*NINT+2) operations
-								HFTEMPn[LNAct3[ctt2]] += SHOD1[h*NINT + ii] * gamma_tn[ii*NINT*NINT + k*NINT + z][0] + SHOD1[k*NINT + ii] * gamma_tn[h*NINT*NINT + ii*NINT + z][1] + SHOD1[z*NINT + ii] * gamma_tn[h*NINT*NINT + k*NINT + ii][2]; 
+								HFTEMPn[LNAct3[ctt2]] += SHOD1[h*NINT + ii] * gamma_tn[ii*NINT*NINT + k*NINT + z][0] + SHOD1[k*NINT + ii] * gamma_tn[h*NINT*NINT + ii*NINT + z][1] + SHOD1[z*NINT + ii] * gamma_tn[h*NINT*NINT + k*NINT + ii][2];
 							}
 							ctt2 += 1;
 						}
@@ -1350,7 +1376,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			FFORCE[nrb.NRBA_t[j] - 1] += BNRB[nrb.NRBA_t[j] - 1];
 		}
 		//The combination of FFORCE passes the test
-		
+
 		if (tfm == 1) {
 			for (j = 0; j < fspt_num; j++) {
 				Q[fspt[j] - 1] = 1.0;
@@ -1376,7 +1402,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			//PRESSURE CORRECTION FACTOR
 			ds[nrb.NRBA_t[j] - 1][2] = ds[nrb.NRBA_t[j] - 1][1] + ((ds[nrb.NRBA_t[j] - 1][2] - ds[nrb.NRBA_t[j] - 1][1]) / (1 + KAPPA));
 		} //after ds is updated, P can be updated.
-	
+
 
 		//======================NODE-BY-NODE CAVITATION CHECK=========================//
 		if (tfm == 1) {
@@ -1440,7 +1466,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 											//nr[z].P_dev[j][nr[z].DP_2D[k] - 1][h] += SHG[nr[z].NRBELE_ARR[j] - 1][h][LNA_3D[ii][jj][kk] - 1][nr[z].DP[k] - 1] * (P[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][1] - PIN[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][1]);
 											//nr[z].P_dev[j][nr[z].DP_2D[k] - 1][h] += SHG[nr[z].NRBELE_ARR[j] - 1][h][LNA_3D[ii][jj][kk] - 1][nr[z].DP[k] - 1] * (FEE[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][1] - FEE_inc[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][1]) / RHO;
 											//nr[z].P_dev[j][nr[z].DP_2D[k] - 1][h] += SHG[nr[z].NRBELE_ARR[j] - 1][h][LNA_3D[ii][jj][kk] - 1][nr[z].DP[k] - 1] * FEE[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][1] / RHO;
-											nr[z].P_dev[j][nr[z].DP_2D[k] - 1][h] += SHG[nr[z].NRBELE_ARR[j] - 1][h][LNA_3D[ii][jj][kk] - 1][nr[z].DP[k] - 1] * FEEDOT[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][1] / RHO;
+											nr[z].P_dev[j][nr[z].DP_2D[k] - 1][h] += SHG[nr[z].NRBELE_ARR[j] - 1][h][LNA_3D[ii][jj][kk] - 1][nr[z].DP[k] - 1] * abs(FEEDOT[IEN[LNA_3D[ii][jj][kk] - 1][nr[z].NRBELE_ARR[j] - 1] - 1][1]) / RHO;
 										}
 									}
 								}
@@ -1469,8 +1495,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 									nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
 								}
 								else {
-									nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-									std::cout << " " << std::endl;
+									nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+									//std::cout << " " << std::endl;
 								}
 								//std::cout << " " << std::endl;
 							}
@@ -1517,13 +1543,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						if (improvednrb == 1) {
 							//modify the value base on the angle between normal displacement direction and normal surface direction
 							if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5) != 0) {
-								//if (debug == 0) {
+								if (debug == 0) {
 									nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-								//}
-								//else {
-									//nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-								//}
-								//std::cout << " " << std::endl;
+								}
+								else {
+									nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+								}
 							}
 							else {
 								nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = 1.0;
@@ -1596,7 +1621,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 			}
 		}
-		
+
 		for (z = 0; z < owsfnumber; z++) {
 			for (j = 0; j < ol[z].GIDNct; j++) {
 				ol[z].DISP_norm[ol[z].GIDN[j] - 1][0] = ol[z].DISP_norm[ol[z].GIDN[j] - 1][1];
@@ -1616,7 +1641,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		*/
 		//Output the pressure history under a specified point
 		//extern double BF_val[4];
-		//energyfilehd << current_time << " " << in.energy_sent << " " << in.energy_rec << " " << BF_val[0] << " " << BF_val[1] << " " << BF_val[2] << " " << BF_val[3] << " " << ol[0].OBF_val << " " << ol[1].OBF_val << " " << ol[2].OBF_val << " " << ol[3].OBF_val << std::endl;
+		energyfilehd << current_time << nr[0].angle_disp1[nr[0].DP_2D[0] - 1][0] << " " << nr[0].angle_disp2[nr[0].DP_2D[0] - 1][0] << std::endl;
 	}
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 	myfile << "total CPU time: " << duration << std::endl;
