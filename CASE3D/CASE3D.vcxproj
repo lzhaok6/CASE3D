@@ -102,6 +102,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\Users\lzhaok6\OneDrive\UNDEX research\MpCCI\codes\CASE3D\EIGENDIR;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

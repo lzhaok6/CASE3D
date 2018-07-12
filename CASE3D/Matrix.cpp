@@ -7,12 +7,15 @@
 #include <Eigen/Dense>
 #include <Eigen/LU>
 #include <ctime>
+#include <omp.h>
 
 struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double****XS, double****SHG, double**JACOB) {
 	MATRIXstruct t;
 	double QFUNC;  //CAPACITANCE MATRIX SUM VARIABLE (mass matrix)
 	double HFUNC;  //REACTANCE MATRIX SUM VARIABLE (stiffness matrix)
 	int i, j, k, l, m, n, e, u, v;
+	double duration;
+	std::clock_t start;
 	t.QMASTER = new double*[NINT*NINT*NINT]; //element matrix  
 	t.HMASTER = new double**[NEL]; //element matrix
 	for (i = 0; i < NINT*NINT*NINT; i++) {
@@ -106,12 +109,11 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 		}
 	}
 
-	//std::clock_t start;
-	//start = std::clock();
+	start = std::clock();
 	/*
 	for (e = 0; e < NEL; e++) {
 		//std::cout << e << std::endl;
-		for (i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element 
+		for (i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element
 			for (j = 0; j < NINT*NINT*NINT; j++) { //the transpose of shape function
 				for (k = 0; k < NINT; k++) {       //k l m are for four points
 					for (l = 0; l < NINT; l++) {
@@ -119,8 +121,8 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 							HFUNC = JACOB[e][k*NINT*NINT + l*NINT + m]*(SHG[e][2][i][k*NINT*NINT+l*NINT+m] * SHG[e][2][j][k*NINT*NINT + l*NINT + m] + SHG[e][1][i][k*NINT*NINT + l*NINT + m] * SHG[e][1][j][k*NINT*NINT + l*NINT + m] + SHG[e][0][i][k*NINT*NINT + l*NINT + m] * SHG[e][0][j][k*NINT*NINT + l*NINT + m]);
 							//ASSEMBLE MASTER REACTANCE MATRIX
 							t.HMASTER[e][i][j] = t.HMASTER[e][i][j] + W[k] * W[l] * W[m] * HFUNC;
-							//QMASTER is diagonal because of the orthogonality of polynomial 
-							//HMASTER is not diagonal because the polynomial is differentiated 
+							//QMASTER is diagonal because of the orthogonality of polynomial
+							//HMASTER is not diagonal because the polynomial is differentiated
 						}
 					}
 				}
@@ -131,30 +133,68 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 		}
 	}
 	*/
+	
+	/*
+	int ***data;
+	data = new int**[NEL];
+	for (i = 0; i < NEL; i++) {
+		data[i] = new int*[NINT*NINT*NINT];
+		for (j = 0; j < NINT*NINT*NINT; j++) {
+			data[i][j] = new int[NINT*NINT*NINT];
+		}
+	}
+	int ct2 = 0; 
+	#pragma omp parallel for 
+	for (i = 0; i < NEL; i++) {
+		//#pragma omp parallel for 
+		for (j = 0; j < NINT*NINT*NINT; j++) {
+			//#pragma omp parallel for
+			for (k = 0; k < NINT*NINT*NINT; k++) {
+				data[i][j][k] = 123;
+				ct2 += 1;
+			}
+		}
+	}
+
+	for (i = 0; i < NEL; i++) {
+		for (j = 0; j < NINT*NINT*NINT; j++) {
+			for (k = 0; k < NINT*NINT*NINT; k++) {
+				if (data[i][j][k] != 123) {
+					std::cout << " " << std::endl;
+				}
+			}
+		}
+	}
+	*/
 
 	//about 25% faster than the algorithm above
-	for (e = 0; e < NEL; e++) {
-		for (i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element 
-			for (j = 0; j < NINT*NINT*NINT; j++) { //the transpose of shape function
-				for (k = 0; k < NINT*NINT*NINT; k++) {       //k l m are for four points
-					HFUNC = JACOB[e][k] * (SHG[e][2][i][k] * SHG[e][2][j][k] + SHG[e][1][i][k] * SHG[e][1][j][k] + SHG[e][0][i][k] * SHG[e][0][j][k]);
+	#pragma omp parallel for num_threads(6)
+	for (int e = 0; e < NEL; e++) {
+		//#pragma omp parallel for num_threads(6)
+		for (int i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element 
+			//#pragma omp parallel for num_threads(6)
+			for (int j = 0; j < NINT*NINT*NINT; j++) { //the transpose of shape function
+				//#pragma omp parallel for num_threads(6)
+				for (int k = 0; k < NINT*NINT*NINT; k++) {       //k l m are for four points
+					//HFUNC = JACOB[e][k] * (SHG[e][2][i][k] * SHG[e][2][j][k] + SHG[e][1][i][k] * SHG[e][1][j][k] + SHG[e][0][i][k] * SHG[e][0][j][k]);
 					//ASSEMBLE MASTER REACTANCE MATRIX
-					t.HMASTER[e][i][j] = t.HMASTER[e][i][j] + W_new[k] * HFUNC;
+					//t.HMASTER[e][i][j] = t.HMASTER[e][i][j] + W_new[k] * HFUNC;
+					t.HMASTER[e][i][j] = t.HMASTER[e][i][j] + W_new[k] * JACOB[e][k] * (SHG[e][2][i][k] * SHG[e][2][j][k] + SHG[e][1][i][k] * SHG[e][1][j][k] + SHG[e][0][i][k] * SHG[e][0][j][k]);
 					//QMASTER is diagonal because of the orthogonality of polynomial 
 					//HMASTER is not diagonal because the polynomial is differentiated 
 				}
 			}
 		}
+		/*
 		if (e % 1000 == 0) {
 			std::cout << e << std::endl; //output which line is being read
 		}
+		*/
 	}
-	/*
-	double duration;
+	
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
 	std::cout << "total CPU time (ms): " << duration << std::endl;
-	std::cout << " " << std::endl;
-	*/
+	//std::cout << " " << std::endl;
 
 	//tensors for the evaluation of stiffness terms
 	t.gamma = new double***[NINT];
@@ -246,8 +286,8 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 	//need to initialize here!!!
 	Eigen::MatrixXd JB(3, 3);
 	Eigen::MatrixXd ga(3, 3);
-	std::clock_t start;
-	start = std::clock();
+	//std::clock_t start;
+	//start = std::clock();
 	/*
 	for (i = 0; i < NINT; i++) {
 		for (j = 0; j < NINT; j++) {
@@ -310,32 +350,33 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 	*/
 
 	int ct;
-	for (e = 0; e < NEL; e++) {
+	start = std::clock();
+	//#pragma omp parallel for num_threads(6)
+	for (int e = 0; e < NEL; e++) {
 		ct = 0;
-		for (k = 0; k < NINT*NINT*NINT; k++) {
-			for (l = 0; l < 3; l++) {
-				for (m = 0; m < 3; m++) {
+		for (int k = 0; k < NINT*NINT*NINT; k++) {
+			for (int l = 0; l < 3; l++) {
+				for (int m = 0; m < 3; m++) {
 					JB(l, m) = XS[e][l][m][k]; //Jacobian matrix
 				}
 			}
 			ga = (JB.inverse().transpose())*JB.inverse(); //3*3 matrix
-			for (l = 0; l < 3; l++) {
-				for (m = 0; m < 3; m++) {
+			for (int l = 0; l < 3; l++) {
+				for (int m = 0; m < 3; m++) {
 					t.Gn[e][l][m][ct] = ga(l, m) * W_new[k] * JACOB[e][k];
 				}
 			}
 			ct += 1;
 		}
+		/*
 		if (e % 1000 == 0) {
 			std::cout << e << std::endl; //output which line is being read
 		}
+		*/
 		//JB is the jacobian matrix and JACOB is the determinant of jacobian matrix 
 	}
-
-	double duration;
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
 	std::cout << "total CPU time (ms): " << duration << std::endl;
-
 	std::cout << " " << std::endl;
 	return t;
 }

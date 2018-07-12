@@ -12,6 +12,7 @@
 #include <Eigen/Dense>
 #include <Eigen/LU>
 #include <stdlib.h>
+#include <omp.h>
 
 /*
 This code dedicated for frigate currently only support mapping algorithm 2.  
@@ -22,11 +23,9 @@ double current_time;
 OWETSURF ol[owsfnumber]; //declear the data structure globally
 NRBSURF nr[nrbsurfnumber]; 
 int main()
-{
-	//extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
-	//extern NRBSURF nr[owsfnumber];
+{	
 	double LMAX;
-	int h, i, j, k, q, z, e, ii, jj; //error prone: cannot be the same with data structure type (z is the same as Z)
+	int h, q, z, e, i, j, k, ii, jj; //error prone: cannot be the same with data structure type (z is the same as Z)
 	int TIME = 0;     //CONTROL TIME
 	if (FEM == 1 && N != 1) {
 		std::cout << "the current code doesn't support high-order FEM" << std::endl;
@@ -200,6 +199,7 @@ int main()
 	ZC = stdoff*0.3048 + SZ / 2;
 	YC = -depth*0.3048;
 	XC = 0.0;
+
 	//determine the stand-off point (nearest structural node or free surface node depending on which one is closer)
 	dists = sqrt(pow(XC - 0.0, 2) + pow(YC - (-SY), 2) + pow(ZC - SZ / 2, 2));
 	distf = -YC;
@@ -216,6 +216,13 @@ int main()
 	}
 
 	dist = sqrt(pow((XC - XO), 2) + pow((YC - YO), 2) + pow((ZC - ZO), 2));
+	if (Bleich == 1 && WAVE == 2) {
+		dist = depth;
+		ZC = 0;
+		YC = -depth;
+		XC = -SX / 2;
+	}
+
 	double A = 0.0;
 	double B = 0.0;
 	double K = 0.0;
@@ -234,7 +241,7 @@ int main()
 
 	double KAPPA = 0.0;
 
-	if (Bleich == 1) {
+	if (Bleich == 1 && WAVE == 1) {
 		PPEAK = 0.712e6;
 		TAU = 0.999e-3;
 	}
