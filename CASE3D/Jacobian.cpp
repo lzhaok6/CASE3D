@@ -14,6 +14,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 	extern NRBSURF nr[nrbsurfnumber];
 
 	//initialize t.XS
+	/*
 	t.XS = new double***[NEL];
 	for (i = 0; i < NEL; i++) {
 		t.XS[i] = new double**[3];
@@ -33,7 +34,21 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 			}
 		}
 	}
-
+	*/
+	t.XS = new double**[NEL];
+	for (i = 0; i < NEL; i++) {
+		t.XS[i] = new double*[9];
+		for (j = 0; j < 9; j++) {
+			t.XS[i][j] = new double[NINT*NINT*NINT];
+		}
+	}
+	for (i = 0; i < NEL; i++) {
+		for (j = 0; j < 9; j++) {
+			for (l = 0; l < NINT*NINT*NINT; l++) {
+				t.XS[i][j][l] = 0.0;
+			}
+		}
+	}
 	t.JACOB = new double*[NEL];
 	for (i = 0; i < NEL; i++) {
 		t.JACOB[i] = new double[NINT*NINT*NINT];
@@ -65,6 +80,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 	LOCAL_GSHAPEstruct lg;
 	lg = LOCAL_GSHAPE(gq.S, LNA, NINT);
 
+	/*
 	for (m = 0; m < NEL; m++) {
 		std::cout << m << std::endl;
 		for (i = 0; i < NINT; i++) {
@@ -86,6 +102,32 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 					t.JACOB[m][i*NINT*NINT + j*NINT + k] = t.XS[m][0][0][i*NINT*NINT + j*NINT + k] * (t.XS[m][1][1][i*NINT*NINT + j*NINT + k] * t.XS[m][2][2][i*NINT*NINT + j*NINT + k] - t.XS[m][2][1][i*NINT*NINT + j*NINT + k] * t.XS[m][1][2][i*NINT*NINT + j*NINT + k])
 						- t.XS[m][1][0][i*NINT*NINT + j*NINT + k] * (t.XS[m][0][1][i*NINT*NINT + j*NINT + k] * t.XS[m][2][2][i*NINT*NINT + j*NINT + k] - t.XS[m][2][1][i*NINT*NINT + j*NINT + k] * t.XS[m][0][2][i*NINT*NINT + j*NINT + k])
 						+ t.XS[m][2][0][i*NINT*NINT + j*NINT + k] * (t.XS[m][0][1][i*NINT*NINT + j*NINT + k] * t.XS[m][1][2][i*NINT*NINT + j*NINT + k] - t.XS[m][1][1][i*NINT*NINT + j*NINT + k] * t.XS[m][0][2][i*NINT*NINT + j*NINT + k]);
+				}
+			}
+		}
+	}
+	*/
+	for (m = 0; m < NEL; m++) {
+		//std::cout << m << std::endl;
+		for (i = 0; i < NINT; i++) {
+			for (j = 0; j < NINT; j++) {
+				for (k = 0; k < NINT; k++) {
+					for (l = 0; l < 8; l++) {
+						//same with 2D code, the transpose of that in Mindmap (the determinant of two transpose matrix is the same)
+						t.XS[m][3 * 0 + 0][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 0 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dxi
+						t.XS[m][3 * 1 + 0][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 1 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dxi
+						t.XS[m][3 * 2 + 0][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 2 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dxi
+						t.XS[m][3 * 0 + 1][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 0 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/deta
+						t.XS[m][3 * 1 + 1][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 1 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/deta
+						t.XS[m][3 * 2 + 1][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 2 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/deta
+						t.XS[m][3 * 0 + 2][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 0 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dzeta
+						t.XS[m][3 * 1 + 2][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 1 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dzeta
+						t.XS[m][3 * 2 + 2][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 2 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dzeta
+					}
+					//The determinant of jacobian matrix for each node in the element
+					t.JACOB[m][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 0 + 0][i*NINT*NINT + j*NINT + k] * (t.XS[m][3 * 1 + 1][i*NINT*NINT + j*NINT + k] * t.XS[m][3 * 2 + 2][i*NINT*NINT + j*NINT + k] - t.XS[m][3 * 2 + 1][i*NINT*NINT + j*NINT + k] * t.XS[m][3 * 1 + 2][i*NINT*NINT + j*NINT + k])
+						- t.XS[m][3 * 1 + 0][i*NINT*NINT + j*NINT + k] * (t.XS[m][3 * 0 + 1][i*NINT*NINT + j*NINT + k] * t.XS[m][3 * 2 + 2][i*NINT*NINT + j*NINT + k] - t.XS[m][3 * 2 + 1][i*NINT*NINT + j*NINT + k] * t.XS[m][3 * 0 + 2][i*NINT*NINT + j*NINT + k])
+						+ t.XS[m][3 * 2 + 0][i*NINT*NINT + j*NINT + k] * (t.XS[m][3 * 0 + 1][i*NINT*NINT + j*NINT + k] * t.XS[m][3 * 1 + 2][i*NINT*NINT + j*NINT + k] - t.XS[m][3 * 1 + 1][i*NINT*NINT + j*NINT + k] * t.XS[m][3 * 0 + 2][i*NINT*NINT + j*NINT + k]);
 				}
 			}
 		}

@@ -9,7 +9,7 @@
 #include <ctime>
 #include <omp.h>
 
-struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double****XS, double****SHG, double**JACOB) {
+struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double***XS, double****SHG, double**JACOB) {
 	MATRIXstruct t;
 	double QFUNC;  //CAPACITANCE MATRIX SUM VARIABLE (mass matrix)
 	double HFUNC;  //REACTANCE MATRIX SUM VARIABLE (stiffness matrix)
@@ -196,135 +196,107 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 	std::cout << "total CPU time (ms): " << duration << std::endl;
 	//std::cout << " " << std::endl;
 
-	//tensors for the evaluation of stiffness terms
-	t.gamma = new double***[NINT];
-	for (i = 0; i < NINT; i++) {
-		t.gamma[i] = new double**[NINT];
-		for (j = 0; j < NINT; j++) {
-			t.gamma[i][j] = new double*[NINT];
-			for (k = 0; k < NINT; k++) {
-				t.gamma[i][j][k] = new double[3];
-			}
-		}
-	}
-	for (i = 0; i < NINT; i++) {
-		for (j = 0; j < NINT; j++) {
-			for (k = 0; k < NINT; k++) {
-				for (l = 0; l < 3; l++) {
-					t.gamma[i][j][k][l] = 0.0;
+	if (tensorfactorization == 1) {
+		//tensors for the evaluation of stiffness terms
+		t.gamma = new double***[NINT];
+		for (i = 0; i < NINT; i++) {
+			t.gamma[i] = new double**[NINT];
+			for (j = 0; j < NINT; j++) {
+				t.gamma[i][j] = new double*[NINT];
+				for (k = 0; k < NINT; k++) {
+					t.gamma[i][j][k] = new double[3];
 				}
 			}
 		}
-	}
-
-	t.gamman = new double*[NINT*NINT*NINT];
-	for (i = 0; i < NINT*NINT*NINT; i++) {
-		t.gamman[i] = new double[3];
-	}
-	for (i = 0; i < NINT*NINT*NINT; i++) {
-		for (j = 0; j < 3; j++) {
-			t.gamman[i][j] = 0.0;
-		}
-	}
-
-	t.gamma_t = new double***[NINT];
-	for (i = 0; i < NINT; i++) {
-		t.gamma_t[i] = new double**[NINT];
-		for (j = 0; j < NINT; j++) {
-			t.gamma_t[i][j] = new double*[NINT];
-			for (k = 0; k < NINT; k++) {
-				t.gamma_t[i][j][k] = new double[3];
-			}
-		}
-	}
-	for (i = 0; i < NINT; i++) {
-		for (j = 0; j < NINT; j++) {
-			for (k = 0; k < NINT; k++) {
-				for (l = 0; l < 3; l++) {
-					t.gamma_t[i][j][k][l] = 0.0;
-				}
-			}
-		}
-	}
-
-	t.gamma_tn = new double*[NINT*NINT*NINT];
-	for (i = 0; i < NINT*NINT*NINT; i++) {
-		t.gamma_tn[i] = new double[3];
-	}
-	for (i = 0; i < NINT*NINT*NINT; i++) {
-		for (j = 0; j < 3; j++) {
-			t.gamma_tn[i][j] = 0.0;
-		}
-	}
-
-	//double*****t.G;
-	t.G = new double****[3];
-	for (i = 0; i < 3; i++) {
-		t.G[i] = new double***[3];
-		for (j = 0; j < 3; j++) {
-			t.G[i][j] = new double**[NINT];
-			for (k = 0; k < NINT; k++) {
-				t.G[i][j][k] = new double*[NINT];
-				for (l = 0; l < NINT; l++) {
-					t.G[i][j][k][l] = new double[NINT];
-				}
-			}
-		}
-	}
-
-	t.Gn = new double***[NEL];
-	for (i = 0; i < NEL; i++) {
-		t.Gn[i] = new double**[3];
-		for (j = 0; j < 3; j++) {
-			t.Gn[i][j] = new double*[3];
-			for (k = 0; k < 3; k++) {
-				t.Gn[i][j][k] = new double[NINT*NINT*NINT];
-			}
-		}
-	}
-
-	//need to initialize here!!!
-	Eigen::MatrixXd JB(3, 3);
-	Eigen::MatrixXd ga(3, 3);
-	//std::clock_t start;
-	//start = std::clock();
-	/*
-	for (i = 0; i < NINT; i++) {
-		for (j = 0; j < NINT; j++) {
-			for (k = 0; k < NINT; k++) {
-				//
-				for (l = 0; l < 3; l++) {
-					for (m = 0; m < 3; m++) {
-						JB(l, m) = XS[l][m][i][j][k]; //Jacobian matrix
-					}
-				}
-				//std::cout << JB << std::endl;
-				//std::cout << JB.inverse() << std::endl;
-				ga = (JB.inverse().transpose())*JB.inverse(); //3*3 matrix
-															  //std::cout << ga << std::endl;
-				for (l = 0; l < 3; l++) {
-					for (m = 0; m < 3; m++) {
-						t.G[l][m][i][j][k] = ga(l, m) * W[i] * W[j] * W[k] * JACOB[i][j][k];
-						//std::cout << t.G[l][m][i][j][k] << std::endl;
-					}
-					//std::cout<<std::endl;
-				}
-			}
-		}
-	}
-	//JB is the jacobian matrix and JACOB is the determinant of jacobian matrix 
-	*/
-	/*
-	int ct;
-	for (e = 0; e < NEL; e++) {
-		//std::cout << e << std::endl;
-		ct = 0; 
 		for (i = 0; i < NINT; i++) {
 			for (j = 0; j < NINT; j++) {
 				for (k = 0; k < NINT; k++) {
 					for (l = 0; l < 3; l++) {
+						t.gamma[i][j][k][l] = 0.0;
+					}
+				}
+			}
+		}
+
+		t.gamman = new double*[NINT*NINT*NINT];
+		for (i = 0; i < NINT*NINT*NINT; i++) {
+			t.gamman[i] = new double[3];
+		}
+		for (i = 0; i < NINT*NINT*NINT; i++) {
+			for (j = 0; j < 3; j++) {
+				t.gamman[i][j] = 0.0;
+			}
+		}
+
+		t.gamma_t = new double***[NINT];
+		for (i = 0; i < NINT; i++) {
+			t.gamma_t[i] = new double**[NINT];
+			for (j = 0; j < NINT; j++) {
+				t.gamma_t[i][j] = new double*[NINT];
+				for (k = 0; k < NINT; k++) {
+					t.gamma_t[i][j][k] = new double[3];
+				}
+			}
+		}
+		for (i = 0; i < NINT; i++) {
+			for (j = 0; j < NINT; j++) {
+				for (k = 0; k < NINT; k++) {
+					for (l = 0; l < 3; l++) {
+						t.gamma_t[i][j][k][l] = 0.0;
+					}
+				}
+			}
+		}
+
+		t.gamma_tn = new double*[NINT*NINT*NINT];
+		for (i = 0; i < NINT*NINT*NINT; i++) {
+			t.gamma_tn[i] = new double[3];
+		}
+		for (i = 0; i < NINT*NINT*NINT; i++) {
+			for (j = 0; j < 3; j++) {
+				t.gamma_tn[i][j] = 0.0;
+			}
+		}
+
+		//double*****t.G;
+		t.G = new double****[3];
+		for (i = 0; i < 3; i++) {
+			t.G[i] = new double***[3];
+			for (j = 0; j < 3; j++) {
+				t.G[i][j] = new double**[NINT];
+				for (k = 0; k < NINT; k++) {
+					t.G[i][j][k] = new double*[NINT];
+					for (l = 0; l < NINT; l++) {
+						t.G[i][j][k][l] = new double[NINT];
+					}
+				}
+			}
+		}
+
+		t.Gn = new double***[NEL];
+		for (i = 0; i < NEL; i++) {
+			t.Gn[i] = new double**[3];
+			for (j = 0; j < 3; j++) {
+				t.Gn[i][j] = new double*[3];
+				for (k = 0; k < 3; k++) {
+					t.Gn[i][j][k] = new double[NINT*NINT*NINT];
+				}
+			}
+		}
+
+		//need to initialize here!!!
+		Eigen::MatrixXd JB(3, 3);
+		Eigen::MatrixXd ga(3, 3);
+		//std::clock_t start;
+		//start = std::clock();
+		/*
+		for (i = 0; i < NINT; i++) {
+			for (j = 0; j < NINT; j++) {
+				for (k = 0; k < NINT; k++) {
+					//
+					for (l = 0; l < 3; l++) {
 						for (m = 0; m < 3; m++) {
-							JB(l, m) = XS[e][l][m][i*NINT*NINT + j*NINT + k]; //Jacobian matrix
+							JB(l, m) = XS[l][m][i][j][k]; //Jacobian matrix
 						}
 					}
 					//std::cout << JB << std::endl;
@@ -333,48 +305,79 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 																  //std::cout << ga << std::endl;
 					for (l = 0; l < 3; l++) {
 						for (m = 0; m < 3; m++) {
-							t.Gn[e][l][m][ct] = ga(l, m) * W[i] * W[j] * W[k] * JACOB[e][i*NINT*NINT + j*NINT + k];
+							t.G[l][m][i][j][k] = ga(l, m) * W[i] * W[j] * W[k] * JACOB[i][j][k];
 							//std::cout << t.G[l][m][i][j][k] << std::endl;
 						}
 						//std::cout<<std::endl;
 					}
-					ct += 1;
 				}
 			}
 		}
-		if (e % 1000 == 0) {
-			std::cout << e << std::endl; //output which line is being read
-		}
-		//JB is the jacobian matrix and JACOB is the determinant of jacobian matrix 
-	}
-	*/
-
-	int ct;
-	start = std::clock();
-	//#pragma omp parallel for num_threads(6)
-	for (int e = 0; e < NEL; e++) {
-		ct = 0;
-		for (int k = 0; k < NINT*NINT*NINT; k++) {
-			for (int l = 0; l < 3; l++) {
-				for (int m = 0; m < 3; m++) {
-					JB(l, m) = XS[e][l][m][k]; //Jacobian matrix
-				}
-			}
-			ga = (JB.inverse().transpose())*JB.inverse(); //3*3 matrix
-			for (int l = 0; l < 3; l++) {
-				for (int m = 0; m < 3; m++) {
-					t.Gn[e][l][m][ct] = ga(l, m) * W_new[k] * JACOB[e][k];
-				}
-			}
-			ct += 1;
-		}
+		//JB is the jacobian matrix and JACOB is the determinant of jacobian matrix
+		*/
 		/*
-		if (e % 1000 == 0) {
-			std::cout << e << std::endl; //output which line is being read
+		int ct;
+		for (e = 0; e < NEL; e++) {
+			//std::cout << e << std::endl;
+			ct = 0;
+			for (i = 0; i < NINT; i++) {
+				for (j = 0; j < NINT; j++) {
+					for (k = 0; k < NINT; k++) {
+						for (l = 0; l < 3; l++) {
+							for (m = 0; m < 3; m++) {
+								JB(l, m) = XS[e][l][m][i*NINT*NINT + j*NINT + k]; //Jacobian matrix
+							}
+						}
+						//std::cout << JB << std::endl;
+						//std::cout << JB.inverse() << std::endl;
+						ga = (JB.inverse().transpose())*JB.inverse(); //3*3 matrix
+																	  //std::cout << ga << std::endl;
+						for (l = 0; l < 3; l++) {
+							for (m = 0; m < 3; m++) {
+								t.Gn[e][l][m][ct] = ga(l, m) * W[i] * W[j] * W[k] * JACOB[e][i*NINT*NINT + j*NINT + k];
+								//std::cout << t.G[l][m][i][j][k] << std::endl;
+							}
+							//std::cout<<std::endl;
+						}
+						ct += 1;
+					}
+				}
+			}
+			if (e % 1000 == 0) {
+				std::cout << e << std::endl; //output which line is being read
+			}
+			//JB is the jacobian matrix and JACOB is the determinant of jacobian matrix
 		}
 		*/
-		//JB is the jacobian matrix and JACOB is the determinant of jacobian matrix 
+
+		int ct;
+		start = std::clock();
+		//#pragma omp parallel for num_threads(6)
+		for (int e = 0; e < NEL; e++) {
+			ct = 0;
+			for (int k = 0; k < NINT*NINT*NINT; k++) {
+				for (int l = 0; l < 3; l++) {
+					for (int m = 0; m < 3; m++) {
+						JB(l, m) = XS[e][l * 3 + m][k]; //Jacobian matrix
+					}
+				}
+				ga = (JB.inverse().transpose())*JB.inverse(); //3*3 matrix
+				for (int l = 0; l < 3; l++) {
+					for (int m = 0; m < 3; m++) {
+						t.Gn[e][l][m][ct] = ga(l, m) * W_new[k] * JACOB[e][k];
+					}
+				}
+				ct += 1;
+			}
+			/*
+			if (e % 1000 == 0) {
+				std::cout << e << std::endl; //output which line is being read
+			}
+			*/
+			//JB is the jacobian matrix and JACOB is the determinant of jacobian matrix 
+		}
 	}
+
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
 	std::cout << "total CPU time (ms): " << duration << std::endl;
 	std::cout << " " << std::endl;

@@ -1277,7 +1277,9 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 		*/
 		//time integration
-		for (j = 0; j < NNODE; j++) {
+		//start = std::clock();
+		#pragma omp parallel for num_threads(6)
+		for (int j = 0; j < NNODE; j++) {
 			DSDOT[j] = (ds[j][1] - ds[j][0]) / DT; //SOLUTION ARRAY FOR FIRST TIME DERIVATIVE OF CONDENSATION
 			FEEDOT[j][1] = FEEDOT[j][0] + DT*(P[j][0] + (BETA*DT*(pow(C, 2))*DSDOT[j]));
 			FEE[j][1] = FEE[j][0] + DT*FEEDOT[j][1];
@@ -1290,6 +1292,9 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			HF[j] = 0.0;
 			HFn[j] = 0.0;
 		} //1 MEANS N+1 TIME STEP; 0 MEANS N TIME STEP
+		//duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
+		//std::cout << "total CPU time (ms): " << duration << std::endl;
+		//std::cout << " " << std::endl;
 
 		//start = std::clock();
 		ctt3 = 0;
