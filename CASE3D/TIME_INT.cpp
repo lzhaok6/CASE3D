@@ -1368,7 +1368,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					HF[IENct3[ctt3]] += HFTEMPn[LNAct3[h]]; //takes NEL*2*NINT^3 operations
 					ctt3 += 1;
 				}
-				
 				/*
 				for (ii = 0; ii < NINT; ii++) { //p NEL*(2*NINT+2) operations
 					for (h = 0; h < NINT; h++) { //j,i,i //takes NEL*NINT*(2*NINT+2) operations

@@ -31,7 +31,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	//system("PAUSE "); 
-	std::ifstream infile("Bleich_Sandler_unit.msh");
+	std::ifstream infile("FSP_N=3.msh");
 	if (!infile) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");

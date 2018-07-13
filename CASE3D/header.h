@@ -28,7 +28,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	double****gamma_t, double ****gamma, double*****G);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
-const int N = 1;    //N is the element order of fluid mesh 
+const int N = 3;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;
 typedef struct owetsurf {
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
@@ -202,12 +202,12 @@ struct TIMINTstruct {
 };
 
 //Input values
-const double SX = 1.0;
-//const double SX = 8.5344 / 2; //14ft
-//const double SY = 1.2192; //4ft 
-const double SY = 0.141;
-//const double SZ = 4.8768; //16ft
-const double SZ = 1.0;
+//const double SX = 1.0;
+const double SX = 8.5344 / 2; //14ft
+const double SY = 1.2192; //4ft 
+//const double SY = 0.141;
+const double SZ = 4.8768; //16ft
+//const double SZ = 1.0;
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;
 const int Nq = N + 1; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
@@ -217,25 +217,25 @@ const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
 const int hprefg = 1;
 const int mappingalgo = 2; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
-//const double RHO = 1025.0; //original
-const double RHO = 989.0; //Bleich-Sandler
-const int WAVE = 1; //1 for plane wave; 2 for spherical wave 
+const double RHO = 1025.0; //original
+//const double RHO = 989.0; //Bleich-Sandler
+const int WAVE = 2; //1 for plane wave; 2 for spherical wave 
 const int wavdirc[3] = { 0,1,0 }; //the direction of incident plane wave (positive y axis) 
-//const double C = 1500.0; //original  
-const double C = 1450.0; //Bleich_Sandler
+const double C = 1500.0; //original  
+//const double C = 1450.0; //Bleich_Sandler
 const double CFLFRAC = 0.5;  //original 
 const int dtscale = 1;
 const double BETA = 0.25;   //original 
-const double TTERM = 0.012;    //SIMULATION END TIME 
+const double TTERM = 0.08;    //SIMULATION END TIME 
 const int CAV = 1; //1 for cavitation, 0 for non-cavitation 
 const double PSAT = 0.0; //saturated pressure 
 const double pi = 3.141593;
 const double grav = 9.81;
 const double PATM = 101.3e3; //pa 
-//const double stdoff = 20; //ft
-//const double depth = 25; //ft
-const double stdoff = 0; //ft
-const double depth = 50; //ft
+const double stdoff = 10; //ft
+const double depth = 30; //ft
+//const double stdoff = 0; //ft
+//const double depth = 50; //ft
 const double W = 60; //charge weight (lb)
 
 //standoff point in spherical wave case 
@@ -246,27 +246,27 @@ const double W = 60; //charge weight (lb)
 const double output_int = 5e-4; //output file time interval (0.5ms)
 const int debug = 0; //is the code in debug mode?
 const int fsdebug = 0;
-const int tfm = 0; //is total field model used? 
-const int tensorfactorization = 1;
+const int tfm = 1; //is total field model used? 
+const int tensorfactorization = 0;
 const int TNT = 1;
 const int output = 0;
 const int FEM = 0; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
-//const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
-//const int nrbsurfnumber = 4; //The number of NRB surface. 
-const int owsfnumber = 1; //For the FSP case, we defined 4 wetted surfaces. 
-const int nrbsurfnumber = 1; //The number of NRB surface. 
-//const int wt_pys_num[4] = { 0,1,2,3 };  //the physical group number that corresponds to the wet surface (physical group 3)
-//const int nrb_pys_num[4] = { 4,5,6,7 };
-const int wt_pys_num[1] = { 0 };
-const int nrb_pys_num[1] = { 1 };
-//const double XHE = 0.3048;
-const double XHE = 0.1;
-//const double YHE = 0.3048;
-const double YHE = 0.141 / 2;
-//const double DY = 2 * SY;
-const double DY = 3.807; //Bleich_Sandler
+const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
+const int nrbsurfnumber = 4; //The number of NRB surface. 
+//const int owsfnumber = 1; //For the FSP case, we defined 4 wetted surfaces. 
+//const int nrbsurfnumber = 1; //The number of NRB surface. 
+const int wt_pys_num[4] = { 0,1,2,3 };  //the physical group number that corresponds to the wet surface (physical group 3)
+const int nrb_pys_num[4] = { 4,5,6,7 };
+//const int wt_pys_num[1] = { 0 };
+//const int nrb_pys_num[1] = { 1 };
+const double XHE = 0.3048;
+//const double XHE = 0.1;
+const double YHE = 0.3048;
+//const double YHE = 0.141 / 2;
+const double DY = 2 * SY;
+//const double DY = 3.807; //Bleich_Sandler
 const int SYNEL = 4 * refine;
 const double xo = SY;
-const int Bleich = 1; 
+const int Bleich = 0; 
 const int improvednrb = 0;
