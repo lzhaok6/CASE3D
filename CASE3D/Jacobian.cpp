@@ -114,6 +114,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				for (k = 0; k < NINT; k++) {
 					for (l = 0; l < 8; l++) {
 						//same with 2D code, the transpose of that in Mindmap (the determinant of two transpose matrix is the same)
+						/*
 						t.XS[m][3 * 0 + 0][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 0 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dxi
 						t.XS[m][3 * 1 + 0][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 1 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dxi
 						t.XS[m][3 * 2 + 0][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 2 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dxi
@@ -122,6 +123,16 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 						t.XS[m][3 * 2 + 1][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 2 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/deta
 						t.XS[m][3 * 0 + 2][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 0 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dzeta
 						t.XS[m][3 * 1 + 2][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 1 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dzeta
+						t.XS[m][3 * 2 + 2][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 2 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dzeta
+						*/
+						t.XS[m][3 * 0 + 0][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 0 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dxi
+						t.XS[m][3 * 1 + 0][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 1 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/deta 
+						t.XS[m][3 * 2 + 0][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 2 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dzeta  
+						t.XS[m][3 * 0 + 1][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 0 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dxi 
+						t.XS[m][3 * 1 + 1][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 1 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/deta
+						t.XS[m][3 * 2 + 1][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 2 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dzeta 
+						t.XS[m][3 * 0 + 2][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 0 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dxi 
+						t.XS[m][3 * 1 + 2][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 1 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/deta 
 						t.XS[m][3 * 2 + 2][i*NINT*NINT + j*NINT + k] = t.XS[m][3 * 2 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dzeta
 					}
 					//The determinant of jacobian matrix for each node in the element

@@ -238,7 +238,7 @@ int main()
 	}
 	double PPEAK = K*pow(dist / pow(W*0.453592, 1.0 / 3.0), -(1 + A)); //pa
 	double TAU = pow(W*0.453592, 1.0 / 3.0)*0.084*pow(pow(W*0.453592, 1.0 / 3.0) / dist, -B) / 1000; //sec
-
+	
 	double KAPPA = 0.0;
 
 	if (Bleich == 1 && WAVE == 1) {
@@ -246,7 +246,8 @@ int main()
 		TAU = 0.999e-3;
 	}
 
-	TIME_INT(a.NNODE, a.GCOORD, c.LNA, a.IEN, a.NEL, TIME, T, t.DT, t.NDT, o.HMASTER, o.Q, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamman, o.gamma_tn, o.Gn, n.SHG);
+	TIME_INT(a.NNODE, a.GCOORD, c.LNA, a.IEN, a.NEL, TIME, T, t.DT, t.NDT, o.HMASTER, o.Q, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamman, o.gamma_tn, o.Gn, n.SHG,
+		o.gamma_t, o.gamma, o.G);
 
 	printf("Cleaning up...\n");
 	/* clean up */

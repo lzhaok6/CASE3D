@@ -17,7 +17,8 @@
 //NRB determines the NRB local node numbering and the associated NRB arrays
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT, 
 	double*** HMASTER, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC, 
-	double ZC, double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn, double****SHG) {
+	double ZC, double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn, double****SHG,
+	double****gamma_t, double ****gamma, double*****G) {
 
 	int h, i, j, k, q, z, ii, jj, kk, m;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
@@ -1324,7 +1325,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				//takes 6*NEL*NINT^4 FLOP
 				ctt1 = 0;
 				for (ii = 0; ii < NINT; ii++) { //p NEL*(2*NINT+2) operations
-					ctt2 = 0;
 					for (h = 0; h < NINT; h++) { //j,i,i //takes NEL*NINT*(2*NINT+2) operations
 						for (z = 0; z < NINT; z++) { //k,k,j //takes NEL*NINT^2*(2*NINT+2) operations
 							gamman[counter1[ctt1]][0] = 0.0;
@@ -1334,7 +1334,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 								gamman[counter1[ctt1]][0] += SHOD1[q*NINT + ii] * FEE[IENct1[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
 								gamman[counter2[ctt1]][1] += SHOD1[q*NINT + ii] * FEE[IENct2[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
 								gamman[counter3[ctt1]][2] += SHOD1[q*NINT + ii] * FEE[IENct3[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
-								ctt2 += 1;
 							}
 							ctt1 += 1;
 						}
@@ -1364,13 +1363,66 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						}
 					}
 				}
-
 				//takes 1*NINT^3*NEL FLOP
 				for (h = 0; h < NINT*NINT*NINT; h++) { //takes NEL*(2 * NINT + 2) operations
 					HF[IENct3[ctt3]] += HFTEMPn[LNAct3[h]]; //takes NEL*2*NINT^3 operations
 					ctt3 += 1;
 				}
+				
+				/*
+				for (ii = 0; ii < NINT; ii++) { //p NEL*(2*NINT+2) operations
+					for (h = 0; h < NINT; h++) { //j,i,i //takes NEL*NINT*(2*NINT+2) operations
+						for (z = 0; z < NINT; z++) { //k,k,j //takes NEL*NINT^2*(2*NINT+2) operations
+							gamma[ii][h][z][0] = 0.0;
+							gamma[h][ii][z][1] = 0.0;
+							gamma[h][z][ii][2] = 0.0;
+							for (q = 0; q < NINT; q++) { //q (recurrent addition in this dimension) //takes NEL*NINT^3*(2*NINT+2) operation
+								gamma[ii][h][z][0] += SHOD[1][q][ii] * FEE[IEN[LNA_3D[q][h][z] - 1][j] - 1][1]; //takes 9*NEL*NINT^4 operations
+																												//ipk
+								gamma[h][ii][z][1] += SHOD[1][q][ii] * FEE[IEN[LNA_3D[h][q][z] - 1][j] - 1][1];
+								//ijp
+								gamma[h][z][ii][2] += SHOD[1][q][ii] * FEE[IEN[LNA_3D[h][z][q] - 1][j] - 1][1];
+								//oc += 6;
+							}
+						}
+					}
+				}
+				for (ii = 0; ii < NINT; ii++) { //takes NEL*(2 * NINT + 2) operations
+					for (h = 0; h < NINT; h++) { //takes NEL*NINT*(2*NINT + 2) operations
+						for (z = 0; z < NINT; z++) { //takes NEL*NINT^2*(2*NINT+2) operations
+							gamma_t[ii][h][z][0] = G[0][0][ii][h][z] * gamma[ii][h][z][0] + G[0][1][ii][h][z] * gamma[ii][h][z][1] + G[0][2][ii][h][z] * gamma[ii][h][z][2]; //takes 18*NINT^3*NEL operations
+																																											 //ipk
+							gamma_t[ii][h][z][1] = G[1][1][ii][h][z] * gamma[ii][h][z][1] + G[0][1][ii][h][z] * gamma[ii][h][z][0] + G[1][2][ii][h][z] * gamma[ii][h][z][2];
+							//ijp
+							gamma_t[ii][h][z][2] = G[2][2][ii][h][z] * gamma[ii][h][z][2] + G[0][2][ii][h][z] * gamma[ii][h][z][0] + G[1][2][ii][h][z] * gamma[ii][h][z][1];
+							oc += 15;
+						}
+					}
+				}
+				for (h = 0; h < NINT; h++) {  //i //takes NEL*NINT*(2*NINT+2) operations
+					for (k = 0; k < NINT; k++) { //j  //takes NEL*NINT^2*(2*NINT+2) operations
+						for (z = 0; z < NINT; z++) { //k //takes NEL*NINT^3*(2*NINT+2) operations
+							HFTEMP[j][LNA_3D[h][k][z] - 1] = 0.0;
+							for (ii = 0; ii < NINT; ii++) { //p (recurrent addition) //p NEL*(2*NINT+2) operations
+								HFTEMP[j][LNA_3D[h][k][z] - 1] += SHOD[1][h][ii] * gamma_t[ii][k][z][0] + SHOD[1][k][ii] * gamma_t[h][ii][z][1] + SHOD[1][z][ii] * gamma_t[h][k][ii][2]; //takes 7*NINT^4*NEL
+							}
+						}
+					}
+				}
+				for (h = 0; h < NINT; h++) { //takes NEL*(2 * NINT + 2) operations
+					for (q = 0; q < NINT; q++) { //takes NEL*NINT*(2*NINT + 2) operations
+						for (z = 0; z < NINT; z++) { //takes NEL*NINT^2*(2*NINT+2) operations
+							HF[IEN[LNA_3D[h][q][z] - 1][j] - 1] += HFTEMP[j][LNA_3D[h][q][z] - 1]; //takes NEL*2*NINT^3 operations
+						}
+					}
+				}
+				*/
 			}
+		}
+
+		hd = 0.0; 
+		for (j = 0; j < NNODE; j++) {
+			hd += HF[j];
 		}
 
 		for (j = 0; j < NNODE; j++) {

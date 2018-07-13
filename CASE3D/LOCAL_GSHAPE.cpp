@@ -129,11 +129,11 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT) {
 					t.GSHL[3][i][j][k][l] = (1.0 / 8.0)*(1 + t.MCOORD[i][0] * S[j])*(1 + t.MCOORD[i][1] * S[k])*(1 + t.MCOORD[i][2] * S[l]);
 					//not derivative
 					t.GSHL[0][i][j][k][l] = (1.0 / 8.0)*t.MCOORD[i][0] * (1 + t.MCOORD[i][1] * S[k])*(1 + t.MCOORD[i][2] * S[l]);
-					//X direction derivative
+					//xi direction derivative
 					t.GSHL[1][i][j][k][l] = (1.0 / 8.0)*t.MCOORD[i][1] * (1 + t.MCOORD[i][0] * S[j])*(1 + t.MCOORD[i][2] * S[l]);
-					//Y direction derivative
+					//eta direction derivative
 					t.GSHL[2][i][j][k][l] = (1.0 / 8.0)*t.MCOORD[i][2] * (1 + t.MCOORD[i][0] * S[j])*(1 + t.MCOORD[i][1] * S[k]);
-					//Z direction derivative
+					//zeta direction derivative
 				}
 			}
 		}

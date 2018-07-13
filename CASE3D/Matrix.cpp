@@ -289,32 +289,33 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 		Eigen::MatrixXd ga(3, 3);
 		//std::clock_t start;
 		//start = std::clock();
-		/*
-		for (i = 0; i < NINT; i++) {
-			for (j = 0; j < NINT; j++) {
-				for (k = 0; k < NINT; k++) {
-					//
-					for (l = 0; l < 3; l++) {
-						for (m = 0; m < 3; m++) {
-							JB(l, m) = XS[l][m][i][j][k]; //Jacobian matrix
+		for (e = 0; e < NEL; e++) {
+			for (i = 0; i < NINT; i++) {
+				for (j = 0; j < NINT; j++) {
+					for (k = 0; k < NINT; k++) {
+						//
+						for (l = 0; l < 3; l++) {
+							for (m = 0; m < 3; m++) {
+								JB(l, m) = XS[e][l * 3 + m][i*NINT*NINT + j*NINT + k]; //Jacobian matrix
+							}
 						}
-					}
-					//std::cout << JB << std::endl;
-					//std::cout << JB.inverse() << std::endl;
-					ga = (JB.inverse().transpose())*JB.inverse(); //3*3 matrix
-																  //std::cout << ga << std::endl;
-					for (l = 0; l < 3; l++) {
-						for (m = 0; m < 3; m++) {
-							t.G[l][m][i][j][k] = ga(l, m) * W[i] * W[j] * W[k] * JACOB[i][j][k];
-							//std::cout << t.G[l][m][i][j][k] << std::endl;
+						//std::cout << JB << std::endl;
+						//std::cout << JB.inverse() << std::endl;
+						ga = (JB.inverse().transpose())*JB.inverse(); //3*3 matrix
+																	  //std::cout << ga << std::endl;
+						for (l = 0; l < 3; l++) {
+							for (m = 0; m < 3; m++) {
+								t.G[l][m][i][j][k] = ga(l, m) * W_new[i*NINT*NINT + j*NINT + k] * JACOB[e][i*NINT*NINT + j*NINT + k];
+								//std::cout << t.G[l][m][i][j][k] << std::endl;
+							}
+							//std::cout<<std::endl;
 						}
-						//std::cout<<std::endl;
 					}
 				}
 			}
 		}
 		//JB is the jacobian matrix and JACOB is the determinant of jacobian matrix
-		*/
+		
 		/*
 		int ct;
 		for (e = 0; e < NEL; e++) {

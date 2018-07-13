@@ -24,7 +24,8 @@ void FSILINK(int*** LNA);
 struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD);
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT,
 	double*** HMASTER, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
-	double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn, double****SHG);
+	double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn, double****SHG,
+	double****gamma_t, double ****gamma, double*****G);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
 const int N = 1;    //N is the element order of fluid mesh 
@@ -246,7 +247,7 @@ const double output_int = 5e-4; //output file time interval (0.5ms)
 const int debug = 0; //is the code in debug mode?
 const int fsdebug = 0;
 const int tfm = 0; //is total field model used? 
-const int tensorfactorization = 0;
+const int tensorfactorization = 1;
 const int TNT = 1;
 const int output = 0;
 const int FEM = 0; //Is this a first order FEM code? 
