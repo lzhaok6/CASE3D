@@ -24,7 +24,7 @@ void FSILINK(int*** LNA);
 struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD);
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT,
 	double*** HMASTER, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
-	double XO, double YO, double ZO, double ***SHOD, double** gamman, double** gamma_tn, double****Gn, double****SHG,
+	double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double****Gn, double****SHG,
 	double****gamma_t, double ****gamma, double*****G);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
@@ -181,12 +181,14 @@ struct MATRIXstruct {
 	double***HMASTER;
 	double *Q;  //GLOBAL CAPACITANCE MATRIX
 	double ****gamma;
-	double **gamman;
+	//double **gamman;
 	//double gamman[NINT*NINT*NINT][3];
+	double gamman[NINT*NINT*NINT * 3];
 	double **gamman2;
 	double ****gamma_t;
-	double **gamma_tn;
+	//double **gamma_tn;
 	//double gamma_tn[NINT*NINT*NINT][3];
+	double gamma_tn[NINT*NINT*NINT * 3];
 	double *****G;
 	double ****Gn;
 };
