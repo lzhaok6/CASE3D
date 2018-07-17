@@ -793,7 +793,7 @@ struct meshgenerationstruct meshgeneration() {
 				ol[z].norm[i][0] = n1 / absn; ol[z].norm[i][1] = n2 / absn; ol[z].norm[i][2] = n3 / absn;
 			}
 			//check if the separated element has the same normal direction as the original mesh (N=1)
-			std::cout << " " << std::endl; 
+			//std::cout << " " << std::endl; 
 		}
 		//================================Write the model file for MpCCI here================================//
 		std::ofstream myfile;

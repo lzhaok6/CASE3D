@@ -1276,7 +1276,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		for (j = 0; j < NNODE; j++) {
 			hd += ol[0].WBS[j];
 		}
-		*/
+		*/	
 		//time integration
 		//start = std::clock();
 		#pragma omp parallel for num_threads(6)
@@ -1298,7 +1298,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//std::cout << " " << std::endl;
 
 		//start = std::clock();
-		ctt3 = 0;
+		//ctt3 = 0;
 		if (tensorfactorization == 0) {
 			//start = std::clock();
 			#pragma omp parallel for num_threads(6)
@@ -1321,21 +1321,22 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			//std::cout << " " << std::endl;
 		}
 		else {
+			//#pragma omp parallel for num_threads(6)
 			for (j = 0; j < NEL; j++) { //takes 2*NEL+2 operations 
 				//takes 6*NEL*NINT^4 FLOP
-				ctt1 = 0;
+				//ctt1 = 0;
 				for (ii = 0; ii < NINT; ii++) { //p NEL*(2*NINT+2) operations
 					for (h = 0; h < NINT; h++) { //j,i,i //takes NEL*NINT*(2*NINT+2) operations
 						for (z = 0; z < NINT; z++) { //k,k,j //takes NEL*NINT^2*(2*NINT+2) operations
-							gamman[counter1[ctt1]][0] = 0.0;
-							gamman[counter2[ctt1]][1] = 0.0;
-							gamman[counter3[ctt1]][2] = 0.0;
+							gamman[counter1[ii*NINT*NINT + h*NINT + z]][0] = 0.0;
+							gamman[counter2[ii*NINT*NINT + h*NINT + z]][1] = 0.0;
+							gamman[counter3[ii*NINT*NINT + h*NINT + z]][2] = 0.0;
 							for (q = 0; q < NINT; q++) { //q (recurrent addition in this dimension) //takes NEL*NINT^3*(2*NINT+2) operations	
-								gamman[counter1[ctt1]][0] += SHOD1[q*NINT + ii] * FEE[IENct1[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
-								gamman[counter2[ctt1]][1] += SHOD1[q*NINT + ii] * FEE[IENct2[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
-								gamman[counter3[ctt1]][2] += SHOD1[q*NINT + ii] * FEE[IENct3[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
+								gamman[counter1[ii*NINT*NINT + h*NINT + z]][0] += SHOD1[q*NINT + ii] * FEE[IENct1[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
+								gamman[counter2[ii*NINT*NINT + h*NINT + z]][1] += SHOD1[q*NINT + ii] * FEE[IENct2[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
+								gamman[counter3[ii*NINT*NINT + h*NINT + z]][2] += SHOD1[q*NINT + ii] * FEE[IENct3[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
 							}
-							ctt1 += 1;
+							//ctt1 += 1;
 						}
 					}
 				}
@@ -1351,22 +1352,22 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 
 				//takes 6*NINT^4*NEL FLOP
-				ctt2 = 0;
+				//ctt2 = 0;
 				for (h = 0; h < NINT; h++) {  //i //takes NEL*NINT*(2*NINT+2) operations
 					for (k = 0; k < NINT; k++) { //j  //takes NEL*NINT^2*(2*NINT+2) operations
 						for (z = 0; z < NINT; z++) { //k //takes NEL*NINT^3*(2*NINT+2) operations
-							HFTEMPn[LNAct3[ctt2]] = 0.0;
+							HFTEMPn[LNAct3[h*NINT*NINT + k*NINT + z]] = 0.0;
 							for (ii = 0; ii < NINT; ii++) { //p (recurrent addition) //p NEL*(2*NINT+2) operations
-								HFTEMPn[LNAct3[ctt2]] += SHOD1[h*NINT + ii] * gamma_tn[ii*NINT*NINT + k*NINT + z][0] + SHOD1[k*NINT + ii] * gamma_tn[h*NINT*NINT + ii*NINT + z][1] + SHOD1[z*NINT + ii] * gamma_tn[h*NINT*NINT + k*NINT + ii][2];
+								HFTEMPn[LNAct3[h*NINT*NINT + k*NINT + z]] += SHOD1[h*NINT + ii] * gamma_tn[ii*NINT*NINT + k*NINT + z][0] + SHOD1[k*NINT + ii] * gamma_tn[h*NINT*NINT + ii*NINT + z][1] + SHOD1[z*NINT + ii] * gamma_tn[h*NINT*NINT + k*NINT + ii][2];
 							}
-							ctt2 += 1;
+							//ctt2 += 1;
 						}
 					}
 				}
 				//takes 1*NINT^3*NEL FLOP
 				for (h = 0; h < NINT*NINT*NINT; h++) { //takes NEL*(2 * NINT + 2) operations
-					HF[IENct3[ctt3]] += HFTEMPn[LNAct3[h]]; //takes NEL*2*NINT^3 operations
-					ctt3 += 1;
+					HF[IENct3[j*NINT*NINT*NINT + h]] += HFTEMPn[LNAct3[h]]; //takes NEL*2*NINT^3 operations
+					//ctt3 += 1;
 				}
 				/*
 				for (ii = 0; ii < NINT; ii++) { //p NEL*(2*NINT+2) operations
@@ -1417,11 +1418,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 				*/
 			}
-		}
-
-		hd = 0.0; 
-		for (j = 0; j < NNODE; j++) {
-			hd += HF[j];
 		}
 
 		for (j = 0; j < NNODE; j++) {
