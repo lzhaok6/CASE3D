@@ -218,10 +218,12 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 			}
 		}
 
+		
 		t.gamman = new double*[NINT*NINT*NINT];
 		for (i = 0; i < NINT*NINT*NINT; i++) {
 			t.gamman[i] = new double[3];
 		}
+		
 		for (i = 0; i < NINT*NINT*NINT; i++) {
 			for (j = 0; j < 3; j++) {
 				t.gamman[i][j] = 0.0;
@@ -247,11 +249,12 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 				}
 			}
 		}
-
+		
 		t.gamma_tn = new double*[NINT*NINT*NINT];
 		for (i = 0; i < NINT*NINT*NINT; i++) {
 			t.gamma_tn[i] = new double[3];
 		}
+		
 		for (i = 0; i < NINT*NINT*NINT; i++) {
 			for (j = 0; j < 3; j++) {
 				t.gamma_tn[i][j] = 0.0;
