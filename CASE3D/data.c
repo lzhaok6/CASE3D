@@ -41,7 +41,8 @@ void readfile(const char* filename){
 	ret = fscanf(fhandle, "EF %s %i %i %i\n", fptr->name, &fptr->dim, &fptr->direction, &fptr->element_type);
 	//name is the name of each coupling surface
     if(ret != 4){ 
-		printf("Reading error."); exit(-1);    
+	//if (ret != 3) {
+		printf("Reading error."); exit(-1);
 	}
 	printf("foundation >%s<   dim=%i  direction=%i\n",
 		fptr->name, fptr->dim, fptr->direction);
@@ -51,7 +52,7 @@ void readfile(const char* filename){
         break;
       case 3:
 		  if (fptr->element_type == 0) {
-			  nodesperelem = 4; //linear quad element on coupling surface (3D)
+			 nodesperelem = 4; //linear quad element on coupling surface (3D)
 		  }
 		  if (fptr->element_type == 1) {
 			  nodesperelem = 3; //linear triangular element for tetrahedral element (3D)

@@ -452,7 +452,8 @@ int MpCCI_Driver_definePart(MPCCI_SERVER *server, MPCCI_PART *part)
                *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i*4+1];
                *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i*4+2];
                *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i*4+3];
-               elemTypes[i]   = MPCCI_ETYP_QUAD4;  //change element type by changing macro/lu
+               //elemTypes[i]   = MPCCI_ETYP_QUAD4;  //change element type by changing macro/lu
+			   elemTypes[i] = MPCCI_ETYP_TRIA3;
 			   //linear quad element, need to change to higher order/lu
 			   //*elemNodePtr may have to be changed too/lu
 			   //element type macros are defined in the file "mpcci elements.h"/lu

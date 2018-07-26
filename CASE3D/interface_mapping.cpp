@@ -185,6 +185,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 		}
 
 		else if (mappingalgo == 4) {
+			/*
 			if (debug2 == 1) {
 				for (z = 0; z < owsfnumber; z++) {
 					for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
@@ -194,6 +195,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					}
 				}
 			}
+			*/
 			if (element_type == 1) { //tetrahedral element
 				double DISPTEMP = 0.0;
 				ct = 0;

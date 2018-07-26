@@ -931,12 +931,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				for (j = 0; j < ol[z].GIDNct; j++) {
 					ol[z].WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM; // //correct version with structural gravity
 					if (Bleich == 1) {
-						if (debug2 == 0) {
+						//if (debug2 == 0) {
 							ol[z].WP[ol[z].GIDN[j] - 1] = (PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]) / SX / SZ;
-						}
-						else {
-							ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
-						}
+						//}
+						//else {
+							//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
+						//}
 					}
 					ol[z].WPIN[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][1] + PIN[ol[z].GIDN[j] - 1][0];
 				}
@@ -1489,6 +1489,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			FFORCE[nrb.NRBA_t[j] - 1] += BNRB[nrb.NRBA_t[j] - 1];
 		}
 		//The combination of FFORCE passes the test
+
+		hd = 0.0;
+		for (j = 0; j < NNODE; j++) {
+			hd += BNRB[j];
+		}
 
 		if (tfm == 1) {
 			for (j = 0; j < fspt_num; j++) {

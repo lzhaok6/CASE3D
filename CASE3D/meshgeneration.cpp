@@ -936,6 +936,7 @@ struct meshgenerationstruct meshgeneration() {
 		myfile.open("model.txt");
 		for (z = 0; z < wt_pys_size; z++) {
 			std::string wetsurface_name;
+			//wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1";
 			wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1 " + std::to_string(element_type);
 			myfile << wetsurface_name << std::endl;
 			myfile << "NODES " << ol[z].GIDNct_MpCCI << std::endl;
