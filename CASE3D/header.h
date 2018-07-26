@@ -14,8 +14,8 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD);
 struct LEGENDREstruct LEGENDRE(int Nq, int n);
 struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT);
 struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA);
-struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double***XS, double**JACOB);
-struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double***XS, double****SHG, double**JACOB);
+struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double***XS, double**JACOB, double**GCOORD, int**IEN, double* JACOB_tet);
+struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double***XS, double****SHG, double**JACOB, double* JACOB_tet, double*** SHG_tet);
 double EIGENMAX(double** QMASTER, double*** HMASTER, int NEL);
 struct TIMINTstruct TIMINT(double LMAX);
 struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA);
@@ -59,7 +59,8 @@ typedef struct owetsurf {
 	int FP_2D[NINT*NINT];
 	double** JACOB;
 	int Jacob_face[2]; //Used to identify which coordinate dimension (x,y or z/xi,eta,zeta?) to be used for surface 2D Jacobian matrix calculation.  
-	int LNA_norm[4];
+	//int LNA_norm[4];
+	int* LNA_norm;
 	int** IEN_py; //the linear element connectivity matrix of 2D physical groups (boundaries) separated from the original 2D high-order elements
 	double**** xs;
 	double****xs_2D; //for the 2D elements on wetted surface
@@ -69,6 +70,7 @@ typedef struct owetsurf {
 	//LNA_norm is originally devised for mapping algorithm 2. However, it is leveraged in 2D Jacobian determinant derivation (assuming linear geometric mapping) because it numbering is the corner nodes of the 2D wetted surface element.  
 	double****GSHL_2D;
 	int dir; 
+	double *dimension; 
 } OWETSURF;
 
 //Store the properties on NRB surface (currently just one)
@@ -86,7 +88,8 @@ typedef struct nrbsurf {
 	int* NRBA; 
 	int NRBNODE;
 	double**norm; 
-	int LNA_norm[4];
+	//int LNA_norm[4];
+	int* LNA_norm; 
 	double**** xs;
 	double **XEST_kn;
 	double **XEST;
@@ -109,6 +112,7 @@ typedef struct nrbsurf {
 	double ***disp_mag;
 	//double* ADMASTERG; 
 	//double *BNRB; 
+	double *dimension;
 } NRBSURF; 
 
 struct LOBATTOstruct {
@@ -170,10 +174,13 @@ struct JACOBIANstruct {
 	//double****XS;
 	double***XS;
 	double**JACOB; 
+	double**XS_tet;
+	double*JACOB_tet; 
 };
 
 struct GLOBAL_SHAPEstruct {
 	double****SHG;
+	double***SHG_tet; 
 };
 
 struct MATRIXstruct {
@@ -206,12 +213,12 @@ struct TIMINTstruct {
 };
 
 //Input values
-//const double SX = 1.0;
-const double SX = 8.5344 / 2; //14ft
-const double SY = 1.2192; //4ft 
-//const double SY = 0.141;
-const double SZ = 4.8768; //16ft
-//const double SZ = 1.0;
+const double SX = 1.0;
+//const double SX = 8.5344 / 2; //14ft
+//const double SY = 1.2192; //4ft 
+const double SY = 0.141;
+//const double SZ = 4.8768; //16ft
+const double SZ = 1.0;
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;
 const int Nq = N + 1; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
@@ -220,17 +227,17 @@ const int refine = 1; //The refinement rate of fluid mesh against base fluid mes
 const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
 const int hprefg = 1;
-const int mappingalgo = 2; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
-const double RHO = 1025.0; //original
-//const double RHO = 989.0; //Bleich-Sandler
-const int WAVE = 2; //1 for plane wave; 2 for spherical wave 
+const int mappingalgo = 4; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
+//const double RHO = 1025.0; //original
+const double RHO = 989.0; //Bleich-Sandler
+const int WAVE = 1; //1 for plane wave; 2 for spherical wave 
 const int wavdirc[3] = { 0,1,0 }; //the direction of incident plane wave (positive y axis) 
-const double C = 1500.0; //original  
-//const double C = 1450.0; //Bleich_Sandler
+//const double C = 1500.0; //original  
+const double C = 1450.0; //Bleich_Sandler
 const double CFLFRAC = 0.5;  //original 
 const int dtscale = 1;
 const double BETA = 0.25;   //original 
-const double TTERM = 0.08;    //SIMULATION END TIME 
+const double TTERM = 0.012;    //SIMULATION END TIME 
 const int CAV = 1; //1 for cavitation, 0 for non-cavitation 
 const double PSAT = 0.0; //saturated pressure 
 const double pi = 3.141593;
@@ -249,28 +256,30 @@ const double W = 60; //charge weight (lb)
 //the parameter to control whether a tabulated smoothed waveform is used 
 const double output_int = 5e-4; //output file time interval (0.5ms)
 const int debug = 0; //is the code in debug mode?
+const int debug2 = 1; 
 const int fsdebug = 0;
-const int tfm = 1; //is total field model used? 
-const int tensorfactorization = 1;
+const int tfm = 0; //is total field model used? 
+const int tensorfactorization = 0;
 const int TNT = 1;
-const int output = 0;
-const int FEM = 0; //Is this a first order FEM code? 
+const int output = 1;
+const int FEM = 1; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
-const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
-const int nrbsurfnumber = 4; //The number of NRB surface. 
-//const int owsfnumber = 1; //For the FSP case, we defined 4 wetted surfaces. 
-//const int nrbsurfnumber = 1; //The number of NRB surface. 
-const int wt_pys_num[4] = { 0,1,2,3 };  //the physical group number that corresponds to the wet surface (physical group 3)
-const int nrb_pys_num[4] = { 4,5,6,7 };
-//const int wt_pys_num[1] = { 0 };
-//const int nrb_pys_num[1] = { 1 };
-const double XHE = 0.3048;
-//const double XHE = 0.1;
-const double YHE = 0.3048;
-//const double YHE = 0.141 / 2;
-const double DY = 2 * SY;
-//const double DY = 3.807; //Bleich_Sandler
+//const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
+//const int nrbsurfnumber = 4; //The number of NRB surface. 
+const int owsfnumber = 1; //For the FSP case, we defined 4 wetted surfaces. 
+const int nrbsurfnumber = 1; //The number of NRB surface. 
+//const int wt_pys_num[4] = { 0,1,2,3 };  //the physical group number that corresponds to the wet surface (physical group 3)
+//const int nrb_pys_num[4] = { 4,5,6,7 };
+const int wt_pys_num[1] = { 0 };
+const int nrb_pys_num[1] = { 1 };
+//const double XHE = 0.3048;
+const double XHE = 0.1; //Bleich_Sandler
+//const double YHE = 0.3048;
+const double YHE = 0.141 / 2; //Bleich_Sandler 
+//const double DY = 2 * SY;
+const double DY = 3.807; //Bleich_Sandler
 const int SYNEL = 4 * refine;
 const double xo = SY;
-const int Bleich = 0; 
+const int Bleich = 1; 
 const int improvednrb = 0;
+const int element_type = 1; //0 for hexahedral element; 1 for tetrahedral element; 

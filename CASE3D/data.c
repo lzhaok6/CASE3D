@@ -15,6 +15,7 @@
 #include "data.h"
 
 
+
 int wetsurfnumber;
 WETSURF* wsflist[MAXWETSURF];
 void readfile(const char* filename){
@@ -36,19 +37,25 @@ void readfile(const char* filename){
 	//This indicator is generally set by a previous operation on the stream that attempted to read at or past the end-of-file
 	WETSURF* fptr = malloc(sizeof(WETSURF));
     fptr->name=malloc(100);
-    ret = fscanf(fhandle,"EF %s %i %i\n",fptr->name,& fptr->dim,& fptr->direction); //scan from the first line of module definition
+    //ret = fscanf(fhandle,"EF %s %i %i\n",fptr->name,& fptr->dim,& fptr->direction); //scan from the first line of module definition
+	ret = fscanf(fhandle, "EF %s %i %i %i\n", fptr->name, &fptr->dim, &fptr->direction, &fptr->element_type);
 	//name is the name of each coupling surface
-    if(ret != 3){ 
+    if(ret != 4){ 
 		printf("Reading error."); exit(-1);    
 	}
 	printf("foundation >%s<   dim=%i  direction=%i\n",
 		fptr->name, fptr->dim, fptr->direction);
     switch(fptr->dim){
       case 2:
-        nodesperelem = 2;
+        nodesperelem = 2; //linear line element on coupling surface (2D)
         break;
       case 3:
-        nodesperelem = 4; //linear quad element on coupling surface
+		  if (fptr->element_type == 0) {
+			  nodesperelem = 4; //linear quad element on coupling surface (3D)
+		  }
+		  if (fptr->element_type == 1) {
+			  nodesperelem = 3; //linear triangular element for tetrahedral element (3D)
+		  }
         break;
       default:
         printf("wrong dimension: %i\n",fptr->dim);

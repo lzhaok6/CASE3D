@@ -12,69 +12,105 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA) {
 	int i, j, k, l, m, n, e, z, o;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[nrbsurfnumber];
-	LOBATTOstruct bq;
-	bq = LOBATTO(Nq); //one unit higher than the interpolation order
-	GLLQUADstruct gq;
-	gq = GLLQUAD(bq.Z, bq.WL, Nq, !FEM);
-	LOCAL_SHAPEstruct ls;
-	ls = LOCAL_SHAPE(LNA, N, Nq); //one order higher than the interpolation order
-
-	//Construct the ADMASTER for the integration (insert one additional GLL quadrature point)
-	//Can we use just one surface for NRBC? I think so  
-	//We need to combine the physical group corresponding to NRBC first
-	//Do we need to individual points on the NRBC? 
-	//ADMASTER is for each element. 
-	//We need NRBA to store all the nodes on NRB
-	//We also need the total number of node in each NRB surface
-	//We need to lump ADMASTER to get ADMASTERG 
-
+	
 	t.ADMASTERG = new double[NNODE];
 	for (i = 0; i < NNODE; i++) {
 		t.ADMASTERG[i] = 0.0;
 	}
 
-	for (z = 0; z < nrbsurfnumber; z++) {
-		nr[z].ADMASTER = new double**[nr[z].NEL_nrb];
-		for (i = 0; i < nr[z].NEL_nrb; i++) {
-			nr[z].ADMASTER[i] = new double*[NINT*NINT];
-			for (j = 0; j < NINT*NINT; j++) {
-				nr[z].ADMASTER[i][j] = new double[NINT*NINT];
-			}
-		}
-		for (i = 0; i < nr[z].NEL_nrb; i++) {
-			for (j = 0; j < NINT*NINT; j++) {
-				for (k = 0; k < NINT*NINT; k++) {
-					nr[z].ADMASTER[i][j][k] = 0.0;
+	if (element_type == 0) {
+		LOBATTOstruct bq;
+		bq = LOBATTO(Nq); //one unit higher than the interpolation order
+		GLLQUADstruct gq;
+		gq = GLLQUAD(bq.Z, bq.WL, Nq, !FEM);
+		LOCAL_SHAPEstruct ls;
+		ls = LOCAL_SHAPE(LNA, N, Nq); //one order higher than the interpolation order
+		//Construct the ADMASTER for the integration (insert one additional GLL quadrature point)
+		//Can we use just one surface for NRBC? I think so  
+		//We need to combine the physical group corresponding to NRBC first
+		//Do we need to individual points on the NRBC? 
+		//ADMASTER is for each element. 
+		//We need NRBA to store all the nodes on NRB
+		//We also need the total number of node in each NRB surface
+		//We need to lump ADMASTER to get ADMASTERG 
+
+		for (z = 0; z < nrbsurfnumber; z++) {
+			nr[z].ADMASTER = new double**[nr[z].NEL_nrb];
+			for (i = 0; i < nr[z].NEL_nrb; i++) {
+				nr[z].ADMASTER[i] = new double*[NINT*NINT];
+				for (j = 0; j < NINT*NINT; j++) {
+					nr[z].ADMASTER[i][j] = new double[NINT*NINT];
 				}
 			}
-		}
+			for (i = 0; i < nr[z].NEL_nrb; i++) {
+				for (j = 0; j < NINT*NINT; j++) {
+					for (k = 0; k < NINT*NINT; k++) {
+						nr[z].ADMASTER[i][j][k] = 0.0;
+					}
+				}
+			}
 
-		double DUNC;
-		//Check out Evernote "Some thoughts on boundary force integration" 
-		for (e = 0; e < nr[z].NEL_nrb; e++) {
-			for (m = 0; m < NINT; m++) {
-				for (n = 0; n < NINT; n++) {
-					for (l = 0; l < NINT; l++) {
-						for (o = 0; o < NINT; o++) {
-							DUNC = 0.0; //accumulator 
-							for (i = 0; i < NqINT; i++) {
-								for (j = 0; j < NqINT; j++) {
-									DUNC += gq.W[i] * gq.W[j] * (ls.SHOD[0][m][i] * ls.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * nr[z].Jacob_2D[e][i*NqINT + j];
-									//FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * (XHE / 2.0)*(YHE / 2.0);
+			double DUNC;
+			//Check out Evernote "Some thoughts on boundary force integration" 
+			for (e = 0; e < nr[z].NEL_nrb; e++) {
+				for (m = 0; m < NINT; m++) {
+					for (n = 0; n < NINT; n++) {
+						for (l = 0; l < NINT; l++) {
+							for (o = 0; o < NINT; o++) {
+								DUNC = 0.0; //accumulator 
+								for (i = 0; i < NqINT; i++) {
+									for (j = 0; j < NqINT; j++) {
+										DUNC += gq.W[i] * gq.W[j] * (ls.SHOD[0][m][i] * ls.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * nr[z].Jacob_2D[e][i*NqINT + j];
+										//FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * (XHE / 2.0)*(YHE / 2.0);
+									}
 								}
+								//ol[z].FPMASTER[e][ol[z].LNA_2D[m][n] - 1][ol[z].LNA_2D[l][o] - 1] += FUNC;
+								nr[z].ADMASTER[e][m*NINT + n][l*NINT + o] += DUNC;
 							}
-							//ol[z].FPMASTER[e][ol[z].LNA_2D[m][n] - 1][ol[z].LNA_2D[l][o] - 1] += FUNC;
-							nr[z].ADMASTER[e][m*NINT + n][l*NINT + o] += DUNC;
 						}
 					}
 				}
 			}
-		}
 
-		for (e = 0; e < nr[z].NEL_nrb; e++) {
-			for (j = 0; j < NINT*NINT; j++) {
-				for (k = 0; k < NINT*NINT; k++) {
-					t.ADMASTERG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][e] - 1] += nr[z].ADMASTER[e][j][k];
+			for (e = 0; e < nr[z].NEL_nrb; e++) {
+				for (j = 0; j < NINT*NINT; j++) {
+					for (k = 0; k < NINT*NINT; k++) {
+						t.ADMASTERG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][e] - 1] += nr[z].ADMASTER[e][j][k];
+					}
+				}
+			}
+
+		}
+	}
+	if (element_type == 1) {
+		for (z = 0; z < nrbsurfnumber; z++) {
+			nr[z].ADMASTER = new double**[nr[z].NEL_nrb];
+			for (i = 0; i < nr[z].NEL_nrb; i++) {
+				nr[z].ADMASTER[i] = new double*[3];
+				for (j = 0; j < 3; j++) {
+					nr[z].ADMASTER[i][j] = new double[3];
+				}
+			}
+			for (i = 0; i < nr[z].NEL_nrb; i++) {
+				for (j = 0; j < 3; j++) {
+					for (k = 0; k < 3; k++) {
+						nr[z].ADMASTER[i][j][k] = 0.0;
+					}
+				}
+			}
+			//Check out the Goodnote "Bounary force integration" or Evernote "Tetrahedral average integration"
+			for (e = 0; e < nr[z].NEL_nrb; e++) {
+				for (m = 0; m < 3; m++) {
+					for (n = 0; n < 3; n++) {
+						nr[z].ADMASTER[e][m][n] = (1.0 / 9.0) * nr[z].dimension[e];
+					}
+				}
+			}
+			for (e = 0; e < nr[z].NEL_nrb; e++) {
+				for (j = 0; j < 3; j++) {
+					for (k = 0; k < 3; k++) {
+						t.ADMASTERG[nr[z].IEN_gb[k][e] - 1] += nr[z].ADMASTER[e][j][k];
+					}
 				}
 			}
 		}

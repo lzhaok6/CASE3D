@@ -1,0 +1,13 @@
+Code name: 3Dbarge_TFM_Abaqus_sym_mesh
+Simulation date and time: 25-07-2018 20-03-11
+Mesh information:
+N: 1 mesh size:  wetted surface number: 1 Nodenumber: 4273 Element number: 18898 h/p refinement rate: 1
+Explosive information: 
+stdoff point (spherical): 0 0 3.548 explosion center: 0 -9.144 3.548 peak pressure (Mpa): 712000 decay rate: 0.000999 WAVE (1: plane, 2: spherical): 1
+Time integration information
+CFL: 0.5 dt: 4.99323e-06 dt scale factor: 1 total time: 0.012 damping: 0.25 explicit central difference (Leap frog)
+Fluid properties: 
+CAV: 1 C: 1450 RHO: 989 atmospheric pressure: 101300 saturated pressure: 0
+FSI coupling
+mapping algorithm: 4
+debug mode: 0

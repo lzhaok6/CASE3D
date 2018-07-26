@@ -43,8 +43,29 @@ int main()
 		std::cout << "the mapping algorithms other than 2 are not designed to transfer abosolute pressure" << std::endl;
 		system("PAUSE ");
 	}
+
 	std::cout << "Have you properly configured owsfnumber and nrbsurfnumber?" << std::endl;
-	//system("PAUSE "); 
+
+	if (tensorfactorization == 1 & element_type == 1) {
+		std::cout << "tetrahedral element does not support tensor-product factorization" << std::endl;
+		system("PAUSE ");
+	}
+	if (element_type == 1 && N > 1) {
+		std::cout << "The high-order tetrahedral element is not supported" << std::endl;
+		system("PAUSE ");
+	}
+	if (element_type == 1 && FEM != 1) {
+		std::cout << "The tet element is only FEM type" << std::endl;
+		system("PAUSE ");
+	}
+	if (element_type == 0 && mappingalgo != 2) {
+		std::cout << "The other mapping algorithm is not available for hexahedral element" << std::endl;
+		system("PAUSE ");
+	}
+	if (element_type == 1 && mappingalgo != 4) {
+		std::cout << "The other mapping algorithm is not available for tetrahedral element" << std::endl;
+		system("PAUSE ");
+	}
 
 	meshgenerationstruct a;
 	a = meshgeneration();
@@ -91,10 +112,10 @@ int main()
 	*/
 	//std::cout << "JACOBIAN done" << std::endl;
 	GLOBAL_SHAPEstruct n;
-	n = GLOBAL_SHAPE(a.NEL, g.SHL, m.XS, m.JACOB);
+	n = GLOBAL_SHAPE(a.NEL, g.SHL, m.XS, m.JACOB, a.GCOORD, a.IEN, m.JACOB_tet);
 	//std::cout << "GLOBAL_SHAPE done" << std::endl;
 	MATRIXstruct o;
-	o = MATRIX(a.NEL, a.NNODE, g.SHL, f.W, a.IEN, c.LNA, m.XS, n.SHG, m.JACOB);
+	o = MATRIX(a.NEL, a.NNODE, g.SHL, f.W, a.IEN, c.LNA, m.XS, n.SHG, m.JACOB, m.JACOB_tet, n.SHG_tet);
 	//duration_int = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 	//std::cout << "time lapse for until this point: " << duration_int << std::endl;
 
@@ -128,67 +149,70 @@ int main()
 	//later added
 	T[t.NDT] = TTERM;
 
-	//define mapping functions for interface mapping
-	double* basep; //points on base fluid mesh 
-	double* origp; //points on original fluid mesh 
-	double nomx, nomy, nomz;
-	double denomx, denomy, denomz;
-	basep = new double[NCINT];
-	for (i = 0; i < NCINT; i++) {
-		basep[i] = 0.0;
-	}
-	for (i = 0; i < NCINT; i++) {
-		basep[i] = -1.0 + i*(2.0 / (NCINT - 1));
-	}
-
-	origp = new double[hpref + 1];
-	for (i = 0; i < refine + 1; i++) {
-		origp[i*N] = -1 + (2.0 / refine)*i;
-	}
-	for (i = 0; i < refine; i++) {
-		for (j = 1; j < N; j++) {
-			origp[i*N + j] = origp[i*N] + (2.0 / refine)*((b.Z[j - 1] + 1) / 2);
+	if (element_type == 0) { //hexahedral element
+		//define mapping functions for interface mapping
+		double* basep; //points on base fluid mesh 
+		double* origp; //points on original fluid mesh 
+		double nomx, nomy, nomz;
+		double denomx, denomy, denomz;
+		basep = new double[NCINT];
+		for (i = 0; i < NCINT; i++) {
+			basep[i] = 0.0;
 		}
-	}
+		for (i = 0; i < NCINT; i++) {
+			basep[i] = -1.0 + i*(2.0 / (NCINT - 1));
+		}
 
-	for (z = 0; z < owsfnumber; z++) {
-		ol[z].phi_fem = new double**[4];
-		for (i = 0; i < 4; i++) { //for all the points in that element
-			ol[z].phi_fem[i] = new double*[NINT];
-			for (j = 0; j < NINT; j++) {
-				ol[z].phi_fem[i][j] = new double[NINT];
+		origp = new double[hpref + 1];
+		for (i = 0; i < refine + 1; i++) {
+			origp[i*N] = -1 + (2.0 / refine)*i;
+		}
+		for (i = 0; i < refine; i++) {
+			for (j = 1; j < N; j++) {
+				origp[i*N + j] = origp[i*N] + (2.0 / refine)*((b.Z[j - 1] + 1) / 2);
 			}
 		}
-		for (i = 0; i < 4; i++) {
-			for (j = 0; j < NINT; j++) {
-				for (k = 0; k < NINT; k++) {
-					ol[z].phi_fem[i][j][k] = 0.0;
+
+		for (z = 0; z < owsfnumber; z++) {
+			ol[z].phi_fem = new double**[4];
+			for (i = 0; i < 4; i++) { //for all the points in that element
+				ol[z].phi_fem[i] = new double*[NINT];
+				for (j = 0; j < NINT; j++) {
+					ol[z].phi_fem[i][j] = new double[NINT];
 				}
 			}
-		}
-		for (h = 0; h < 2; h++) { //stands for every fem point, LNA[u][v][w](shape function is based on those points)
-			for (k = 0; k < 2; k++) {
-				for (i = 0; i < NINT; i++) {  //i j k are the independent variable in basis function(sem points)
-					for (j = 0; j < NINT; j++) {
-						nomx = 1.0; nomy = 1.0; //multiplier initialization
-						denomx = 1.0; denomy = 1.0; //multiplier initialization
-						for (e = 0; e < 2; e++) { //loop through nominator and denominator in basis function expression
-							if (e != h) {
-								nomx *= (origp[i] - basep[e]);
-								denomx *= (basep[h] - basep[e]);
+			for (i = 0; i < 4; i++) {
+				for (j = 0; j < NINT; j++) {
+					for (k = 0; k < NINT; k++) {
+						ol[z].phi_fem[i][j][k] = 0.0;
+					}
+				}
+			}
+			for (h = 0; h < 2; h++) { //stands for every fem point, LNA[u][v][w](shape function is based on those points)
+				for (k = 0; k < 2; k++) {
+					for (i = 0; i < NINT; i++) {  //i j k are the independent variable in basis function(sem points)
+						for (j = 0; j < NINT; j++) {
+							nomx = 1.0; nomy = 1.0; //multiplier initialization
+							denomx = 1.0; denomy = 1.0; //multiplier initialization
+							for (e = 0; e < 2; e++) { //loop through nominator and denominator in basis function expression
+								if (e != h) {
+									nomx *= (origp[i] - basep[e]);
+									denomx *= (basep[h] - basep[e]);
+								}
+								if (e != k) {
+									nomy *= (origp[j] - basep[e]);
+									denomy *= (basep[k] - basep[e]);
+								}
 							}
-							if (e != k) {
-								nomy *= (origp[j] - basep[e]);
-								denomy *= (basep[k] - basep[e]);
-							}
+							ol[z].phi_fem[ol[z].LNA_algo2[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
+							//the coordinate definition dof u,v is the same with i,j
 						}
-						ol[z].phi_fem[ol[z].LNA_algo2[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
-						//the coordinate definition dof u,v is the same with i,j
 					}
 				}
 			}
 		}
 	}
+
 	//derive the peak wave pressure and decay rate
 	double XC = 0.0; double YC = 0.0; double ZC = 0.0;
 	double XO = 0.0; double YO = 0.0; double ZO = 0.0; //stand-off point

@@ -76,6 +76,42 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			}
 		}
 
+		else if (mappingalgo == 4) {
+			if (element_type == 1) { //tetrahedral element
+				ct = 0;
+				for (z = 0; z < owsfnumber; z++) {
+					if (ol[z].FSNEL > 0) {
+						for (l = 0; l < ol[z].FSNEL; l++) { //loop through each element
+							for (i = 0; i < 3; i++) {
+								wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[i][l] - 1) + 0] = 0.0;
+								wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[i][l] - 1) + 1] = 0.0;
+								wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[i][l] - 1) + 2] = 0.0;
+							}
+						}
+						ct += 1;
+					}
+				}
+				ct = 0;
+				//The problem remains to be fixed is that the pressure value is at the interpolation point instead of the quadrature point
+				for (z = 0; z < owsfnumber; z++) {
+					if (ol[z].FSNEL > 0) {
+						for (l = 0; l < ol[z].FSNEL; l++) {
+							for (i = 0; i < 3; i++) {
+								for (j = 0; j < 3; j++) {
+									for (n = 0; n < 3; n++) {
+										wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[i][l] - 1) + n] //force in z direction
+											+= ol[z].norm[l][n] * (1.0 / 3.0) * ol[z].WP[ol[z].IEN_gb[j][l] - 1] * (1.0 / 3.0) * ol[z].dimension[l];
+									}
+								}
+							}
+						}
+					}
+					ct += 1;
+				}
+			}
+
+		}
+
 		double BF_val[4];
 		ct = 0;
 		for (i = 0; i < owsfnumber; i++) {
@@ -146,9 +182,40 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					}
 				}
 			}
-
-			std::cout << " " << std::endl;
 		}
+
+		else if (mappingalgo == 4) {
+			if (debug2 == 1) {
+				for (z = 0; z < owsfnumber; z++) {
+					for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
+						for (i = 0; i < 3; i++) { //loop through each point on element surface 
+							wsflist[z]->nodecoord[3 * (ol[z].IEN_2D[i][l] - 1) + 1] = GCOORD[ol[z].IEN_gb[i][l] - 1][1] + 1;
+						}
+					}
+				}
+			}
+			if (element_type == 1) { //tetrahedral element
+				double DISPTEMP = 0.0;
+				ct = 0;
+				for (z = 0; z < owsfnumber; z++) {
+					if (ol[z].FSNEL > 0) {
+						for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
+							for (i = 0; i < 3; i++) { //loop through each point on element surface 
+								ol[z].DISP[ol[z].IEN_gb[i][l] - 1][0] = 0.0;
+								ol[z].DISP[ol[z].IEN_gb[i][l] - 1][1] = 0.0;
+								ol[z].DISP[ol[z].IEN_gb[i][l] - 1][2] = 0.0;
+								for (n = 0; n < 3; n++) {
+									DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[i][l] - 1) + n] - GCOORD[ol[z].IEN_gb[i][l] - 1][n];
+									ol[z].DISP[ol[z].IEN_gb[i][l] - 1][n] = DISPTEMP;
+								}
+							}
+						}
+						ct += 1;
+					}
+				}
+			}
+		}
+
 		std::cout << " " << std::endl;
 		break;
 	}

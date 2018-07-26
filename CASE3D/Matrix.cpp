@@ -9,22 +9,42 @@
 #include <ctime>
 #include <omp.h>
 
-struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double***XS, double****SHG, double**JACOB) {
+struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double***XS, double****SHG, double**JACOB, double* JACOB_tet, double*** SHG_tet) {
 	MATRIXstruct t;
 	double QFUNC;  //CAPACITANCE MATRIX SUM VARIABLE (mass matrix)
 	double HFUNC;  //REACTANCE MATRIX SUM VARIABLE (stiffness matrix)
 	int i, j, k, l, m, n, e, u, v;
 	double duration;
 	std::clock_t start;
-	t.QMASTER = new double*[NINT*NINT*NINT]; //element matrix  
-	t.HMASTER = new double**[NEL]; //element matrix
-	for (i = 0; i < NINT*NINT*NINT; i++) {
-		t.QMASTER[i] = new double[NINT*NINT*NINT];
+
+	if (element_type == 0) {
+		t.QMASTER = new double*[NINT*NINT*NINT]; //element matrix  
+		for (i = 0; i < NINT*NINT*NINT; i++) {
+			t.QMASTER[i] = new double[NINT*NINT*NINT];
+		}
 	}
-	for (i = 0; i < NEL; i++) {
-		t.HMASTER[i] = new double*[NINT*NINT*NINT];
-		for (j = 0; j < NINT*NINT*NINT; j++) {
-			t.HMASTER[i][j] = new double[NINT*NINT*NINT];
+	if (element_type == 1) {
+		t.QMASTER = new double*[4]; //element matrix  
+		for (i = 0; i < 4; i++) {
+			t.QMASTER[i] = new double[4];
+		}
+	}
+
+	t.HMASTER = new double**[NEL]; //element matrix
+	if (element_type == 0) {
+		for (i = 0; i < NEL; i++) {
+			t.HMASTER[i] = new double*[NINT*NINT*NINT];
+			for (j = 0; j < NINT*NINT*NINT; j++) {
+				t.HMASTER[i][j] = new double[NINT*NINT*NINT];
+			}
+		}
+	}
+	if (element_type == 1) {
+		for (i = 0; i < NEL; i++) {
+			t.HMASTER[i] = new double*[4];
+			for (j = 0; j < 4; j++) {
+				t.HMASTER[i][j] = new double[4];
+			}
 		}
 	}
 
@@ -33,10 +53,21 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 		t.Q[i] = 0.0;
 	}
 
-	for (m = 0; m < NEL; m++) {
-		for (i = 0; i < NINT*NINT*NINT; i++) {
-			for (j = 0; j < NINT*NINT*NINT; j++) {
-				t.HMASTER[m][i][j] = 0.0;
+	if (element_type == 0) {
+		for (m = 0; m < NEL; m++) {
+			for (i = 0; i < NINT*NINT*NINT; i++) {
+				for (j = 0; j < NINT*NINT*NINT; j++) {
+					t.HMASTER[m][i][j] = 0.0;
+				}
+			}
+		}
+	}
+	if (element_type == 1) {
+		for (m = 0; m < NEL; m++) {
+			for (i = 0; i < 4; i++) {
+				for (j = 0; j < 4; j++) {
+					t.HMASTER[m][i][j] = 0.0;
+				}
 			}
 		}
 	}
@@ -52,54 +83,80 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 	}
 
 	//----------------BEGIN MATRIX COMP.--------------------//
-	if (FEM == 1) {
-		for (e = 0; e < NEL; e++) {
-			for (u = 0; u < NINT*NINT*NINT; u++) {
-				for (v = 0; v < NINT*NINT*NINT; v++) {
-					t.QMASTER[u][v] = 0.0;
-				}
-			}
-			for (i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element
-				for (j = 0; j < NINT*NINT*NINT; j++) { //the transpose of shape function
-					for (k = 0; k < NINT; k++) {       //k l m are for four points
-						for (l = 0; l < NINT; l++) {
-							for (m = 0; m < NINT; m++) {
-								//PERFORM GLL INTERGRATION FOR CAPACITANCE MATRIX
-								QFUNC = JACOB[e][k*NINT*NINT + l*NINT + m] * (SHL[3][i][k*NINT*NINT + l*NINT + m] * SHL[3][j][k*NINT*NINT + l*NINT + m]);
-								t.QMASTER[i][i] += W[k] * W[l] * W[m] * QFUNC;  //MULTIDIMENSIONAL GAUSSIAN QUADRATURE: INTEGRATE INNER INTERGRAL FIRST, THEN OUTER INTEGRAL
-							}
-						} //check point: whether the QMASTER matrix is diagonal, if not wrong
+	if (element_type == 0) {
+		if (FEM == 1) { //for FEM element, we apply row-sum technique to make the mass matrix diagonal
+			for (e = 0; e < NEL; e++) {
+				for (u = 0; u < NINT*NINT*NINT; u++) {
+					for (v = 0; v < NINT*NINT*NINT; v++) {
+						t.QMASTER[u][v] = 0.0;
 					}
 				}
-			}
-			//assemble the local mass matrix 
-			for (i = 0; i < NINT*NINT*NINT; i++) {
-				t.Q[IEN[i][e] - 1] += t.QMASTER[i][i];
-			}
-		}
-	}
-	else {
-		for (e = 0; e < NEL; e++) {
-			//std::cout << e << std::endl;
-			for (u = 0; u < NINT*NINT*NINT; u++) {
-				for (v = 0; v < NINT*NINT*NINT; v++) {
-					t.QMASTER[u][v] = 0.0;
-				}
-			}
-			for (i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element
-				for (j = 0; j < NINT*NINT*NINT; j++) { //the transpose of shape function
-					if (i == j) { //diagonal terms
+				for (i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element
+					for (j = 0; j < NINT*NINT*NINT; j++) { //the transpose of shape function
 						for (k = 0; k < NINT; k++) {       //k l m are for four points
 							for (l = 0; l < NINT; l++) {
 								for (m = 0; m < NINT; m++) {
 									//PERFORM GLL INTERGRATION FOR CAPACITANCE MATRIX
 									QFUNC = JACOB[e][k*NINT*NINT + l*NINT + m] * (SHL[3][i][k*NINT*NINT + l*NINT + m] * SHL[3][j][k*NINT*NINT + l*NINT + m]);
-									t.QMASTER[i][j] = t.QMASTER[i][j] + W[k] * W[l] * W[m] * QFUNC;  //MULTIDIMENSIONAL GAUSSIAN QUADRATURE: INTEGRATE INNER INTERGRAL FIRST, THEN OUTER INTEGRAL
+									t.QMASTER[i][i] += W[k] * W[l] * W[m] * QFUNC;  //MULTIDIMENSIONAL GAUSSIAN QUADRATURE: INTEGRATE INNER INTERGRAL FIRST, THEN OUTER INTEGRAL
 								}
 							} //check point: whether the QMASTER matrix is diagonal, if not wrong
 						}
-						//ASSEMBLE GLOBAL CAPACITANCE MATRIX
-						t.Q[IEN[i][e] - 1] = t.Q[IEN[i][e] - 1] + t.QMASTER[i][j];
+					}
+				}
+				//assemble the local mass matrix 
+				for (i = 0; i < NINT*NINT*NINT; i++) {
+					t.Q[IEN[i][e] - 1] += t.QMASTER[i][i];
+				}
+			}
+		}
+		else {
+			for (e = 0; e < NEL; e++) {
+				//std::cout << e << std::endl;
+				for (u = 0; u < NINT*NINT*NINT; u++) {
+					for (v = 0; v < NINT*NINT*NINT; v++) {
+						t.QMASTER[u][v] = 0.0;
+					}
+				}
+				for (i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element
+					for (j = 0; j < NINT*NINT*NINT; j++) { //the transpose of shape function
+						if (i == j) { //diagonal terms
+							for (k = 0; k < NINT; k++) {       //k l m are for four points
+								for (l = 0; l < NINT; l++) {
+									for (m = 0; m < NINT; m++) {
+										//PERFORM GLL INTERGRATION FOR CAPACITANCE MATRIX
+										QFUNC = JACOB[e][k*NINT*NINT + l*NINT + m] * (SHL[3][i][k*NINT*NINT + l*NINT + m] * SHL[3][j][k*NINT*NINT + l*NINT + m]);
+										t.QMASTER[i][j] = t.QMASTER[i][j] + W[k] * W[l] * W[m] * QFUNC;  //MULTIDIMENSIONAL GAUSSIAN QUADRATURE: INTEGRATE INNER INTERGRAL FIRST, THEN OUTER INTEGRAL
+									}
+								} //check point: whether the QMASTER matrix is diagonal, if not wrong
+							}
+							//ASSEMBLE GLOBAL CAPACITANCE MATRIX
+							t.Q[IEN[i][e] - 1] = t.Q[IEN[i][e] - 1] + t.QMASTER[i][j];
+						}
+					}
+				}
+				if (e % 1000 == 0) {
+					std::cout << e << std::endl; //output which line is being read
+				}
+			}
+		}
+
+		//start = std::clock();
+		/*
+		for (e = 0; e < NEL; e++) {
+			//std::cout << e << std::endl;
+			for (i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element
+				for (j = 0; j < NINT*NINT*NINT; j++) { //the transpose of shape function
+					for (k = 0; k < NINT; k++) {       //k l m are for four points
+						for (l = 0; l < NINT; l++) {
+							for (m = 0; m < NINT; m++) {
+								HFUNC = JACOB[e][k*NINT*NINT + l*NINT + m]*(SHG[e][2][i][k*NINT*NINT+l*NINT+m] * SHG[e][2][j][k*NINT*NINT + l*NINT + m] + SHG[e][1][i][k*NINT*NINT + l*NINT + m] * SHG[e][1][j][k*NINT*NINT + l*NINT + m] + SHG[e][0][i][k*NINT*NINT + l*NINT + m] * SHG[e][0][j][k*NINT*NINT + l*NINT + m]);
+								//ASSEMBLE MASTER REACTANCE MATRIX
+								t.HMASTER[e][i][j] = t.HMASTER[e][i][j] + W[k] * W[l] * W[m] * HFUNC;
+								//QMASTER is diagonal because of the orthogonality of polynomial
+								//HMASTER is not diagonal because the polynomial is differentiated
+							}
+						}
 					}
 				}
 			}
@@ -107,95 +164,59 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 				std::cout << e << std::endl; //output which line is being read
 			}
 		}
-	}
-
-	start = std::clock();
-	/*
-	for (e = 0; e < NEL; e++) {
-		//std::cout << e << std::endl;
-		for (i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element
-			for (j = 0; j < NINT*NINT*NINT; j++) { //the transpose of shape function
-				for (k = 0; k < NINT; k++) {       //k l m are for four points
-					for (l = 0; l < NINT; l++) {
-						for (m = 0; m < NINT; m++) {
-							HFUNC = JACOB[e][k*NINT*NINT + l*NINT + m]*(SHG[e][2][i][k*NINT*NINT+l*NINT+m] * SHG[e][2][j][k*NINT*NINT + l*NINT + m] + SHG[e][1][i][k*NINT*NINT + l*NINT + m] * SHG[e][1][j][k*NINT*NINT + l*NINT + m] + SHG[e][0][i][k*NINT*NINT + l*NINT + m] * SHG[e][0][j][k*NINT*NINT + l*NINT + m]);
-							//ASSEMBLE MASTER REACTANCE MATRIX
-							t.HMASTER[e][i][j] = t.HMASTER[e][i][j] + W[k] * W[l] * W[m] * HFUNC;
-							//QMASTER is diagonal because of the orthogonality of polynomial
-							//HMASTER is not diagonal because the polynomial is differentiated
-						}
+		*/
+		//about 25% faster than the algorithm above
+		#pragma omp parallel for num_threads(6)
+		for (int e = 0; e < NEL; e++) {
+			//#pragma omp parallel for num_threads(6)
+			for (int i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element 
+				//#pragma omp parallel for num_threads(6)
+				for (int j = 0; j < NINT*NINT*NINT; j++) { //the transpose of shape function
+					//#pragma omp parallel for num_threads(6)
+					for (int k = 0; k < NINT*NINT*NINT; k++) {       //k l m are for four points
+						//HFUNC = JACOB[e][k] * (SHG[e][2][i][k] * SHG[e][2][j][k] + SHG[e][1][i][k] * SHG[e][1][j][k] + SHG[e][0][i][k] * SHG[e][0][j][k]);
+						//ASSEMBLE MASTER REACTANCE MATRIX
+						//t.HMASTER[e][i][j] = t.HMASTER[e][i][j] + W_new[k] * HFUNC;
+						t.HMASTER[e][i][j] = t.HMASTER[e][i][j] + W_new[k] * JACOB[e][k] * (SHG[e][2][i][k] * SHG[e][2][j][k] + SHG[e][1][i][k] * SHG[e][1][j][k] + SHG[e][0][i][k] * SHG[e][0][j][k]);
+						//QMASTER is diagonal because of the orthogonality of polynomial 
+						//HMASTER is not diagonal because the polynomial is differentiated 
 					}
 				}
 			}
 		}
-		if (e % 1000 == 0) {
-			std::cout << e << std::endl; //output which line is being read
-		}
-	}
-	*/
-	
-	/*
-	int ***data;
-	data = new int**[NEL];
-	for (i = 0; i < NEL; i++) {
-		data[i] = new int*[NINT*NINT*NINT];
-		for (j = 0; j < NINT*NINT*NINT; j++) {
-			data[i][j] = new int[NINT*NINT*NINT];
-		}
-	}
-	int ct2 = 0; 
-	#pragma omp parallel for 
-	for (i = 0; i < NEL; i++) {
-		//#pragma omp parallel for 
-		for (j = 0; j < NINT*NINT*NINT; j++) {
-			//#pragma omp parallel for
-			for (k = 0; k < NINT*NINT*NINT; k++) {
-				data[i][j][k] = 123;
-				ct2 += 1;
-			}
-		}
+		//duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
+		//std::cout << "total CPU time (ms): " << duration << std::endl;
+		//std::cout << " " << std::endl;
 	}
 
-	for (i = 0; i < NEL; i++) {
-		for (j = 0; j < NINT*NINT*NINT; j++) {
-			for (k = 0; k < NINT*NINT*NINT; k++) {
-				if (data[i][j][k] != 123) {
-					std::cout << " " << std::endl;
+	if (element_type == 1) { //tetrahedral element mass (capacitance) and diffusion (reactance) matrix
+		//Currently only for linear tetrahedral element. 
+		//Source: Pozrikidis, C Finite and Spectral Element Methods Using MATLAB Chapter 8
+		for (e = 0; e < NEL; e++) {
+			double Vol = (1.0 / 6.0)*JACOB_tet[e];
+			//Mass matrix
+			for (u = 0; u < 4; u++) {
+				for (v = 0; v < 4; v++) {
+					t.QMASTER[u][v] = 0.0;
+				}
+			}
+			for (i = 0; i < 4; i++) {     //totally NINT*NINT*NINT points for an element
+				for (j = 0; j < 4; j++) { //the transpose of shape function
+					if (i == j) { //diagonal terms
+						t.QMASTER[i][j] = Vol*(1.0 / 4.0)*1.0;  //MULTIDIMENSIONAL GAUSSIAN QUADRATURE: INTEGRATE INNER INTERGRAL FIRST, THEN OUTER INTEGRAL
+						t.Q[IEN[i][e] - 1] = t.Q[IEN[i][e] - 1] + t.QMASTER[i][j];
+					}
+				}
+			}
+			//Diffusion matrix
+			for (int i = 0; i < 4; i++) {     //totally NINT*NINT*NINT points for an element 
+				for (int j = 0; j < 4; j++) { //the transpose of shape function
+					t.HMASTER[e][i][j] = Vol * (SHG_tet[e][2][i] * SHG_tet[e][2][j] + SHG_tet[e][1][i] * SHG_tet[e][1][j] + SHG_tet[e][0][i] * SHG_tet[e][0][j]);
 				}
 			}
 		}
 	}
-	*/
-
-	//about 25% faster than the algorithm above
-	#pragma omp parallel for num_threads(6)
-	for (int e = 0; e < NEL; e++) {
-		//#pragma omp parallel for num_threads(6)
-		for (int i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element 
-			//#pragma omp parallel for num_threads(6)
-			for (int j = 0; j < NINT*NINT*NINT; j++) { //the transpose of shape function
-				//#pragma omp parallel for num_threads(6)
-				for (int k = 0; k < NINT*NINT*NINT; k++) {       //k l m are for four points
-					//HFUNC = JACOB[e][k] * (SHG[e][2][i][k] * SHG[e][2][j][k] + SHG[e][1][i][k] * SHG[e][1][j][k] + SHG[e][0][i][k] * SHG[e][0][j][k]);
-					//ASSEMBLE MASTER REACTANCE MATRIX
-					//t.HMASTER[e][i][j] = t.HMASTER[e][i][j] + W_new[k] * HFUNC;
-					t.HMASTER[e][i][j] = t.HMASTER[e][i][j] + W_new[k] * JACOB[e][k] * (SHG[e][2][i][k] * SHG[e][2][j][k] + SHG[e][1][i][k] * SHG[e][1][j][k] + SHG[e][0][i][k] * SHG[e][0][j][k]);
-					//QMASTER is diagonal because of the orthogonality of polynomial 
-					//HMASTER is not diagonal because the polynomial is differentiated 
-				}
-			}
-		}
-		/*
-		if (e % 1000 == 0) {
-			std::cout << e << std::endl; //output which line is being read
-		}
-		*/
-	}
 	
-	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
-	std::cout << "total CPU time (ms): " << duration << std::endl;
-	//std::cout << " " << std::endl;
-
 	if (tensorfactorization == 1) {
 		//tensors for the evaluation of stiffness terms
 		t.gamma = new double***[NINT];
@@ -365,7 +386,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 		*/
 
 		int ct;
-		start = std::clock();
+		//start = std::clock();
 		//#pragma omp parallel for num_threads(6)
 		for (int e = 0; e < NEL; e++) {
 			ct = 0;
@@ -392,8 +413,8 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 		}
 	}
 
-	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
-	std::cout << "total CPU time (ms): " << duration << std::endl;
+	//duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
+	//std::cout << "total CPU time (ms): " << duration << std::endl;
 	std::cout << " " << std::endl;
 	return t;
 }

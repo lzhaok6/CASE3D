@@ -32,6 +32,7 @@ typedef struct wetsurf{
   //double* elempressure; //may not be useful
   int* elemnodes; //1D connectivity matrix for coupling elements [nelems * nodesperelem]
   double dt;
+  int element_type; 
 } WETSURF;
 
 /* list of foundations */
