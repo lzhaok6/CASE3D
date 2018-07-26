@@ -6,7 +6,7 @@
 #include <iostream>
 
 //EIGENMAX estimates the maximum mesh Eigen value using Greschgorin's Theorem
-double EIGENMAX(double** QMASTER, double*** HMASTER, int NEL) {
+double EIGENMAX(double*** QMASTER, double*** HMASTER, int NEL) {
 	double SUMH; //SUM VARIABLE
 	double HFUNC; //REACTANCE MATRIX LOOP VARIABLE
 	//double FUNC[NINT*NINT*NINT]; //EIGENVALUE STORAGE ARRAY
@@ -41,7 +41,7 @@ double EIGENMAX(double** QMASTER, double*** HMASTER, int NEL) {
 				}
 			}
 			//add all element to diagonal element line by line
-			FUNC[i] = (HMASTER[e][i][i] + SUMH) / QMASTER[i][i]; //the HMASTER here doesn't have the absolute sign. 
+			FUNC[i] = (HMASTER[e][i][i] + SUMH) / QMASTER[e][i][i]; //the HMASTER here doesn't have the absolute sign. 
 		}
 
 		//DERIVE THE MAX EIGEN VALUE IN THE ELEMENT e

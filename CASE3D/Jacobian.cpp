@@ -421,12 +421,13 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				+ XS_tet[2][0] * (XS_tet[0][1] * XS_tet[1][2] - XS_tet[1][1] * XS_tet[0][2]);
 		}
 	}
-
+	/*
 	//The total value of the Jacobian determinant should be the 6 times of the total volume 
 	double hd = 0.0; 
 	for (i = 0; i < NEL; i++) {
 		hd += t.JACOB_tet[i]; 
 	}
+	*/
 	std::cout << " " << std::endl;
 	return t;
 }

@@ -113,6 +113,7 @@ void FSILINK(int*** LNA) {
 				}
 			}
 		}
+		std::cout << " " << std::endl;
 	}
 	if (element_type == 1) { //tetrahedral (3 nodes on the interface)
 		//Check out the Goodnote "Bounary force integration" or Evernote "Tetrahedral average integration"

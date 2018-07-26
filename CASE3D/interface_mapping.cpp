@@ -109,7 +109,6 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					ct += 1;
 				}
 			}
-
 		}
 
 		double BF_val[4];

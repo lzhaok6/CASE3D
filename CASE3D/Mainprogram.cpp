@@ -43,9 +43,7 @@ int main()
 		std::cout << "the mapping algorithms other than 2 are not designed to transfer abosolute pressure" << std::endl;
 		system("PAUSE ");
 	}
-
 	std::cout << "Have you properly configured owsfnumber and nrbsurfnumber?" << std::endl;
-
 	if (tensorfactorization == 1 & element_type == 1) {
 		std::cout << "tetrahedral element does not support tensor-product factorization" << std::endl;
 		system("PAUSE ");
@@ -64,6 +62,14 @@ int main()
 	}
 	if (element_type == 1 && mappingalgo != 4) {
 		std::cout << "The other mapping algorithm is not available for tetrahedral element" << std::endl;
+		system("PAUSE ");
+	}
+	if (FEM == 1 && Nq != N) {
+		std::cout << "FEM (Gauss-Legendre integration) does not need extra integration nodes" << std::endl;
+		system("PAUSE ");
+	}
+	if (FEM == 0 && Nq == N) {
+		std::cout << "SEM (GLL) needs extra integration nodes" << std::endl;
 		system("PAUSE ");
 	}
 

@@ -17,16 +17,21 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 	double duration;
 	std::clock_t start;
 
+	t.QMASTER = new double**[NEL];
 	if (element_type == 0) {
-		t.QMASTER = new double*[NINT*NINT*NINT]; //element matrix  
-		for (i = 0; i < NINT*NINT*NINT; i++) {
-			t.QMASTER[i] = new double[NINT*NINT*NINT];
+		for (i = 0; i < NEL; i++) {
+			t.QMASTER[i] = new double*[NINT*NINT*NINT]; //element matrix  
+			for (j = 0; j < NINT*NINT*NINT; j++) {
+				t.QMASTER[i][j] = new double[NINT*NINT*NINT];
+			}
 		}
 	}
 	if (element_type == 1) {
-		t.QMASTER = new double*[4]; //element matrix  
-		for (i = 0; i < 4; i++) {
-			t.QMASTER[i] = new double[4];
+		for (i = 0; i < NEL; i++) {
+			t.QMASTER[i] = new double*[4]; //element matrix  
+			for (j = 0; j < 4; j++) {
+				t.QMASTER[i][j] = new double[4];
+			}
 		}
 	}
 
@@ -88,7 +93,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 			for (e = 0; e < NEL; e++) {
 				for (u = 0; u < NINT*NINT*NINT; u++) {
 					for (v = 0; v < NINT*NINT*NINT; v++) {
-						t.QMASTER[u][v] = 0.0;
+						t.QMASTER[e][u][v] = 0.0;
 					}
 				}
 				for (i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element
@@ -98,7 +103,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 								for (m = 0; m < NINT; m++) {
 									//PERFORM GLL INTERGRATION FOR CAPACITANCE MATRIX
 									QFUNC = JACOB[e][k*NINT*NINT + l*NINT + m] * (SHL[3][i][k*NINT*NINT + l*NINT + m] * SHL[3][j][k*NINT*NINT + l*NINT + m]);
-									t.QMASTER[i][i] += W[k] * W[l] * W[m] * QFUNC;  //MULTIDIMENSIONAL GAUSSIAN QUADRATURE: INTEGRATE INNER INTERGRAL FIRST, THEN OUTER INTEGRAL
+									t.QMASTER[e][i][i] += W[k] * W[l] * W[m] * QFUNC;  //MULTIDIMENSIONAL GAUSSIAN QUADRATURE: INTEGRATE INNER INTERGRAL FIRST, THEN OUTER INTEGRAL
 								}
 							} //check point: whether the QMASTER matrix is diagonal, if not wrong
 						}
@@ -106,7 +111,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 				}
 				//assemble the local mass matrix 
 				for (i = 0; i < NINT*NINT*NINT; i++) {
-					t.Q[IEN[i][e] - 1] += t.QMASTER[i][i];
+					t.Q[IEN[i][e] - 1] += t.QMASTER[e][i][i];
 				}
 			}
 		}
@@ -115,7 +120,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 				//std::cout << e << std::endl;
 				for (u = 0; u < NINT*NINT*NINT; u++) {
 					for (v = 0; v < NINT*NINT*NINT; v++) {
-						t.QMASTER[u][v] = 0.0;
+						t.QMASTER[e][u][v] = 0.0;
 					}
 				}
 				for (i = 0; i < NINT*NINT*NINT; i++) {     //totally NINT*NINT*NINT points for an element
@@ -126,12 +131,12 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 									for (m = 0; m < NINT; m++) {
 										//PERFORM GLL INTERGRATION FOR CAPACITANCE MATRIX
 										QFUNC = JACOB[e][k*NINT*NINT + l*NINT + m] * (SHL[3][i][k*NINT*NINT + l*NINT + m] * SHL[3][j][k*NINT*NINT + l*NINT + m]);
-										t.QMASTER[i][j] = t.QMASTER[i][j] + W[k] * W[l] * W[m] * QFUNC;  //MULTIDIMENSIONAL GAUSSIAN QUADRATURE: INTEGRATE INNER INTERGRAL FIRST, THEN OUTER INTEGRAL
+										t.QMASTER[e][i][j] = t.QMASTER[e][i][j] + W[k] * W[l] * W[m] * QFUNC;  //MULTIDIMENSIONAL GAUSSIAN QUADRATURE: INTEGRATE INNER INTERGRAL FIRST, THEN OUTER INTEGRAL
 									}
 								} //check point: whether the QMASTER matrix is diagonal, if not wrong
 							}
 							//ASSEMBLE GLOBAL CAPACITANCE MATRIX
-							t.Q[IEN[i][e] - 1] = t.Q[IEN[i][e] - 1] + t.QMASTER[i][j];
+							t.Q[IEN[i][e] - 1] = t.Q[IEN[i][e] - 1] + t.QMASTER[e][i][j];
 						}
 					}
 				}
@@ -197,14 +202,14 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 			//Mass matrix
 			for (u = 0; u < 4; u++) {
 				for (v = 0; v < 4; v++) {
-					t.QMASTER[u][v] = 0.0;
+					t.QMASTER[e][u][v] = 0.0;
 				}
 			}
 			for (i = 0; i < 4; i++) {     //totally NINT*NINT*NINT points for an element
 				for (j = 0; j < 4; j++) { //the transpose of shape function
 					if (i == j) { //diagonal terms
-						t.QMASTER[i][j] = Vol*(1.0 / 4.0)*1.0;  //MULTIDIMENSIONAL GAUSSIAN QUADRATURE: INTEGRATE INNER INTERGRAL FIRST, THEN OUTER INTEGRAL
-						t.Q[IEN[i][e] - 1] = t.Q[IEN[i][e] - 1] + t.QMASTER[i][j];
+						t.QMASTER[e][i][j] = Vol*(1.0 / 4.0)*1.0;  //the mass matrix is directly diagonalized
+						t.Q[IEN[i][e] - 1] = t.Q[IEN[i][e] - 1] + t.QMASTER[e][i][j];
 					}
 				}
 			}

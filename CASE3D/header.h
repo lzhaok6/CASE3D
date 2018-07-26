@@ -16,7 +16,7 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT);
 struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA);
 struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double***XS, double**JACOB, double**GCOORD, int**IEN, double* JACOB_tet);
 struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double***XS, double****SHG, double**JACOB, double* JACOB_tet, double*** SHG_tet);
-double EIGENMAX(double** QMASTER, double*** HMASTER, int NEL);
+double EIGENMAX(double*** QMASTER, double*** HMASTER, int NEL);
 struct TIMINTstruct TIMINT(double LMAX);
 struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA);
 double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO);
@@ -184,7 +184,8 @@ struct GLOBAL_SHAPEstruct {
 };
 
 struct MATRIXstruct {
-	double**QMASTER;
+	//double**QMASTER;
+	double***QMASTER;
 	double***HMASTER;
 	double *Q;  //GLOBAL CAPACITANCE MATRIX
 	double ****gamma;
@@ -221,13 +222,13 @@ const double SY = 0.141;
 const double SZ = 1.0;
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;
-const int Nq = N + 1; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
+const int Nq = N; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
 const int NqINT = Nq + 1;
 const int refine = 1; //The refinement rate of fluid mesh against base fluid mesh for h refinement. 
 const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
 const int hprefg = 1;
-const int mappingalgo = 4; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
+const int mappingalgo = 2; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
 //const double RHO = 1025.0; //original
 const double RHO = 989.0; //Bleich-Sandler
 const int WAVE = 1; //1 for plane wave; 2 for spherical wave 
@@ -256,7 +257,7 @@ const double W = 60; //charge weight (lb)
 //the parameter to control whether a tabulated smoothed waveform is used 
 const double output_int = 5e-4; //output file time interval (0.5ms)
 const int debug = 0; //is the code in debug mode?
-const int debug2 = 1; 
+const int debug2 = 0; 
 const int fsdebug = 0;
 const int tfm = 0; //is total field model used? 
 const int tensorfactorization = 0;
@@ -282,4 +283,4 @@ const int SYNEL = 4 * refine;
 const double xo = SY;
 const int Bleich = 1; 
 const int improvednrb = 0;
-const int element_type = 1; //0 for hexahedral element; 1 for tetrahedral element; 
+const int element_type = 0; //0 for hexahedral element; 1 for tetrahedral element; 

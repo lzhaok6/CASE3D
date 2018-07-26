@@ -17,6 +17,7 @@
 
 
 int wetsurfnumber;
+int ele_type; 
 WETSURF* wsflist[MAXWETSURF];
 void readfile(const char* filename){
   FILE* fhandle;
@@ -38,7 +39,7 @@ void readfile(const char* filename){
 	WETSURF* fptr = malloc(sizeof(WETSURF));
     fptr->name=malloc(100);
     //ret = fscanf(fhandle,"EF %s %i %i\n",fptr->name,& fptr->dim,& fptr->direction); //scan from the first line of module definition
-	ret = fscanf(fhandle, "EF %s %i %i %i\n", fptr->name, &fptr->dim, &fptr->direction, &fptr->element_type);
+	ret = fscanf(fhandle, "EF %s %i %i %i\n", fptr->name, &fptr->dim, &fptr->direction, &fptr->element_type_hd);
 	//name is the name of each coupling surface
     if(ret != 4){ 
 	//if (ret != 3) {
@@ -46,15 +47,16 @@ void readfile(const char* filename){
 	}
 	printf("foundation >%s<   dim=%i  direction=%i\n",
 		fptr->name, fptr->dim, fptr->direction);
+	ele_type = fptr->element_type_hd;
     switch(fptr->dim){
       case 2:
         nodesperelem = 2; //linear line element on coupling surface (2D)
         break;
       case 3:
-		  if (fptr->element_type == 0) {
+		  if (ele_type == 0) {
 			 nodesperelem = 4; //linear quad element on coupling surface (3D)
 		  }
-		  if (fptr->element_type == 1) {
+		  if (ele_type == 1) {
 			  nodesperelem = 3; //linear triangular element for tetrahedral element (3D)
 		  }
         break;

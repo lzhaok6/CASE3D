@@ -435,34 +435,39 @@ int MpCCI_Driver_definePart(MPCCI_SERVER *server, MPCCI_PART *part)
       elemTypes   = (unsigned*) malloc(MPCCI_PART_NELEMS(part)*sizeof(unsigned));
 
       /* loop over elements in coupling component */
-      for(i=0; i<MPCCI_PART_NELEMS(part); i++)
-      {
-         /* get element ID and element information */
-         elemID = i;
+	  for (i = 0; i < MPCCI_PART_NELEMS(part); i++)
+	  {
+		  /* get element ID and element information */
+		  elemID = i;
 
-         switch(dim)
-         {
-            case 2:  /* -> line elements */
-               *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i*2];
-               *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i*2+1];
-               elemTypes[i]   = MPCCI_ETYP_LINE2;
-               break;
-            case 3:  /* -> quadrilaterals */
-               *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i*4];
-               *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i*4+1];
-               *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i*4+2];
-               *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i*4+3];
-               //elemTypes[i]   = MPCCI_ETYP_QUAD4;  //change element type by changing macro/lu
-			   elemTypes[i] = MPCCI_ETYP_TRIA3;
-			   //linear quad element, need to change to higher order/lu
-			   //*elemNodePtr may have to be changed too/lu
-			   //element type macros are defined in the file "mpcci elements.h"/lu
-               break;
-            default:
-               MPCCI_MSG_FATAL0("Unsupported element type!");
-               break;
-         }
-      }
+		  switch (dim)
+		  {
+		  case 2:  /* -> line elements */
+			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 2];
+			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 2 + 1];
+			  elemTypes[i] = MPCCI_ETYP_LINE2;
+			  break;
+		  case 3:  /* -> quadrilaterals */
+			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 4];
+			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 4 + 1];
+			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 4 + 2];
+			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 4 + 3];
+			  //elemTypes[i]   = MPCCI_ETYP_QUAD4;  //change element type by changing macro/lu
+			  if (ele_type == 0) {
+				  elemTypes[i] = MPCCI_ETYP_QUAD4;
+			  }
+			  if (ele_type == 1) { //tetrahedral element
+				  elemTypes[i] = MPCCI_ETYP_TRIA3;
+			  }
+			  //linear quad element, need to change to higher order/lu
+			  //*elemNodePtr may have to be changed too/lu
+			  //element type macros are defined in the file "mpcci elements.h"/lu
+			  break;
+		  default:
+			  MPCCI_MSG_FATAL0("Unsupported element type!");
+			  break;
+		  }
+	  }
 
       /* Send the element definition for this coupled component */
 	  //define the elements of a coupling component/lu

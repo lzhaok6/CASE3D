@@ -32,7 +32,7 @@ typedef struct wetsurf{
   //double* elempressure; //may not be useful
   int* elemnodes; //1D connectivity matrix for coupling elements [nelems * nodesperelem]
   double dt;
-  int element_type; 
+  int element_type_hd;
 } WETSURF;
 
 /* list of foundations */
@@ -42,7 +42,7 @@ extern WETSURF* wsflist[MAXWETSURF]; //WETSURF=struct wetsurf
 
 /* number of wet surface */
 extern int wetsurfnumber;
-
+extern int ele_type;
 extern double time_step_size;
 extern double current_time;
 
