@@ -55,7 +55,9 @@ typedef struct owetsurf {
 	double** Jacob_test; 
 	int LNA_2D[NINT][NINT];
 	int LNA_algo2[2][2]; //The local node orientation of the linear element in algorithm2
-	int FP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of FPMASTER
+	//int FP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of FPMASTER
+	int FP_temp[NINT*NINT];
+	int **FP; 
 	int FP_2D[NINT*NINT];
 	double** JACOB;
 	int Jacob_face[2]; //Used to identify which coordinate dimension (x,y or z/xi,eta,zeta?) to be used for surface 2D Jacobian matrix calculation.  
@@ -83,7 +85,9 @@ typedef struct nrbsurf {
 	int NEL_nrb; //the element number of the 2D element 
 	//int NNODE_nrb; //The total number of node on NRBC
 	int LNA_2D[NINT][NINT]; 
-	int DP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of ADMASTER
+	//int DP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of ADMASTER
+	int DP_temp[NINT*NINT]; 
+	int** DP; 
 	int DP_2D[NINT*NINT];
 	int* NRBA; 
 	int NRBNODE;
@@ -214,12 +218,12 @@ struct TIMINTstruct {
 };
 
 //Input values
-const double SX = 1.0;
+const double SX = 0.1;
 //const double SX = 8.5344 / 2; //14ft
 //const double SY = 1.2192; //4ft 
 const double SY = 0.141;
 //const double SZ = 4.8768; //16ft
-const double SZ = 1.0;
+const double SZ = 0.1;
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;
 const int Nq = N; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 

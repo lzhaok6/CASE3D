@@ -31,7 +31,9 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	//system("PAUSE "); 
-	std::ifstream infile("Bleich_Sandler_tet.msh");
+	//std::ifstream infile("Bleich_Sandler_0.1surface_0.01m.msh");
+	//::ifstream infile("../../Bleich_Sandler_0.1surface_0.01m.msh");
+	std::ifstream infile("C:/Users/lzhaok6/OneDrive/CASE_MESH/Bleich_Sandler_0.1surface_0.1m_debug.msh");
 	if (!infile) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -314,6 +316,7 @@ struct meshgenerationstruct meshgeneration() {
 		}
 	}
 	if (element_type == 0) {
+		int element_number = 0;
 		for (z = 0; z < physicalgroups - 1; z++) { //all physical groups except for connectivity
 			//First determine if this is a wetted surface physical group or nrb physical group
 			wet = 0; nrb = 0;
@@ -331,6 +334,7 @@ struct meshgenerationstruct meshgeneration() {
 				std::cout << "a physical group cannot be both wetted surface and nrb!";
 				system("PAUSE ");
 			}
+
 			ct = 0;
 			for (j = 0; j < NINT; j++) {
 				for (k = 0; k < NINT; k++) {
@@ -338,12 +342,12 @@ struct meshgenerationstruct meshgeneration() {
 						if (localnode[z][l] == c.LNA[0][j][k]) {
 							if (wet == 1) {
 								ol[wet_ct].LNA_2D[j][k] = l + 1;
-								ol[wet_ct].FP[ct] = c.LNA[0][j][k];
+								ol[wet_ct].FP_temp[ct] = c.LNA[0][j][k];
 								ol[wet_ct].FP_2D[ct] = ol[wet_ct].LNA_2D[j][k];
 							}
 							else if (nrb == 1) {
 								nr[nrb_ct].LNA_2D[j][k] = l + 1;
-								nr[nrb_ct].DP[ct] = c.LNA[0][j][k];
+								nr[nrb_ct].DP_temp[ct] = c.LNA[0][j][k];
 								nr[nrb_ct].DP_2D[ct] = nr[nrb_ct].LNA_2D[j][k];
 							}
 							ct += 1;
@@ -393,12 +397,12 @@ struct meshgenerationstruct meshgeneration() {
 						if (localnode[z][l] == c.LNA[N][j][k]) {
 							if (wet == 1) {
 								ol[wet_ct].LNA_2D[j][k] = l + 1;
-								ol[wet_ct].FP[ct] = c.LNA[N][j][k];
+								ol[wet_ct].FP_temp[ct] = c.LNA[N][j][k];
 								ol[wet_ct].FP_2D[ct] = ol[wet_ct].LNA_2D[j][k];
 							}
 							else if (nrb == 1) {
 								nr[nrb_ct].LNA_2D[j][k] = l + 1;
-								nr[nrb_ct].DP[ct] = c.LNA[N][j][k];
+								nr[nrb_ct].DP_temp[ct] = c.LNA[N][j][k];
 								nr[nrb_ct].DP_2D[ct] = nr[nrb_ct].LNA_2D[j][k];
 							}
 							ct += 1;
@@ -448,12 +452,12 @@ struct meshgenerationstruct meshgeneration() {
 						if (localnode[z][l] == c.LNA[i][j][0]) {
 							if (wet == 1) {
 								ol[wet_ct].LNA_2D[i][j] = l + 1;
-								ol[wet_ct].FP[ct] = c.LNA[i][j][0];
+								ol[wet_ct].FP_temp[ct] = c.LNA[i][j][0];
 								ol[wet_ct].FP_2D[ct] = ol[wet_ct].LNA_2D[i][j];
 							}
 							else if (nrb == 1) {
 								nr[nrb_ct].LNA_2D[i][j] = l + 1;
-								nr[nrb_ct].DP[ct] = c.LNA[i][j][0];
+								nr[nrb_ct].DP_temp[ct] = c.LNA[i][j][0];
 								nr[nrb_ct].DP_2D[ct] = nr[nrb_ct].LNA_2D[i][j];
 							}
 							ct += 1;
@@ -503,12 +507,12 @@ struct meshgenerationstruct meshgeneration() {
 						if (localnode[z][l] == c.LNA[i][j][N]) {
 							if (wet == 1) {
 								ol[wet_ct].LNA_2D[i][j] = l + 1;
-								ol[wet_ct].FP[ct] = c.LNA[i][j][N];
+								ol[wet_ct].FP_temp[ct] = c.LNA[i][j][N];
 								ol[wet_ct].FP_2D[ct] = ol[wet_ct].LNA_2D[i][j];
 							}
 							else if (nrb == 1) {
 								nr[nrb_ct].LNA_2D[i][j] = l + 1;
-								nr[nrb_ct].DP[ct] = c.LNA[i][j][N];
+								nr[nrb_ct].DP_temp[ct] = c.LNA[i][j][N];
 								nr[nrb_ct].DP_2D[ct] = nr[nrb_ct].LNA_2D[i][j];
 							}
 							ct += 1;
@@ -558,12 +562,12 @@ struct meshgenerationstruct meshgeneration() {
 						if (localnode[z][l] == c.LNA[i][0][k]) {
 							if (wet == 1) {
 								ol[wet_ct].LNA_2D[i][k] = l + 1;
-								ol[wet_ct].FP[ct] = c.LNA[i][0][k];
+								ol[wet_ct].FP_temp[ct] = c.LNA[i][0][k];
 								ol[wet_ct].FP_2D[ct] = ol[wet_ct].LNA_2D[i][k];
 							}
 							else if (nrb == 1) {
 								nr[nrb_ct].LNA_2D[i][k] = l + 1;
-								nr[nrb_ct].DP[ct] = c.LNA[i][0][k];
+								nr[nrb_ct].DP_temp[ct] = c.LNA[i][0][k];
 								nr[nrb_ct].DP_2D[ct] = nr[nrb_ct].LNA_2D[i][k];
 							}
 							ct += 1;
@@ -613,12 +617,12 @@ struct meshgenerationstruct meshgeneration() {
 						if (localnode[z][l] == c.LNA[i][N][k]) {
 							if (wet == 1) {
 								ol[wet_ct].LNA_2D[i][k] = l + 1;
-								ol[wet_ct].FP[ct] = c.LNA[i][N][k];
+								ol[wet_ct].FP_temp[ct] = c.LNA[i][N][k];
 								ol[wet_ct].FP_2D[ct] = ol[wet_ct].LNA_2D[i][k];
 							}
 							else if (nrb == 1) {
 								nr[nrb_ct].LNA_2D[i][k] = l + 1;
-								nr[nrb_ct].DP[ct] = c.LNA[i][N][k];
+								nr[nrb_ct].DP_temp[ct] = c.LNA[i][N][k];
 								nr[nrb_ct].DP_2D[ct] = nr[nrb_ct].LNA_2D[i][k];
 							}
 							ct += 1;
@@ -667,56 +671,8 @@ struct meshgenerationstruct meshgeneration() {
 			system("PAUSE ");
 		}
 	}
+
 	//================================end extraction===================================//
-
-	//Extract the local node pattern for tetrahedral element
-	wet_ct = 0;
-	nrb_ct = 0;
-	if (element_type == 1) {
-		for (z = 0; z < physicalgroups - 1; z++) { //all physical groups except for connectivity
-			//First determine if this is a wetted surface physical group or nrb physical group
-			wet = 0; nrb = 0;
-			for (i = 0; i < wt_pys_size; i++) {
-				if (z == wt_pys_num[i]) {
-					wet = 1; //this physical group corresponds to wetted surface
-					wet_ct += 1; 
-				}
-			}
-			for (i = 0; i < nrb_pys_size; i++) {
-				if (z == nrb_pys_num[i]) {
-					nrb = 1; //this physical group corresponds to wetted surface
-					nrb_ct += 1; 
-				}
-			}
-			if (wet == 1 && nrb == 1) {
-				std::cout << "a physical group cannot be both wetted surface and nrb!";
-				system("PAUSE ");
-			}
-			for (i = 0; i < t.NEL;i++) { //loop through all the element
-				ct = 0;
-				for (j = 0; j < 4; j++) { //loop through local nodes
-					for (k = 0; k < 3; k++) { //loop through 2D local nodes
-						if (t.BCIEN[z][0][k] == t.IEN[j][i]) { //found a corresponding node
-							if (wet == 1) {
-								ol[wet_ct - 1].FP[k] = j + 1;
-								ol[wet_ct - 1].FP_2D[ct] = ct + 1;
-							}
-							else if (nrb == 1) {
-								nr[nrb_ct - 1].DP[k] = j + 1;
-								nr[nrb_ct - 1].DP_2D[ct] = ct + 1;
-							}
-							ct = ct + 1; 
-							if (ct == 3) { //found all local nodes in one global element (ready to jump out of the loop)
-								goto endextraction2;
-							}
-						}
-					}
-				}
-			}
-		endextraction2:;
-		}
-	}
-
 
 	//=============separate the high-order element into linear elements and obtain the normal direction================//
 	//int wt_pys_num = 2; //the physical group number that corresponds to the wet surface (physical group 3)
@@ -778,6 +734,43 @@ struct meshgenerationstruct meshgeneration() {
 			for (i = 0; i < ol[z].FSNEL; i++) {
 				for (j = 0; j < elenode2D; j++) {
 					ol[z].IEN_gb[j][i] = t.BCIEN[wt_pys_num[z]][ele_num[i]][j];
+				}
+			}
+
+			ol[z].FP = new int*[ol[z].FSNEL];
+			for (i = 0; i < ol[z].FSNEL; i++) {
+				ol[z].FP[i] = new int[elenode2D];
+			}
+			//Define FP for hexahedral element
+			if (element_type == 0) {
+				for (i = 0; i < ol[z].FSNEL; i++) {
+					for (j = 0; j < elenode2D; j++) {
+						ol[z].FP[i][j] = ol[z].FP_temp[j];
+					}
+				}
+			}
+			//Define FP for tetrahedral element
+			//Extract the local node pattern for tetrahedral element
+			if (element_type == 1) {
+				for (l = 0; l < ol[z].FSNEL; l++) {
+
+					for (i = 0; i < t.NEL; i++) { //loop through all the element
+						ct = 0;
+						for (j = 0; j < 4; j++) { //loop through local nodes
+							for (k = 0; k < 3; k++) { //loop through 2D local nodes
+								if (t.BCIEN[wt_pys_num[z]][l][k] == t.IEN[j][i]) { //found a corresponding node
+									ol[z].FP[l][k] = j + 1;
+									ol[z].FP_2D[ct] = ct + 1;
+									ct = ct + 1;
+									if (ct == 3) { //found all local nodes in one global element (ready to move on to the next element)
+										//goto nextelement;
+										i = t.NEL; //Forcedly exit the i=0;i<t.NEL;i++ loop above 
+									}
+								}
+							}
+						}
+					}
+					//nextelement:;
 				}
 			}
 
@@ -873,7 +866,7 @@ struct meshgenerationstruct meshgeneration() {
 				for (j = 0; j < t.NEL; j++) {
 					ct = 0;
 					for (k = 0; k < elenode2D; k++) {
-						if (t.IEN[ol[z].FP[k] - 1][j] == ol[z].IEN_gb[ol[z].FP_2D[k] - 1][i]) {
+						if (t.IEN[ol[z].FP[i][k] - 1][j] == ol[z].IEN_gb[ol[z].FP_2D[k] - 1][i]) {
 							ct += 1;
 						}
 					}
@@ -979,6 +972,41 @@ struct meshgenerationstruct meshgeneration() {
 			nr[z].IEN_gb[i] = new int[nr[z].NEL_nrb];
 		}
 
+		//Extract the local node pattern for hexahedral and tetrahedral element
+		nr[z].DP = new int*[nr[z].NEL_nrb];
+		for (i = 0; i < nr[z].NEL_nrb; i++) {
+			nr[z].DP[i] = new int[elenode2D];
+		}
+		if (element_type == 0) {
+			for (i = 0; i < nr[z].NEL_nrb; i++) {
+				for (j = 0; j < elenode2D; j++) {
+					nr[z].DP[i][j] = nr[z].DP_temp[j];
+				}
+			}
+		}
+		if (element_type == 1) {
+			for (l = 0; l < nr[z].NEL_nrb; l++) {
+				for (i = 0; i < t.NEL; i++) { //loop through all the element
+					ct = 0;
+					for (j = 0; j < 4; j++) { //loop through local nodes
+						for (k = 0; k < 3; k++) { //loop through 2D local nodes
+							if (t.BCIEN[nrb_pys_num[z]][l][k] == t.IEN[j][i]) { //found a corresponding node
+								nr[z].DP[l][k] = j + 1;
+								nr[z].DP_2D[ct] = ct + 1;
+								ct = ct + 1;
+								if (ct == 3) { //found all local nodes in one global element (ready to move on to the next element)
+											   //goto nextelement;
+									i = t.NEL; //Forcedly exit the i=0;i<t.NEL;i++ loop above 
+								}
+							}
+						}
+					}
+				}
+				//nextelement:;
+			}
+		}
+
+
 		ct = 0;
 		for (e = 0; e < nr[z].NEL_nrb; e++) {
 			for (j = 0; j < elenode2D; j++) {
@@ -1027,7 +1055,7 @@ struct meshgenerationstruct meshgeneration() {
 			for (j = 0; j < t.NEL; j++) {
 				ct = 0;
 				for (k = 0; k < elenode2D; k++) {
-					if (t.IEN[nr[z].DP[k] - 1][j] == nr[z].IEN_gb[nr[z].DP_2D[k] - 1][i]) {
+					if (t.IEN[nr[z].DP[i][k] - 1][j] == nr[z].IEN_gb[nr[z].DP_2D[k] - 1][i]) {
 						ct += 1;
 					}
 				}
@@ -1068,6 +1096,8 @@ struct meshgenerationstruct meshgeneration() {
 
 	//For some reason, the normal side is flipped after using NekMesh to process the Gmsh generated all-tet mesh. 
 	//If we don't use NekMesh, the surface element normal direction of the mesh directly from Gmsh is not correct (mixed).  
+	
+	/*
 	if (element_type == 1) {
 		for (z = 0; z < nrb_pys_size; z++) {
 			for (i = 0; i < nr[z].NEL_nrb; i++) {
@@ -1084,8 +1114,9 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 	}
+	*/
 
-
+	/*
 	//Check if the total dimension in Bleich-Sandler case is 1.0 for wet surface and NRB
 	double hd = 0.0; 
 	for (i = 0; i < nr[0].NEL_nrb; i++) {
@@ -1094,6 +1125,13 @@ struct meshgenerationstruct meshgeneration() {
 	hd = 0.0; 
 	for (i = 0; i < ol[0].FSNEL; i++) {
 		hd += ol[0].dimension[i];
+	}
+	*/
+	if (Bleich == 1) {
+		if (ol[0].norm[0][1] != 1 || nr[0].norm[0][1] != -1) {
+			std::cout << "The normal direction of the wetted surface and NRB is wrong" << std::endl;
+			system("PAUSE ");
+		}
 	}
 
 	std::cout << " " << std::endl;
