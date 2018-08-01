@@ -33,7 +33,7 @@ struct meshgenerationstruct meshgeneration() {
 	//system("PAUSE "); 
 	//std::ifstream infile("Bleich_Sandler_0.1surface_0.01m.msh");
 	//::ifstream infile("../../Bleich_Sandler_0.1surface_0.01m.msh");
-	std::ifstream infile("C:/Users/lzhaok6/OneDrive/CASE_MESH/Bleich_Sandler_0.1surface_0.1m_debug.msh");
+	std::ifstream infile("C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_tet_0.1m.msh");
 	if (!infile) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -752,25 +752,32 @@ struct meshgenerationstruct meshgeneration() {
 			//Define FP for tetrahedral element
 			//Extract the local node pattern for tetrahedral element
 			if (element_type == 1) {
+				int node[3]; 
+				//#pragma omp parallel for num_threads(6)
 				for (l = 0; l < ol[z].FSNEL; l++) {
-
+					if (l % 100 == 0) {
+						std::cout << l << std::endl; //output which line is being read
+					}
+					node[0] = t.BCIEN[wt_pys_num[z]][l][0]; node[1] = t.BCIEN[wt_pys_num[z]][l][1]; node[2] = t.BCIEN[wt_pys_num[z]][l][2];
 					for (i = 0; i < t.NEL; i++) { //loop through all the element
 						ct = 0;
-						for (j = 0; j < 4; j++) { //loop through local nodes
-							for (k = 0; k < 3; k++) { //loop through 2D local nodes
-								if (t.BCIEN[wt_pys_num[z]][l][k] == t.IEN[j][i]) { //found a corresponding node
+						for (k = 0; k < 3; k++) { //loop through 2D local nodes
+							for (j = 0; j < 4; j++) { //loop through local nodes
+								//if (t.BCIEN[wt_pys_num[z]][l][k] == t.IEN[j][i]) { //found a corresponding node
+								if (node[k] == t.IEN[j][i]) {
 									ol[z].FP[l][k] = j + 1;
 									ol[z].FP_2D[ct] = ct + 1;
 									ct = ct + 1;
 									if (ct == 3) { //found all local nodes in one global element (ready to move on to the next element)
-										//goto nextelement;
 										i = t.NEL; //Forcedly exit the i=0;i<t.NEL;i++ loop above 
 									}
 								}
 							}
+							if (ct == 0) { //if the first 2D local node does not have a corresponding node in the current gloabl element being searched, the search would move forward to the next gloabl element
+								k = 3;
+							}
 						}
 					}
-					//nextelement:;
 				}
 			}
 
@@ -985,24 +992,30 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 		if (element_type == 1) {
+			int node[3];
 			for (l = 0; l < nr[z].NEL_nrb; l++) {
+				if (l % 100 == 0) {
+					std::cout << l << std::endl; //output which line is being read
+				}
+				node[0] = t.BCIEN[nrb_pys_num[z]][l][0]; node[1] = t.BCIEN[nrb_pys_num[z]][l][1]; node[2] = t.BCIEN[nrb_pys_num[z]][l][2];
 				for (i = 0; i < t.NEL; i++) { //loop through all the element
 					ct = 0;
-					for (j = 0; j < 4; j++) { //loop through local nodes
-						for (k = 0; k < 3; k++) { //loop through 2D local nodes
-							if (t.BCIEN[nrb_pys_num[z]][l][k] == t.IEN[j][i]) { //found a corresponding node
+					for (k = 0; k < 3; k++) { //loop through 2D local nodes
+						for (j = 0; j < 4; j++) { //loop through local nodes
+							if (node[k] == t.IEN[j][i]) { //found a corresponding node
 								nr[z].DP[l][k] = j + 1;
 								nr[z].DP_2D[ct] = ct + 1;
 								ct = ct + 1;
 								if (ct == 3) { //found all local nodes in one global element (ready to move on to the next element)
-											   //goto nextelement;
 									i = t.NEL; //Forcedly exit the i=0;i<t.NEL;i++ loop above 
 								}
 							}
 						}
+						if (ct == 0) {
+							k = 3;
+						}
 					}
 				}
-				//nextelement:;
 			}
 		}
 
