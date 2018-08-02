@@ -163,6 +163,16 @@ struct meshgenerationstruct meshgeneration() {
 		ct += 1;
 	}
 
+	int* IEN_1D; 
+	if (element_type == 1) { //tet element
+		IEN_1D = new int[t.NEL*elenode3D];
+		for (i = 0; i < t.NEL; i++) {
+			for (j = 0; j < elenode3D; j++) {
+				IEN_1D[elenode3D*i + j] = t.IEN[j][i];
+			}
+		}
+	}
+
 	//Define the rest of surface boundaries (for boundary condition definition)
 	//std::vector<std::vector<std::vector<int>>> BCIEN;
 	for (i = 0; i < physicalgroups - 1; i++) {
@@ -749,10 +759,12 @@ struct meshgenerationstruct meshgeneration() {
 					}
 				}
 			}
+
 			//Define FP for tetrahedral element
 			//Extract the local node pattern for tetrahedral element
 			if (element_type == 1) {
-				int node[3]; 
+				int node[3];
+				ol[z].GIDF = new int[ol[z].FSNEL];
 				//#pragma omp parallel for num_threads(6)
 				for (l = 0; l < ol[z].FSNEL; l++) {
 					if (l % 100 == 0) {
@@ -761,14 +773,15 @@ struct meshgenerationstruct meshgeneration() {
 					node[0] = t.BCIEN[wt_pys_num[z]][l][0]; node[1] = t.BCIEN[wt_pys_num[z]][l][1]; node[2] = t.BCIEN[wt_pys_num[z]][l][2];
 					for (i = 0; i < t.NEL; i++) { //loop through all the element
 						ct = 0;
-						for (k = 0; k < 3; k++) { //loop through 2D local nodes
-							for (j = 0; j < 4; j++) { //loop through local nodes
-								//if (t.BCIEN[wt_pys_num[z]][l][k] == t.IEN[j][i]) { //found a corresponding node
-								if (node[k] == t.IEN[j][i]) {
+						for (k = 0; k < elenode2D; k++) { //loop through 2D local nodes
+							for (j = 0; j < elenode3D; j++) { //loop through local 3D nodes
+								//if (node[k] == t.IEN[j][i]) {
+								if (node[k] == IEN_1D[i*elenode3D + j]) {
 									ol[z].FP[l][k] = j + 1;
 									ol[z].FP_2D[ct] = ct + 1;
 									ct = ct + 1;
 									if (ct == 3) { //found all local nodes in one global element (ready to move on to the next element)
+										ol[z].GIDF[l] = i + 1;
 										i = t.NEL; //Forcedly exit the i=0;i<t.NEL;i++ loop above 
 									}
 								}
@@ -867,24 +880,26 @@ struct meshgenerationstruct meshgeneration() {
 			}
 
 			//Obtain GIDF (the global element number of each wetted surface)
-			ol[z].GIDF = new int[ol[z].FSNEL];
-			for (i = 0; i < ol[z].FSNEL; i++) {
-				flag = 0;
-				for (j = 0; j < t.NEL; j++) {
-					ct = 0;
-					for (k = 0; k < elenode2D; k++) {
-						if (t.IEN[ol[z].FP[i][k] - 1][j] == ol[z].IEN_gb[ol[z].FP_2D[k] - 1][i]) {
-							ct += 1;
+			if (element_type == 0) {
+				ol[z].GIDF = new int[ol[z].FSNEL];
+				for (i = 0; i < ol[z].FSNEL; i++) {
+					flag = 0;
+					for (j = 0; j < t.NEL; j++) {
+						ct = 0;
+						for (k = 0; k < elenode2D; k++) {
+							if (t.IEN[ol[z].FP[i][k] - 1][j] == ol[z].IEN_gb[ol[z].FP_2D[k] - 1][i]) {
+								ct += 1;
+							}
+						}
+						if (ct == elenode2D) { //find the corresponding 3D element
+							ol[z].GIDF[i] = j + 1;
+							flag = 1;
 						}
 					}
-					if (ct == elenode2D) { //find the corresponding 3D element
-						ol[z].GIDF[i] = j + 1;
-						flag = 1;
+					if (flag == 0) {
+						std::cout << "No corresponding 3D element is found" << std::endl;
+						system("PAUSE ");
 					}
-				}
-				if (flag == 0) {
-					std::cout << "No corresponding 3D element is found" << std::endl;
-					system("PAUSE ");
 				}
 			}
 
@@ -978,7 +993,7 @@ struct meshgenerationstruct meshgeneration() {
 		for (i = 0; i < elenode2D; i++) {
 			nr[z].IEN_gb[i] = new int[nr[z].NEL_nrb];
 		}
-
+	
 		//Extract the local node pattern for hexahedral and tetrahedral element
 		nr[z].DP = new int*[nr[z].NEL_nrb];
 		for (i = 0; i < nr[z].NEL_nrb; i++) {
@@ -993,6 +1008,7 @@ struct meshgenerationstruct meshgeneration() {
 		}
 		if (element_type == 1) {
 			int node[3];
+			nr[z].NRBELE_ARR = new int[nr[z].NEL_nrb];
 			for (l = 0; l < nr[z].NEL_nrb; l++) {
 				if (l % 100 == 0) {
 					std::cout << l << std::endl; //output which line is being read
@@ -1000,13 +1016,14 @@ struct meshgenerationstruct meshgeneration() {
 				node[0] = t.BCIEN[nrb_pys_num[z]][l][0]; node[1] = t.BCIEN[nrb_pys_num[z]][l][1]; node[2] = t.BCIEN[nrb_pys_num[z]][l][2];
 				for (i = 0; i < t.NEL; i++) { //loop through all the element
 					ct = 0;
-					for (k = 0; k < 3; k++) { //loop through 2D local nodes
-						for (j = 0; j < 4; j++) { //loop through local nodes
-							if (node[k] == t.IEN[j][i]) { //found a corresponding node
+					for (k = 0; k < elenode2D; k++) { //loop through 2D local nodes
+						for (j = 0; j < elenode3D; j++) { //loop through local nodes
+							if (node[k] == IEN_1D[i*elenode3D + j]) { //found a corresponding node
 								nr[z].DP[l][k] = j + 1;
 								nr[z].DP_2D[ct] = ct + 1;
 								ct = ct + 1;
 								if (ct == 3) { //found all local nodes in one global element (ready to move on to the next element)
+									nr[z].NRBELE_ARR[l] = i + 1;
 									i = t.NEL; //Forcedly exit the i=0;i<t.NEL;i++ loop above 
 								}
 							}
@@ -1061,25 +1078,26 @@ struct meshgenerationstruct meshgeneration() {
 			nr[z].NRBA[i] = dummy2[i];
 		}
 
-		//obtain NRBELE_ARR
-		nr[z].NRBELE_ARR = new int[nr[z].NEL_nrb];
-		for (i = 0; i < nr[z].NEL_nrb; i++) {
-			flag = 0;
-			for (j = 0; j < t.NEL; j++) {
-				ct = 0;
-				for (k = 0; k < elenode2D; k++) {
-					if (t.IEN[nr[z].DP[i][k] - 1][j] == nr[z].IEN_gb[nr[z].DP_2D[k] - 1][i]) {
-						ct += 1;
+		if (element_type == 0) {
+			nr[z].NRBELE_ARR = new int[nr[z].NEL_nrb];
+			for (i = 0; i < nr[z].NEL_nrb; i++) {
+				flag = 0;
+				for (j = 0; j < t.NEL; j++) {
+					ct = 0;
+					for (k = 0; k < elenode2D; k++) {
+						if (t.IEN[nr[z].DP[i][k] - 1][j] == nr[z].IEN_gb[nr[z].DP_2D[k] - 1][i]) {
+							ct += 1;
+						}
+					}
+					if (ct == elenode2D) { //find the corresponding 3D element
+						nr[z].NRBELE_ARR[i] = j + 1;
+						flag = 1;
 					}
 				}
-				if (ct == elenode2D) { //find the corresponding 3D element
-					nr[z].NRBELE_ARR[i] = j + 1;
-					flag = 1;
+				if (flag == 0) {
+					std::cout << "Not corresponding 3D element is found" << std::endl;
+					system("PAUSE ");
 				}
-			}
-			if (flag == 0) {
-				std::cout << "Not corresponding 3D element is found" << std::endl;
-				system("PAUSE ");
 			}
 		}
 		//obtain the normal vector corresponding to every NRB element (high-order)
