@@ -146,5 +146,8 @@
     <ClCompile Include="data.c">
       <Filter>Source Files\MpCCI</Filter>
     </ClCompile>
+    <ClCompile Include="Neighborhood_search.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

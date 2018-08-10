@@ -185,6 +185,7 @@
     <ClCompile Include="Mainprogram.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="meshgeneration.cpp" />
+    <ClCompile Include="Neighborhood_search.cpp" />
     <ClCompile Include="NRB.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

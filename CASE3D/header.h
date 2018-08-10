@@ -30,6 +30,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 const int N = 1;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;
+const int hprefg = 1; ////The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5)
 typedef struct owetsurf {
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
 	double *PSI; //integrated incident pressure 
@@ -231,7 +232,7 @@ const int NqINT = Nq + 1;
 const int refine = 1; //The refinement rate of fluid mesh against base fluid mesh for h refinement. 
 const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
-const int hprefg = 1;
+//const int hprefg = 1;
 const int mappingalgo = 4; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
 const double RHO = 1025.0; //original
 //const double RHO = 989.0; //Bleich-Sandler
