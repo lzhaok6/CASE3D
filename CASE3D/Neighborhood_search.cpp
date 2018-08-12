@@ -335,9 +335,6 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	//Node projection from structure to fluid (Project the structural Gauss points to fluid elements)
 	//Structural wetted elements do not share gauss points
 	//We assume the structural wetted surface is imported as a whole surface and the fluid wetted surface could have several groups
-	Eigen::Matrix3d A(3,3);
-	A(0, 0) = 1; A(0, 1) = 2; A(0, 2) = 1; A(1, 0) = 2; A(1, 1) = 1; A(1, 2) = 0; A(2, 0) = -1; A(2, 1) = 1; A(2, 2) = 2;
-	std::cout << A.inverse() << std::endl; 
 
 	for (i = 0; i < ELE_stru; i++) {
 		for (j = 0; j < (hprefg + 1)*(hprefg + 1); j++) {
@@ -374,7 +371,6 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							f(0, 0) = (xu_k - x1)*(xu_k - xn) + (yu_k - y1)*(yu_k - yn) + (zu_k - z1)*(zu_k - zn);
 							f(1, 0) = (xu_k - x2)*(xu_k - xn) + (yu_k - y2)*(yu_k - yn) + (zu_k - z2)*(zu_k - zn);
 							f(2, 0) = (xu_k - x3)*(xu_k - xn) + (yu_k - y3)*(yu_k - yn) + (zu_k - z3)*(zu_k - zn);
-							std::cout << fdot.inverse() << std::endl;
 							dx = -fdot.inverse()*f; //delta x^k 
 							diff = pow(pow(dx(0, 0), 2) + pow(dx(1, 0), 2) + pow(dx(2, 0), 2), 0.5);
 							xu_k_1 = xu_k + dx(0, 0); yu_k_1 = yu_k + dx(1, 0); zu_k_1 = zu_k + dx(2, 0);

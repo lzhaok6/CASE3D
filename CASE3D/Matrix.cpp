@@ -324,10 +324,10 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 		}
 
 		//need to initialize here!!!
-		//Eigen::MatrixXd JB(3, 3);
-		//Eigen::MatrixXd ga(3, 3);
-		Eigen::Matrix3d JB(3, 3);
-		Eigen::Matrix3d ga(3, 3);
+		Eigen::MatrixXd JB(3, 3);
+		Eigen::MatrixXd ga(3, 3);
+		//Eigen::Matrix3d JB(3, 3);
+		//Eigen::Matrix3d ga(3, 3);
 		//std::clock_t start;
 		//start = std::clock();
 		for (e = 0; e < NEL; e++) {

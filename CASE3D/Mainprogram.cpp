@@ -88,7 +88,6 @@ int main()
 
 	//Neighborhood_search(a.GCOORD, c.LNA, a.IEN, a.NEL);
 
-
 	//double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu
 	//---------------SHAPE FUNCTION ROUTINE------------------------------//
 	//DETERMINE GLL QUADRATURE POINTS AND WEIGHTS

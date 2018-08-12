@@ -1,5 +1,5 @@
 Code name: 3Dbarge_TFM_Abaqus_sym_mesh
-Simulation date and time: 12-08-2018 11-18-26
+Simulation date and time: 12-08-2018 13-40-23
 Mesh information:
 N: 2 mesh size:  wetted surface number: 4 Nodenumber: 40831 Element number: 4576 h/p refinement rate: 1
 Explosive information: 
@@ -11,4 +11,3 @@ CAV: 1 C: 1500 RHO: 1025 atmospheric pressure: 101300 saturated pressure: 0
 FSI coupling
 mapping algorithm: 2
 debug mode: 0
-total CPU time: 645.466
