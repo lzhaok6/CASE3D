@@ -9,7 +9,7 @@
 //The original subroutine assumes that the number of interpolation points and quadrature points is the same. 
 //Jan. 8 2018: The above problem is fixed to allow different number of interpolation and quadrature points. 
 
-struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD) {
+struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD, int fem) {
 	int i, j, k, l, m, o;
 	LOCAL_SHAPEstruct t;
 
@@ -30,6 +30,14 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD) {
 		}
 	}
 
+	t.SHL_2D = new double**[3];
+	for (i = 0; i < 3; i++) {
+		t.SHL_2D[i] = new double*[nint*nint];
+		for (j = 0; j < nint*nint; j++) {
+			t.SHL_2D[i][j] = new double[(NQUAD + 1)*(NQUAD + 1)];
+		}
+	}
+
 	t.SHOD = new double**[2];
 	for (i = 0; i < 2;i++) {
 		t.SHOD[i] = new double*[nint];
@@ -45,7 +53,7 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD) {
 		}
 	}
 
-	if (FEM == 1) {
+	if (fem == 1) {
 		LOBATTOstruct b;
 		b = LOBATTO(n);
 		GLLQUADstruct g;
@@ -159,6 +167,28 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD) {
 			}
 		}
 	}
+
+
+
+	//Assume a linear 2D function with Gauss-Legendre quadrature point (used in Neighborhood_search.cpp)
+	TD_LOCAL_NODEstruct ct_ln;
+	ct_ln = TD_LOCAL_NODE(1);
+	for (i = 0; i < 2; i++) {   //Xi 
+		for (j = 0; j < 2; j++) {  //Eta
+			//i j are interpolation points and l m are quadrature points 
+			for (l = 0; l < NQUAD + 1; l++) { //the internal nodes on Xi 
+				for (m = 0; m < NQUAD + 1; m++) { //the internal nodes on Eta 
+					t.SHL_2D[2][ct_ln.LNA[i][j] - 1][l*(NQUAD + 1) + m] = t.SHOD[0][i][l] * t.SHOD[0][j][m];
+					//2D Nth ORDER SHAPE FUNCTION
+					t.SHL_2D[0][ct_ln.LNA[i][j] - 1][l*(NQUAD + 1) + m] = t.SHOD[1][i][l] * t.SHOD[0][j][m];
+					//2D Nth ORDER SHAPE FUNCTION DERIVATIVE W/R TO Xi 
+					t.SHL_2D[1][ct_ln.LNA[i][j] - 1][l*(NQUAD + 1) + m] = t.SHOD[0][i][l] * t.SHOD[1][j][m];
+					//2D Nth ORDER SHAPE FUNCTION DERIVATIVE W/R TO Eta 
+				}
+			}
+		}
+	}
+
 
 	std::cout << " " << std::endl; 
 	//check point: if the shape function value at the corresponding point is 0 

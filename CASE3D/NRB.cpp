@@ -24,7 +24,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA) {
 		GLLQUADstruct gq;
 		gq = GLLQUAD(bq.Z, bq.WL, Nq, !FEM);
 		LOCAL_SHAPEstruct ls;
-		ls = LOCAL_SHAPE(LNA, N, Nq); //one order higher than the interpolation order
+		ls = LOCAL_SHAPE(LNA, N, Nq, FEM); //one order higher than the interpolation order
 		//Construct the ADMASTER for the integration (insert one additional GLL quadrature point)
 		//Can we use just one surface for NRBC? I think so  
 		//We need to combine the physical group corresponding to NRBC first

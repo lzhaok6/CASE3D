@@ -22,6 +22,7 @@ double time_step_size;
 double current_time;
 OWETSURF ol[owsfnumber]; //declear the data structure globally
 NRBSURF nr[nrbsurfnumber]; 
+STRU_WET_SURF ss;
 int main()
 {	
 	double LMAX;
@@ -85,13 +86,17 @@ int main()
 	c = LOCAL_NODE(N);
 	std::cout << "LOCAL_NODE(N) done" << std::endl;
 
+	//Neighborhood_search(a.GCOORD, c.LNA, a.IEN, a.NEL);
+
+
+	//double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu
 	//---------------SHAPE FUNCTION ROUTINE------------------------------//
 	//DETERMINE GLL QUADRATURE POINTS AND WEIGHTS
 	GLLQUADstruct f;
 	f = GLLQUAD(b.Z, b.WL, N, !FEM);
 	//std::cout << "GLLQUAD done" << std::endl;
 	LOCAL_SHAPEstruct g;
-	g = LOCAL_SHAPE(c.LNA, N, N);
+	g = LOCAL_SHAPE(c.LNA, N, N, FEM);
 	//std::cout << "LOCAL_SHAPE done" << std::endl;
 	//DETERMINE LOCAL GEOMETERY SHAPE FUNCTION AT ELEMENT NODES
 	LOCAL_GSHAPEstruct l;

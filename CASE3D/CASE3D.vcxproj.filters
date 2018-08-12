@@ -149,5 +149,8 @@
     <ClCompile Include="Neighborhood_search.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TD_LOCAL_NODE.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

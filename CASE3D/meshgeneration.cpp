@@ -33,7 +33,7 @@ struct meshgenerationstruct meshgeneration() {
 	//system("PAUSE "); 
 	//std::ifstream infile("Bleich_Sandler_0.1surface_0.01m.msh");
 	//::ifstream infile("../../Bleich_Sandler_0.1surface_0.01m.msh");
-	std::ifstream infile("C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_tet_0_4m.msh");
+	std::ifstream infile("C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2.msh");
 	if (!infile) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -204,7 +204,7 @@ struct meshgenerationstruct meshgeneration() {
 		LOCAL_NODEstruct c_ln;
 		c_ln = LOCAL_NODE(1);
 		LOCAL_SHAPEstruct ls_ln; //ln means linear
-		ls_ln = LOCAL_SHAPE(c_ln.LNA, 1, N); //Get the 3D linear shape function value on Nth order SEM nodes
+		ls_ln = LOCAL_SHAPE(c_ln.LNA, 1, N, FEM); //Get the 3D linear shape function value on Nth order SEM nodes
 		//t.SHL[3][LNA[i][j][k] - 1][l*(NQUAD + 1)*(NQUAD + 1) + m*(NQUAD + 1) + o]
 		int LNA_ln[2][2][2];
 		LNA_ln[0][0][0] = c.LNA[0][0][0]; LNA_ln[1][0][0] = c.LNA[N][0][0];
