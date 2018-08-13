@@ -326,8 +326,8 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 		//need to initialize here!!!
 		Eigen::MatrixXd JB(3, 3);
 		Eigen::MatrixXd ga(3, 3);
-		//Eigen::Matrix3d JB(3, 3);
-		//Eigen::Matrix3d ga(3, 3);
+		//Eigen::Matrix3d JB;
+		//Eigen::Matrix3d ga;
 		//std::clock_t start;
 		//start = std::clock();
 		for (e = 0; e < NEL; e++) {
@@ -356,41 +356,6 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 			}
 		}
 		//JB is the jacobian matrix and JACOB is the determinant of jacobian matrix
-		
-		/*
-		int ct;
-		for (e = 0; e < NEL; e++) {
-			//std::cout << e << std::endl;
-			ct = 0;
-			for (i = 0; i < NINT; i++) {
-				for (j = 0; j < NINT; j++) {
-					for (k = 0; k < NINT; k++) {
-						for (l = 0; l < 3; l++) {
-							for (m = 0; m < 3; m++) {
-								JB(l, m) = XS[e][l][m][i*NINT*NINT + j*NINT + k]; //Jacobian matrix
-							}
-						}
-						//std::cout << JB << std::endl;
-						//std::cout << JB.inverse() << std::endl;
-						ga = (JB.inverse().transpose())*JB.inverse(); //3*3 matrix
-																	  //std::cout << ga << std::endl;
-						for (l = 0; l < 3; l++) {
-							for (m = 0; m < 3; m++) {
-								t.Gn[e][l][m][ct] = ga(l, m) * W[i] * W[j] * W[k] * JACOB[e][i*NINT*NINT + j*NINT + k];
-								//std::cout << t.G[l][m][i][j][k] << std::endl;
-							}
-							//std::cout<<std::endl;
-						}
-						ct += 1;
-					}
-				}
-			}
-			if (e % 1000 == 0) {
-				std::cout << e << std::endl; //output which line is being read
-			}
-			//JB is the jacobian matrix and JACOB is the determinant of jacobian matrix
-		}
-		*/
 
 		int ct;
 		//start = std::clock();
@@ -411,13 +376,8 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 				}
 				ct += 1;
 			}
-			/*
-			if (e % 1000 == 0) {
-				std::cout << e << std::endl; //output which line is being read
-			}
-			*/
-			//JB is the jacobian matrix and JACOB is the determinant of jacobian matrix 
 		}
+		
 	}
 
 	//duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;

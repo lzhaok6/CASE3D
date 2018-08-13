@@ -32,8 +32,8 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD, int fem) {
 
 	t.SHL_2D = new double**[3];
 	for (i = 0; i < 3; i++) {
-		t.SHL_2D[i] = new double*[nint*nint];
-		for (j = 0; j < nint*nint; j++) {
+		t.SHL_2D[i] = new double*[4];
+		for (j = 0; j < 4; j++) {
 			t.SHL_2D[i][j] = new double[(NQUAD + 1)*(NQUAD + 1)];
 		}
 	}
