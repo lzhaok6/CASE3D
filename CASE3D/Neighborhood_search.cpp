@@ -61,7 +61,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			}
 			for (i = 0; i < ol[z].FSNEL; i++) {
 				for (j = 0; j < 4; j++) {
-					ol[z].IEN_flu_2D[j][i] = IEN_flu[ol[z].LNA_norm[j] - 1][ol[z].GIDF[i] - 1];
+					//ol[z].IEN_flu_2D[j][i] = IEN_flu[ol[z].LNA_norm[j] - 1][ol[z].GIDF[i] - 1];
+					ol[z].IEN_flu_2D[j][i] = ol[z].IEN_gb[ol[z].LNA_norm[j] - 1][i];
 				}
 			}
 		}
@@ -326,8 +327,11 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	int** FSNEL_stru_gs; //[gauss point][structural wetted surface element]
 
 	Eigen::Matrix3d fdot; 
+	Eigen::Matrix3d A; 
 	Eigen::Vector3d f;
+	Eigen::Vector3d b; //RHS coefficient
 	Eigen::Vector3d dx;
+	Eigen::Vector3d x; 
 	double search_range = 1; //set the searching range to 1m (only the element with all points in the range will be searched)
 	double range[2];
 	range[1] = search_range; 
@@ -375,35 +379,33 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 					if (flag == 1) { //the element should be searched (within the searching range)
 						//Find the global coordinate of the orthogonally projected point on the current element
 						//initiate the coordinate of the projected point to be the same with the structural gauss point
-						xu_k = GCOORD_stru_gs[IEN_stru_gs[j][i] - 1][0]; yu_k = GCOORD_stru_gs[IEN_stru_gs[j][i] - 1][1]; zu_k = GCOORD_stru_gs[IEN_stru_gs[j][i] - 1][2];
 						x1 = GCOORD[ol[z].IEN_flu_2D[0][k] - 1][0]; x2 = GCOORD[ol[z].IEN_flu_2D[1][k] - 1][0]; x3 = GCOORD[ol[z].IEN_flu_2D[2][k] - 1][0];
 						y1 = GCOORD[ol[z].IEN_flu_2D[0][k] - 1][1]; y2 = GCOORD[ol[z].IEN_flu_2D[1][k] - 1][1]; y3 = GCOORD[ol[z].IEN_flu_2D[2][k] - 1][1];
 						z1 = GCOORD[ol[z].IEN_flu_2D[0][k] - 1][2]; z2 = GCOORD[ol[z].IEN_flu_2D[1][k] - 1][2]; z3 = GCOORD[ol[z].IEN_flu_2D[2][k] - 1][2];
 						xn = GCOORD_stru_gs[IEN_stru_gs[j][i] - 1][0]; yn = GCOORD_stru_gs[IEN_stru_gs[j][i] - 1][1]; zn = GCOORD_stru_gs[IEN_stru_gs[j][i] - 1][2];
-						diff = 1; 
-						while (diff > tol) {
-							fdot(0, 0) = -x1 - xn + 2 * xu_k; fdot(0, 1) = -y1 - yn + 2 * yu_k; fdot(0, 2) = -z1 - zn + 2 * zu_k; //1st point
-							fdot(1, 0) = -x2 - xn + 2 * xu_k; fdot(1, 1) = -y2 - yn + 2 * yu_k; fdot(1, 2) = -z2 - zn + 2 * zu_k; //2nd point
-							fdot(2, 0) = -x3 - xn + 2 * xu_k; fdot(2, 1) = -y3 - yn + 2 * yu_k; fdot(2, 2) = -z3 - zn + 2 * zu_k; //3rd point
-							f(0) = (xu_k - x1)*(xu_k - xn) + (yu_k - y1)*(yu_k - yn) + (zu_k - z1)*(zu_k - zn);
-							f(1) = (xu_k - x2)*(xu_k - xn) + (yu_k - y2)*(yu_k - yn) + (zu_k - z2)*(zu_k - zn);
-							f(2) = (xu_k - x3)*(xu_k - xn) + (yu_k - y3)*(yu_k - yn) + (zu_k - z3)*(zu_k - zn);
-							//std::cout << fdot.inverse() << std::endl; 
-							dx = -fdot.inverse()*f; //delta x^k 
-							//diff = pow(pow(dx(0, 0), 2) + pow(dx(1, 0), 2) + pow(dx(2, 0), 2), 0.5);
-							diff = pow(pow(dx(0), 2) + pow(dx(1), 2) + pow(dx(2), 2), 0.5);
-							//xu_k_1 = xu_k + dx(0, 0); yu_k_1 = yu_k + dx(1, 0); zu_k_1 = zu_k + dx(2, 0);
-							xu_k_1 = xu_k + dx(0); yu_k_1 = yu_k + dx(1); zu_k_1 = zu_k + dx(2);
-							xu_k = xu_k_1; yu_k = yu_k_1; zu_k = zu_k_1; //update the value
-						}
-						xu = xu_k; yu = yu_k; zu = zu_k;
+						b(0) = -(-(-x1 + x3)*xn - (-y1 + y3)*yn - (-z1 + z3)*zn);
+						b(1) = -(-(-x1 + x2)*xn - (-y1 + y2)*yn - (-z1 + z2)*zn);
+						b(2) = -(-(x2*y1 - x3*y1 - x1*y2 + x3 *y2 + x1 *y3 - x2 *y3) *z1 -
+							y1*(-x2 *z1 + x3 *z1 + x1 *z2 - x3 *z2 - x1 *z3 + x2 *z3) -
+							x1*(y2 *z1 - y3 *z1 - y1 *z2 + y3 *z2 + y1 *z3 - y2 *z3));
+						A(0, 0) = -x1 + x3;
+						A(0, 1) = -y1 + y3;
+						A(0, 2) = -z1 + z3;
+						A(1, 0) = -x1 + x2;
+						A(1, 1) = -y1 + y2;
+						A(1, 2) = -z1 + z2;
+						A(2, 0) = y2 *z1 - y3 *z1 - y1 *z2 + y3 *z2 + y1 *z3 - y2 *z3;
+						A(2, 1) = -x2 *z1 + x3 *z1 + x1 *z2 - x3 *z2 - x1 *z3 + x2 *z3;
+						A(2, 2) = x2 *y1 - x3 *y1 - x1 *y2 + x3 *y2 + x1 *y3 - x2 *y3;
+						x = A.inverse()*b;
 						//Found the projected point after Newton iteration 
-
+						xu = x(0); yu = x(1); zu = x(2);
 						//We need to determine at this stage if the projected node is within the searched element, if not we need to pass this element. 
 						if (element_type == 1) { //tetrahedral element
-							Eigen::Matrix3d b(3, 1);
-							Eigen::Matrix3d A(3, 3);
-							Eigen::Matrix3d local(3, 1); //store the local coordinate 
+							//Need to change the name of the matrix and vectors. also need to change the if(){} below
+							Eigen::Vector3d b;
+							Eigen::Matrix3d A;
+							Eigen::Vector3d local; //store the local coordinate 
 							//determine the local coordinate in the tetrahedral element
 							A(0, 0) = GCOORD[IEN_flu_3D[1][ol[z].GIDF[k] - 1] - 1][0] - GCOORD[IEN_flu_3D[0][ol[z].GIDF[k] - 1] - 1][0];
 							A(0, 1) = GCOORD[IEN_flu_3D[2][ol[z].GIDF[k] - 1] - 1][0] - GCOORD[IEN_flu_3D[0][ol[z].GIDF[k] - 1] - 1][0];
@@ -414,9 +416,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							A(2, 0) = GCOORD[IEN_flu_3D[1][ol[z].GIDF[k] - 1] - 1][2] - GCOORD[IEN_flu_3D[0][ol[z].GIDF[k] - 1] - 1][2];
 							A(2, 1) = GCOORD[IEN_flu_3D[2][ol[z].GIDF[k] - 1] - 1][2] - GCOORD[IEN_flu_3D[0][ol[z].GIDF[k] - 1] - 1][2];
 							A(2, 2) = GCOORD[IEN_flu_3D[3][ol[z].GIDF[k] - 1] - 1][2] - GCOORD[IEN_flu_3D[0][ol[z].GIDF[k] - 1] - 1][2];
-							b(0, 0) = xu - GCOORD[IEN_flu_3D[0][ol[z].GIDF[k] - 1] - 1][0];
-							b(1, 0) = yu - GCOORD[IEN_flu_3D[0][ol[z].GIDF[k] - 1] - 1][1];
-							b(2, 0) = zu - GCOORD[IEN_flu_3D[0][ol[z].GIDF[k] - 1] - 1][2];
+							b(0) = xu - GCOORD[IEN_flu_3D[0][ol[z].GIDF[k] - 1] - 1][0];
+							b(1) = yu - GCOORD[IEN_flu_3D[0][ol[z].GIDF[k] - 1] - 1][1];
+							b(2) = zu - GCOORD[IEN_flu_3D[0][ol[z].GIDF[k] - 1] - 1][2];
 							local = A.inverse()*b;
 							//determine if the point is inside the searched element
 							if (local(0, 0) >= 0 && local(0, 0) <= 1 && local(1, 0) >= 0 && local(1, 0) <= 1 && local(2, 0) >= 0 && local(2, 0) <= 1
@@ -518,7 +520,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 								inelement = 1;
 							}
 							else { //The node is not in the current searched element (might be an orphan)
-								inelement = 0; 
+								inelement = 0;
 							}
 						}
 						//End determining if the projected node is in the searched element and its local coordinate
@@ -527,7 +529,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						//Calculate the distance between the structural gauss nodes and the projected node
 						if (inelement == 1) { //if the node is within the current fluid element
 							distance[1] = pow(pow(xn - xu, 2) + pow(yn - yu, 2) + pow(zn - zu, 2), 0.5);
-							if (distance[1] < distance[0]) {
+							//if (distance[1] < distance[0]) {
+							if (distance[1] - distance[0] < -1e-5) {
 								//store the local coordinate in the fluid mesh of the projected structure gauss node
 								ss.gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j][0] = xi; //xi
 								ss.gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j][1] = eta; //eta
@@ -592,27 +595,26 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 					}
 					if (flag == 1) { //the element should be searched (within the searching range)
 						//Find the coordinate of the orthogonally projected fluid interpolation point on the current structure element
-						//initiate the coordinate of the projected point to be the same with the fluid interpolation point
-						//xu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][0]; yu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][1]; zu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][2];
-						xu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][0] + 0.1; yu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][1] + 1; zu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][2] + 1;
 						x1 = GCOORD_stru[IEN_stru[0][k] - 1][0]; x2 = GCOORD_stru[IEN_stru[1][k] - 1][0]; x3 = GCOORD_stru[IEN_stru[2][k] - 1][0];
 						y1 = GCOORD_stru[IEN_stru[0][k] - 1][1]; y2 = GCOORD_stru[IEN_stru[1][k] - 1][1]; y3 = GCOORD_stru[IEN_stru[2][k] - 1][1];
 						z1 = GCOORD_stru[IEN_stru[0][k] - 1][2]; z2 = GCOORD_stru[IEN_stru[1][k] - 1][2]; z3 = GCOORD_stru[IEN_stru[2][k] - 1][2];
 						xn = GCOORD[ol[z].IEN_gb[j][i] - 1][0]; yn = GCOORD[ol[z].IEN_gb[j][i] - 1][1]; zn = GCOORD[ol[z].IEN_gb[j][i] - 1][2];
-						diff = 1.0;
-						while (diff > tol) {
-							fdot(0, 0) = -x1 - xn + 2 * xu_k; fdot(0, 1) = -y1 - yn + 2 * yu_k; fdot(0, 2) = -z1 - zn + 2 * zu_k; //1st point
-							fdot(1, 0) = -x2 - xn + 2 * xu_k; fdot(1, 1) = -y2 - yn + 2 * yu_k; fdot(1, 2) = -z2 - zn + 2 * zu_k; //2nd point
-							fdot(2, 0) = -x3 - xn + 2 * xu_k; fdot(2, 1) = -y3 - yn + 2 * yu_k; fdot(2, 2) = -z3 - zn + 2 * zu_k; //3rd point
-							f(0) = (xu_k - x1)*(xu_k - xn) + (yu_k - y1)*(yu_k - yn) + (zu_k - z1)*(zu_k - zn);
-							f(1) = (xu_k - x2)*(xu_k - xn) + (yu_k - y2)*(yu_k - yn) + (zu_k - z2)*(zu_k - zn);
-							f(2) = (xu_k - x3)*(xu_k - xn) + (yu_k - y3)*(yu_k - yn) + (zu_k - z3)*(zu_k - zn);
-							dx = -fdot.inverse()*f; //delta x^k
-							diff = pow(pow(dx(0), 2) + pow(dx(1), 2) + pow(dx(2), 2), 0.5);
-							xu_k_1 = xu_k + dx(0); yu_k_1 = yu_k + dx(1); zu_k_1 = zu_k + dx(2);
-							xu_k = xu_k_1; yu_k = yu_k_1; zu_k = zu_k_1; //update the value
-						}
-						xu = xu_k; yu = yu_k; zu = zu_k;
+						b(0) = -(-(-x1 + x3)*xn - (-y1 + y3)*yn - (-z1 + z3)*zn);
+						b(1) = -(-(-x1 + x2)*xn - (-y1 + y2)*yn - (-z1 + z2)*zn);
+						b(2) = -(-(x2*y1 - x3*y1 - x1*y2 + x3 *y2 + x1 *y3 - x2 *y3) *z1 -
+							y1*(-x2 *z1 + x3 *z1 + x1 *z2 - x3 *z2 - x1 *z3 + x2 *z3) -
+							x1*(y2 *z1 - y3 *z1 - y1 *z2 + y3 *z2 + y1 *z3 - y2 *z3));
+						A(0, 0) = -x1 + x3;
+						A(0, 1) = -y1 + y3;
+						A(0, 2) = -z1 + z3;
+						A(1, 0) = -x1 + x2;
+						A(1, 1) = -y1 + y2;
+						A(1, 2) = -z1 + z2;
+						A(2, 0) = y2 *z1 - y3 *z1 - y1 *z2 + y3 *z2 + y1 *z3 - y2 *z3;
+						A(2, 1) = -x2 *z1 + x3 *z1 + x1 *z2 - x3 *z2 - x1 *z3 + x2 *z3;
+						A(2, 2) = x2 *y1 - x3 *y1 - x1 *y2 + x3 *y2 + x1 *y3 - x2 *y3;
+						x = A.inverse()*b;
+						xu = x(0); yu = x(1); zu = x(2);
 						//Found the projected point after Newton iteration 
 
 						//We need to determine at this stage if the projected node is within the searched element, if not we need to pass this element. 
@@ -683,7 +685,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						//Calculate the distance between the fluid interpolation nodes and the projected node
 						if (orphan == 0) { //if the node is not an orphan
 							distance[1] = pow(pow(xn - xu, 2) + pow(yn - yu, 2) + pow(zn - zu, 2), 0.5);
-							if (distance[1] < distance[0]) {
+							//if (distance[1] < distance[0]) {
+							if (distance[1] - distance[0] < -1e-5) {
 								xu_searched = xu; yu_searched = yu; zu_searched = zu;
 								distance[0] = distance[1];
 								ol[z].flu_local[i*elenode2D + j][0] = xi; //xi
