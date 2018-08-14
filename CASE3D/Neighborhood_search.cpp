@@ -29,7 +29,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 
 	int elenode2D;
 	if (element_type == 0) { //hex element
-		elenode2D = 4;
+		elenode2D = NINT*NINT;
 	}
 	if (element_type == 1) { //tet element
 		elenode2D = 3;
@@ -179,7 +179,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	for (i = 0; i < surface.size(); i++) {
 		surface_name.push_back(output[surface[i] + 1][0]); //http://www.cplusplus.com/reference/string/string/substr/
 		if (output[surface[i] + 1][1] == " SNEG") { //negative surface
-			surface_orientation.push_back(-1);
+			//surface_orientation.push_back(-1);
+			surface_orientation.push_back(1);
 		}
 		else if (output[surface[i] + 1][1] == " SPOS") { //positive surface 
 			surface_orientation.push_back(1);
@@ -308,9 +309,14 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		ss.gs_flu_local[i] = new double[3];
 	}
 	ss.gs_flu = new int[gs_num];
+
 	for (z = 0; z < owsfnumber; z++) {
-		for (i = 0; i > ol[z].FSNEL*elenode2D; i++) {
+		ol[z].flu_local = new double*[ol[z].FSNEL*elenode2D];
+		ol[z].flu_stru_global = new double*[ol[z].FSNEL*elenode2D];
+		ol[z].flu_stru = new int[ol[z].FSNEL*elenode2D];
+		for (i = 0; i < ol[z].FSNEL*elenode2D; i++) {
 			ol[z].flu_local[i] = new double[2];
+			ol[z].flu_stru_global[i] = new double[3];
 		}
 	}
 
@@ -344,13 +350,13 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	//Node projection from structure to fluid (Project the structural Gauss points to fluid elements)
 	//Structural wetted elements do not share gauss points
 	//We assume the structural wetted surface is imported as a whole surface and the fluid wetted surface could have several groups
-
 	for (i = 0; i < ELE_stru; i++) {
 		for (j = 0; j < (hprefg + 1)*(hprefg + 1); j++) {
 			orphan = 1; //let's first assume the node is an orphan. If the corresponding element is found, the flag is turned to 0 
 			//Start searching for fluid element for gauss node IEN_gs[j][i]
 			//Calculate the distance from the current the structural gauss point to the fluid element in the search range
 			distance[0] = search_range;
+			range[1] = search_range; //initiate the fluid node distance to be equal to the searching range for every gauss node
 			for (z = 0; z < owsfnumber; z++) { //search the fluid wetted element group by group
 				for (k = 0; k < ol[z].FSNEL; k++) { //looping through fluid wetted elements
 					flag = 1;
@@ -440,38 +446,66 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							z1 = GCOORD[IEN_flu_3D[0][ol[z].GIDF[k] - 1] - 1][2]; z2 = GCOORD[IEN_flu_3D[1][ol[z].GIDF[k] - 1] - 1][2]; z3 = GCOORD[IEN_flu_3D[2][ol[z].GIDF[k] - 1] - 1][2]; z4 = GCOORD[IEN_flu_3D[3][ol[z].GIDF[k] - 1] - 1][2]; z5 = GCOORD[IEN_flu_3D[4][ol[z].GIDF[k] - 1] - 1][2]; z6 = GCOORD[IEN_flu_3D[5][ol[z].GIDF[k] - 1] - 1][2]; z7 = GCOORD[IEN_flu_3D[6][ol[z].GIDF[k] - 1] - 1][2]; z8 = GCOORD[IEN_flu_3D[7][ol[z].GIDF[k] - 1] - 1][2];
 							diff = 1;
 							while (diff > tol) {
-								fdot(0, 0) = -(1.0 / 8.0)* (1 - eta_k)* x1*(1 - zeta_k) + 1.0 / 8.0* (1 - eta_k)* x2*(1 - zeta_k) - 1.0 / 8.0 *(1 + eta_k)* x3*(1 - zeta_k) + 1.0 / 8.0 *(1 + eta_k)* x4*(1 - zeta_k) -
-									1.0 / 8.0* (1 - eta_k)* x5*(1 + zeta_k) + 1.0 / 8.0* (1 - eta_k)* x6*(1 + zeta_k) - 1.0 / 8.0* (1 + eta_k)* x7*(1 + zeta_k) + 1.0 / 8.0* (1 + eta_k)* x8*(1 + zeta_k);
-								fdot(0, 1) = -(1.0 / 8.0)* x1*(1 - xi_k)* (1 - zeta_k) + 1.0 / 8.0* x3*(1 - xi_k)* (1 - zeta_k) - 1.0 / 8.0* x2*(1 + xi_k)* (1 - zeta_k) + 1.0 / 8.0* x4*(1 + xi_k)* (1 - zeta_k) -
-									1.0 / 8.0* x5*(1 - xi_k)* (1 + zeta_k) + 1.0 / 8.0* x7*(1 - xi_k)* (1 + zeta_k) - 1.0 / 8.0 *x6*(1 + xi_k)* (1 + zeta_k) + 1.0 / 8.0* x8*(1 + xi_k)* (1 + zeta_k);
-								fdot(0, 2) = -(1.0 / 8.0)* (1 - eta_k)* x1*(1 - xi_k) - 1.0 / 8.0* (1 + eta_k) *x3*(1 - xi_k) + 1.0 / 8.0* (1 - eta_k)* x5*(1 - xi_k) + 1.0 / 8.0 *(1 + eta_k)* x7*(1 - xi_k) -
-									1.0 / 8.0 *(1 - eta_k)* x2*(1 + xi_k) - 1.0 / 8.0 *(1 + eta_k)* x4*(1 + xi_k) + 1.0 / 8.0* (1 - eta_k) *x6*(1 + xi_k) + 1.0 / 8.0* (1 + eta_k)* x8*(1 + xi_k);
-								fdot(1, 0) = -(1.0 / 8.0) *(1 - eta_k)* y1*(1 - zeta_k) + 1.0 / 8.0* (1 - eta_k)* y2*(1 - zeta_k) - 1.0 / 8.0* (1 + eta_k)* y3*(1 - zeta_k) + 1.0 / 8.0 *(1 + eta_k)* y4*(1 - zeta_k) -
-									1.0 / 8.0 *(1 - eta_k)* y5*(1 + zeta_k) + 1.0 / 8.0* (1 - eta_k) *y6*(1 + zeta_k) - 1.0 / 8.0* (1 + eta_k)* y7*(1 + zeta_k) + 1.0 / 8.0* (1 + eta_k) *y8*(1 + zeta_k);
-								fdot(1, 1) = -(1.0 / 8.0) *(1 - xi_k) *y1*(1 - zeta_k) - 1.0 / 8.0* (1 + xi_k)* y2*(1 - zeta_k) + 1.0 / 8.0 *(1 - xi_k)* y3*(1 - zeta_k) + 1.0 / 8.0* (1 + xi_k) *y4*(1 - zeta_k) -
-									1.0 / 8.0* (1 - xi_k)* y5*(1 + zeta_k) - 1.0 / 8.0*(1 + xi_k)* y6*(1 + zeta_k) + 1.0 / 8.0* (1 - xi_k)* y7*(1 + zeta_k) + 1.0 / 8.0*(1 + xi_k)* y8*(1 + zeta_k);
-								fdot(1, 2) = -(1.0 / 8.0)* (1 - eta_k)* (1 - xi_k)* y1 - 1.0 / 8.0* (1 - eta_k)* (1 + xi_k)* y2 - 1.0 / 8.0* (1 + eta_k)* (1 - xi_k)* y3 - 1.0 / 8.0* (1 + eta_k)* (1 + xi_k)* y4 +
-									1.0 / 8.0* (1 - eta_k)* (1 - xi_k)* y5 + 1.0 / 8.0* (1 - eta_k)* (1 + xi_k)* y6 + 1.0 / 8.0* (1 + eta_k)* (1 - xi_k)* y7 + 1.0 / 8.0* (1 + eta_k)* (1 + xi_k)*y8;
-								fdot(2, 0) = -(1.0 / 8.0) *(1 - eta_k)* z1*(1 - zeta_k) + 1.0 / 8.0* (1 - eta_k)* z2*(1 - zeta_k) - 1.0 / 8.0* (1 + eta_k) *z3*(1 - zeta_k) + 1.0 / 8.0* (1 + eta_k)* z4*(1 - zeta_k) -
-									1.0 / 8.0* (1 - eta_k)* z5*(1 + zeta_k) + 1.0 / 8.0* (1 - eta_k)* z6*(1 + zeta_k) - 1.0 / 8.0* (1 + eta_k)* z7*(1 + zeta_k) + 1.0 / 8.0* (1 + eta_k)* z8*(1 + zeta_k);
-								fdot(2, 1) = -(1.0 / 8.0)* (1 - xi_k)* z1*(1 - zeta_k) - 1.0 / 8.0* (1 + xi_k)* z2*(1 - zeta_k) + 1.0 / 8.0* (1 - xi_k) *z3*(1 - zeta_k) + 1.0 / 8.0* (1 + xi_k)* z4*(1 - zeta_k) -
-									1.0 / 8.0* (1 - xi_k) *z5*(1 + zeta_k) - 1.0 / 8.0* (1 + xi_k)* z6*(1 + zeta_k) + 1.0 / 8.0* (1 - xi_k) *z7*(1 + zeta_k) + 1.0 / 8.0* (1 + xi_k)* z8*(1 + zeta_k);
-								fdot(2, 2) = -(1.0 / 8.0) *(1 - eta_k)* (1 - xi_k)* z1 - 1.0 / 8.0 *(1 - eta_k)* (1 + xi_k)* z2 - 1.0 / 8.0* (1 + eta_k)* (1 - xi_k)* z3 - 1.0 / 8.0* (1 + eta_k) *(1 + xi_k) *z4 +
-									1.0 / 8.0 *(1 - eta_k)* (1 - xi_k)* z5 + 1.0 / 8.0* (1 - eta_k)* (1 + xi_k) *z6 + 1.0 / 8.0* (1 + eta_k)* (1 - xi_k)* z7 + 1.0 / 8.0* (1 + eta_k)* (1 + xi_k) *z8;
-								f(0) = -xu + 1.0 / 8.0 * (1 - eta_k)*x1*(1 - xi_k)*(1 - zeta_k) + 1.0 / 8.0*(1 + eta_k)*x3*(1 - xi_k)*(1 - zeta_k) +
-									1.0 / 8.0* (1 - eta_k)* x2*(1 + xi_k)* (1 - zeta_k) + 1.0 / 8.0 *(1 + eta_k)* x4*(1 + xi_k) *(1 - zeta_k) +
-									1.0 / 8.0*(1 - eta_k)*x5*(1 - xi_k) *(1 + zeta_k) + 1.0 / 8.0*(1 + eta_k)*x7*(1 - xi_k)*(1 + zeta_k) +
-									1.0 / 8.0*(1 - eta_k)*x6*(1 + xi_k)*(1 + zeta_k) + 1.0 / 8.0*(1 + eta_k)*x8*(1 + xi_k)*(1 + zeta_k);
-								f(1) = -yu + 1.0 / 8.0* (1 - eta_k)* (1 - xi_k)* y1*(1 - zeta_k) +
-									1.0 / 8.0 *(1 - eta_k) *(1 + xi_k)* y2*(1 - zeta_k) + 1.0 / 8.0 *(1 + eta_k)* (1 - xi_k)* y3*(1 - zeta_k) +
-									1.0 / 8.0* (1 + eta_k)* (1 + xi_k)* y4*(1 - zeta_k) + 1.0 / 8.0 *(1 - eta_k)* (1 - xi_k)* y5*(1 + zeta_k) +
-									1.0 / 8.0* (1 - eta_k)* (1 + xi_k)* y6*(1 + zeta_k) + 1.0 / 8.0* (1 + eta_k)* (1 - xi_k)* y7*(1 + zeta_k) +
-									1.0 / 8.0* (1 + eta_k)* (1 + xi_k)* y8*(1 + zeta_k);
-								f(2) = -zu + 1.0 / 8.0 *(1 - eta_k)* (1 - xi_k) *z1*(1 - zeta_k) +
-									1.0 / 8.0 *(1 - eta_k) *(1 + xi_k)* z2*(1 - zeta_k) + 1.0 / 8.0* (1 + eta_k) *(1 - xi_k)* z3*(1 - zeta_k) +
-									1.0 / 8.0 *(1 + eta_k) *(1 + xi_k)* z4*(1 - zeta_k) + 1.0 / 8.0* (1 - eta_k)* (1 - xi_k) *z5*(1 + zeta_k) +
-									1.0 / 8.0* (1 - eta_k)* (1 + xi_k)* z6*(1 + zeta_k) + 1.0 / 8.0* (1 + eta_k)* (1 - xi_k)* z7*(1 + zeta_k) +
-									1.0 / 8.0 *(1 + eta_k)* (1 + xi_k) *z8*(1 + zeta_k);
+								fdot(0, 0) = -(1.0 / 8.0) *(1.0 - eta_k) *x1*(1.0 - zeta_k) + 1.0 / 8.0 *(1.0 - eta_k) *x2*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *x3*(1.0 - zeta_k) - 1.0 / 8.0 *(1.0 + eta_k) *x4*(1.0 - zeta_k) -
+									1.0 / 8.0 *(1.0 - eta_k) *x5*(1.0 + zeta_k) + 1.0 / 8.0 *(1.0 - eta_k) *x6*(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *x7*(1.0 + zeta_k) - 1.0 / 8.0 *(1.0 + eta_k) *x8*(1.0 + zeta_k);
+								fdot(0, 1) = -(1.0 / 8.0) *x1*(1.0 - xi_k) *(1.0 - zeta_k) + 1.0 / 8.0 *x4*(1.0 - xi_k) *(1.0 - zeta_k) -
+									1.0 / 8.0 *x2*(1.0 + xi_k) *(1.0 - zeta_k) + 1.0 / 8.0 *x3*(1.0 + xi_k) *(1.0 - zeta_k) -
+									1.0 / 8.0 *x5*(1.0 - xi_k) *(1.0 + zeta_k) + 1.0 / 8.0 *x8*(1.0 - xi_k) *(1.0 + zeta_k) -
+									1.0 / 8.0 *x6*(1.0 + xi_k) *(1.0 + zeta_k) + 1.0 / 8.0 *x7*(1.0 + xi_k) *(1.0 + zeta_k);
+								fdot(0, 2) = -(1.0 / 8.0) *(1.0 - eta_k) *x1*(1.0 - xi_k) - 1.0 / 8.0 *(1.0 + eta_k) *x4*(1.0 - xi_k) +
+									1.0 / 8.0 *(1.0 - eta_k) *x5*(1.0 - xi_k) + 1.0 / 8.0 *(1.0 + eta_k) *x8*(1.0 - xi_k) -
+									1.0 / 8.0 *(1.0 - eta_k) *x2*(1.0 + xi_k) - 1.0 / 8.0 *(1.0 + eta_k) *x3*(1.0 + xi_k) +
+									1.0 / 8.0 *(1.0 - eta_k) *x6*(1.0 + xi_k) + 1.0 / 8.0 *(1.0 + eta_k) *x7*(1.0 + xi_k);
+								fdot(1, 0) = -(1.0 / 8.0) *(1.0 - eta_k) *y1*(1.0 - zeta_k) + 1.0 / 8.0 *(1.0 - eta_k) *y2*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *y3*(1.0 - zeta_k) - 1.0 / 8.0 *(1.0 + eta_k) *y4*(1.0 - zeta_k) -
+									1.0 / 8.0 *(1.0 - eta_k) *y5*(1.0 + zeta_k) + 1.0 / 8.0 *(1.0 - eta_k) *y6*(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *y7*(1.0 + zeta_k) - 1.0 / 8.0 *(1.0 + eta_k) *y8*(1.0 + zeta_k);
+								fdot(1, 1) = -(1.0 / 8.0) *(1.0 - xi_k) *y1*(1.0 - zeta_k) - 1.0 / 8.0 *(1.0 + xi_k) *y2*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 + xi_k) *y3*(1.0 - zeta_k) + 1.0 / 8.0 *(1.0 - xi_k) *y4*(1.0 - zeta_k) -
+									1.0 / 8.0 *(1.0 - xi_k) *y5*(1.0 + zeta_k) - 1.0 / 8.0 *(1.0 + xi_k) *y6*(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 + xi_k) *y7*(1.0 + zeta_k) + 1.0 / 8.0 *(1.0 - xi_k) *y8*(1.0 + zeta_k);
+								fdot(1, 2) = -(1.0 / 8.0) *(1.0 - eta_k) *(1.0 - xi_k) *y1 - 1.0 / 8.0 *(1.0 - eta_k) *(1.0 + xi_k) *y2 -
+									1.0 / 8.0 *(1.0 + eta_k) *(1.0 + xi_k) *y3 - 1.0 / 8.0 *(1.0 + eta_k) *(1.0 - xi_k) *y4 +
+									1.0 / 8.0 *(1.0 - eta_k) *(1.0 - xi_k) *y5 + 1.0 / 8.0 *(1.0 - eta_k) *(1.0 + xi_k) *y6 +
+									1.0 / 8.0 *(1.0 + eta_k) *(1.0 + xi_k) *y7 + 1.0 / 8.0 *(1.0 + eta_k) *(1.0 - xi_k) *y8;
+								fdot(2, 0) = -(1.0 / 8.0) *(1.0 - eta_k) *z1*(1.0 - zeta_k) + 1.0 / 8.0 *(1.0 - eta_k) *z2*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *z3*(1.0 - zeta_k) - 1.0 / 8.0 *(1.0 + eta_k) *z4*(1.0 - zeta_k) -
+									1.0 / 8.0 *(1.0 - eta_k) *z5*(1.0 + zeta_k) + 1.0 / 8.0 *(1.0 - eta_k) *z6*(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *z7*(1.0 + zeta_k) - 1.0 / 8.0 *(1.0 + eta_k) *z8*(1.0 + zeta_k);
+								fdot(2, 1) = -(1.0 / 8.0) *(1.0 - xi_k) *z1*(1.0 - zeta_k) - 1.0 / 8.0 *(1.0 + xi_k) *z2*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 + xi_k) *z3*(1.0 - zeta_k) + 1.0 / 8.0 *(1.0 - xi_k) *z4*(1.0 - zeta_k) -
+									1.0 / 8.0 *(1.0 - xi_k) *z5*(1.0 + zeta_k) - 1.0 / 8.0 *(1.0 + xi_k) *z6*(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 + xi_k) *z7*(1.0 + zeta_k) + 1.0 / 8.0 *(1.0 - xi_k) *z8*(1.0 + zeta_k);
+								fdot(2, 2) = -(1.0 / 8.0) *(1.0 - eta_k) *(1.0 - xi_k) *z1 - 1.0 / 8.0 *(1.0 - eta_k) *(1.0 + xi_k) *z2 -
+									1.0 / 8.0 *(1.0 + eta_k) *(1.0 + xi_k) *z3 - 1.0 / 8.0 *(1.0 + eta_k) *(1.0 - xi_k) *z4 +
+									1.0 / 8.0 *(1.0 - eta_k) *(1.0 - xi_k) *z5 + 1.0 / 8.0 *(1.0 - eta_k) *(1.0 + xi_k) *z6 +
+									1.0 / 8.0 *(1.0 + eta_k) *(1.0 + xi_k) *z7 + 1.0 / 8.0 *(1.0 + eta_k) *(1.0 - xi_k) *z8;
+								f(0) = -xu + 1.0 / 8.0 *(1.0 - eta_k) *x1*(1.0 - xi_k) *(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *x4*(1.0 - xi_k) *(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 - eta_k) *x2*(1.0 + xi_k) *(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *x3*(1.0 + xi_k) *(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 - eta_k) *x5*(1.0 - xi_k) *(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *x8*(1.0 - xi_k) *(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 - eta_k) *x6*(1.0 + xi_k) *(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *x7*(1.0 + xi_k) *(1.0 + zeta_k);
+								f(1) = -yu + 1.0 / 8.0 *(1.0 - eta_k) *(1.0 - xi_k) *y1*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 - eta_k) *(1.0 + xi_k) *y2*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *(1.0 + xi_k) *y3*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *(1.0 - xi_k) *y4*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 - eta_k) *(1.0 - xi_k) *y5*(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 - eta_k) *(1.0 + xi_k) *y6*(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *(1.0 + xi_k) *y7*(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *(1.0 - xi_k) *y8*(1.0 + zeta_k);
+								f(2) = -zu + 1.0 / 8.0 *(1.0 - eta_k) *(1.0 - xi_k) *z1*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 - eta_k) *(1.0 + xi_k) *z2*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *(1.0 + xi_k) *z3*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *(1.0 - xi_k) *z4*(1.0 - zeta_k) +
+									1.0 / 8.0 *(1.0 - eta_k) *(1.0 - xi_k) *z5*(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 - eta_k) *(1.0 + xi_k) *z6*(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *(1.0 + xi_k) *z7*(1.0 + zeta_k) +
+									1.0 / 8.0 *(1.0 + eta_k) *(1.0 - xi_k) *z8*(1.0 + zeta_k);
 								dx = -fdot.inverse()*f; //delta x^k
 								diff = pow(pow(dx(0), 2) + pow(dx(1), 2) + pow(dx(2), 2), 0.5);
 								xi_k_1 = xi_k + dx(0); eta_k_1 = eta_k + dx(1); zeta_k_1 = zeta_k + dx(2);
@@ -528,9 +562,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	}
 
 	//Node projection from fluid to structure (Project the fluid interpolation points to structural elements)
-	Eigen::Matrix3d fdot_f(2, 2);
-	Eigen::Matrix3d f_f(2, 1);
-	Eigen::Matrix3d dx_f(2, 1);
+	Eigen::Matrix2d fdot_f;
+	Eigen::Vector2d f_f;
+	Eigen::Vector2d dx_f;
 	diff = 1.0;
 	range[1] = search_range;
 	distance[0] = search_range;
@@ -538,6 +572,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		for (i = 0; i < ol[z].FSNEL; i++) { //loop through fluid elements
 			for (j = 0; j < elenode2D; j++) { //loop through each node on the fluid FSI 
 				orphan = 1; //let's first assume the node is an orphan. If the corresponding element is found, the flag is turned to 0 
+				distance[0] = search_range;
+				range[1] = search_range;
 				//Start searching for structural element for fluid interpolation node ol[z].IEN_gb[j][i]
 				//Calculate the distance from the current fluid interpolation node to the structural element in the search range
 				//First determine if the structure element is inside the searching range
@@ -557,21 +593,23 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 					if (flag == 1) { //the element should be searched (within the searching range)
 						//Find the coordinate of the orthogonally projected fluid interpolation point on the current structure element
 						//initiate the coordinate of the projected point to be the same with the fluid interpolation point
-						xu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][0]; yu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][1]; zu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][2];
+						//xu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][0]; yu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][1]; zu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][2];
+						xu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][0] + 0.1; yu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][1] + 1; zu_k = GCOORD[ol[z].IEN_gb[j][i] - 1][2] + 1;
 						x1 = GCOORD_stru[IEN_stru[0][k] - 1][0]; x2 = GCOORD_stru[IEN_stru[1][k] - 1][0]; x3 = GCOORD_stru[IEN_stru[2][k] - 1][0];
 						y1 = GCOORD_stru[IEN_stru[0][k] - 1][1]; y2 = GCOORD_stru[IEN_stru[1][k] - 1][1]; y3 = GCOORD_stru[IEN_stru[2][k] - 1][1];
 						z1 = GCOORD_stru[IEN_stru[0][k] - 1][2]; z2 = GCOORD_stru[IEN_stru[1][k] - 1][2]; z3 = GCOORD_stru[IEN_stru[2][k] - 1][2];
 						xn = GCOORD[ol[z].IEN_gb[j][i] - 1][0]; yn = GCOORD[ol[z].IEN_gb[j][i] - 1][1]; zn = GCOORD[ol[z].IEN_gb[j][i] - 1][2];
+						diff = 1.0;
 						while (diff > tol) {
 							fdot(0, 0) = -x1 - xn + 2 * xu_k; fdot(0, 1) = -y1 - yn + 2 * yu_k; fdot(0, 2) = -z1 - zn + 2 * zu_k; //1st point
 							fdot(1, 0) = -x2 - xn + 2 * xu_k; fdot(1, 1) = -y2 - yn + 2 * yu_k; fdot(1, 2) = -z2 - zn + 2 * zu_k; //2nd point
 							fdot(2, 0) = -x3 - xn + 2 * xu_k; fdot(2, 1) = -y3 - yn + 2 * yu_k; fdot(2, 2) = -z3 - zn + 2 * zu_k; //3rd point
-							f(0, 0) = (xu_k - x1)*(xu_k - xn) + (yu_k - y1)*(yu_k - yn) + (zu_k - z1)*(zu_k - zn);
-							f(1, 0) = (xu_k - x2)*(xu_k - xn) + (yu_k - y2)*(yu_k - yn) + (zu_k - z2)*(zu_k - zn);
-							f(2, 0) = (xu_k - x3)*(xu_k - xn) + (yu_k - y3)*(yu_k - yn) + (zu_k - z3)*(zu_k - zn);
+							f(0) = (xu_k - x1)*(xu_k - xn) + (yu_k - y1)*(yu_k - yn) + (zu_k - z1)*(zu_k - zn);
+							f(1) = (xu_k - x2)*(xu_k - xn) + (yu_k - y2)*(yu_k - yn) + (zu_k - z2)*(zu_k - zn);
+							f(2) = (xu_k - x3)*(xu_k - xn) + (yu_k - y3)*(yu_k - yn) + (zu_k - z3)*(zu_k - zn);
 							dx = -fdot.inverse()*f; //delta x^k
-							diff = pow(pow(dx(0, 0), 2) + pow(dx(1, 0), 2) + pow(dx(2, 0), 2), 0.5);
-							xu_k_1 = xu_k + dx(0, 0); yu_k_1 = yu_k + dx(1, 0); zu_k_1 = zu_k + dx(2, 0);
+							diff = pow(pow(dx(0), 2) + pow(dx(1), 2) + pow(dx(2), 2), 0.5);
+							xu_k_1 = xu_k + dx(0); yu_k_1 = yu_k + dx(1); zu_k_1 = zu_k + dx(2);
 							xu_k = xu_k_1; yu_k = yu_k_1; zu_k = zu_k_1; //update the value
 						}
 						xu = xu_k; yu = yu_k; zu = zu_k;
@@ -581,33 +619,63 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						double xi_k, eta_k;
 						double xi_k_1, eta_k_1;
 						double xi, eta; //converged local coordinate
+						double xp1, xp2, xp3, xp4, yp1, yp2, yp3, yp4; //pseudo structural node coordinate 
+						double xup, yup; //pseudo projected point coordinate
 						//The derivative is obtained by Mathematica: /Users/zhaokuanlu/OneDrive/post_processing/Hex_global_to_local_coordinate_Newton_iteration.nb
 						//determine the local coordinate in the hexahedral element
 						//Since the equation system is nonlinear, we use the Newton iteration and set the initial value to be 0 
-						xi_k = 0.0; eta_k = 0.0;
+						xi_k = 0.5; eta_k = 0.5;
 						x1 = GCOORD_stru[IEN_stru[0][k] - 1][0]; x2 = GCOORD_stru[IEN_stru[1][k] - 1][0]; x3 = GCOORD_stru[IEN_stru[2][k] - 1][0]; x4 = GCOORD_stru[IEN_stru[3][k] - 1][0];
 						y1 = GCOORD_stru[IEN_stru[0][k] - 1][1]; y2 = GCOORD_stru[IEN_stru[1][k] - 1][1]; y3 = GCOORD_stru[IEN_stru[2][k] - 1][1]; y4 = GCOORD_stru[IEN_stru[3][k] - 1][1];
+						z1 = GCOORD_stru[IEN_stru[0][k] - 1][2]; z2 = GCOORD_stru[IEN_stru[1][k] - 1][2]; z3 = GCOORD_stru[IEN_stru[2][k] - 1][2]; z4 = GCOORD_stru[IEN_stru[3][k] - 1][2];
+						if (x1 == x2 && x1 == x3 && x2 == x3) { //the element is parallel to yz plane, use y(xi,eta) and z(xi,eta) to determine xi and eta
+							xp1 = y1; xp2 = y2; xp3 = y3; xp4 = y4; 
+							yp1 = z1; yp2 = z2; yp3 = z3; yp4 = z4; 
+							xup = yu; yup = zu; 
+						}
+						else if (y1 == y2 && y1 == y3 && y2 == y3) { //the element is parallel to xz plane, use x(xi,eta) and z(xi,eta) to determine xi and eta
+							xp1 = x1; xp2 = x2; xp3 = x3; xp4 = x4;
+							yp1 = z1; yp2 = z2; yp3 = z3; yp4 = z4;
+							xup = xu; yup = zu; 
+						}
+						else if (z1 == z2 && z1 == z3 && z2 == z3) { //the element is parallel to xy plane, use x(xi,eta) and y(xi,eta) to determine xi and eta
+							xp1 = x1; xp2 = x2; xp3 = x3; xp4 = x4;
+							yp1 = y1; yp2 = y2; yp3 = y3; yp4 = y4;
+							xup = xu; yup = yu; 
+						}
+						else { //the element is a 3D surface, use any two dimension (we choose to use x and y here)
+							xp1 = x1; xp2 = x2; xp3 = x3; xp4 = x4;
+							yp1 = y1; yp2 = y2; yp3 = y3; yp4 = y4;
+							xup = xu; yup = yu; 
+						}
+						diff = 1.0;
 						while (diff > tol) {
-							fdot_f(0, 0) = -(1.0 / 4.0)* (1 - eta)* x1 + 1.0 / 4.0* (1 - eta)* x2 - 1.0 / 4.0 *(1 + eta)* x3 + 1.0 / 4.0* (1 + eta)* x4;
-							fdot_f(0, 1) = -(1.0 / 4.0) *x1*(1 - xi) + 1.0 / 4.0 *x3*(1 - xi) - 1.0 / 4.0* x2*(1 + xi) + 1.0 / 4.0 *x4*(1 + xi);
-							fdot_f(1, 0) = -(1.0 / 4.0) *(1 - eta) *y1 + 1.0 / 4.0* (1 - eta) *y2 - 1.0 / 4.0* (1 + eta)* y3 + 1.0 / 4.0* (1 + eta) *y4;
-							fdot_f(1, 1) = -(1.0 / 4.0) *(1 - xi) *y1 - 1.0 / 4.0* (1 + xi) *y2 + 1.0 / 4.0* (1 - xi) *y3 + 1.0 / 4.0* (1 + xi)* y4;
-							f_f(0, 0) = -xu + 1.0 / 4.0* (1 - eta)* x1*(1 - xi) + 1.0 / 4.0* (1 + eta)* x3*(1 - xi) + 1.0 / 4.0* (1 - eta) *x2*(1 + xi) + 1.0 / 4.0* (1 + eta) *x4*(1 + xi);
-							f_f(1, 0) = -yu + 1.0 / 4.0* (1 - eta)* (1 - xi)* y1 + 1.0 / 4.0* (1 - eta)* (1 + xi)* y2 + 1.0 / 4.0* (1 + eta)* (1 - xi)* y3 + 1.0 / 4.0* (1 + eta)* (1 + xi)* y4;
+							fdot_f(0, 0) = -(1.0 / 4.0) *(1.0 - eta_k) *xp1 + 1.0 / 4.0 *(1.0 - eta_k) *xp2 + 1.0 / 4.0 *(1.0 + eta_k) *xp3 -
+								1.0 / 4.0 *(1.0 + eta_k) *xp4;
+							fdot_f(0, 1) = -(1.0 / 4.0) *xp1*(1.0 - xi_k) + 1.0 / 4.0 *xp4*(1.0 - xi_k) - 1.0 / 4.0 *xp2*(1.0 + xi_k) +
+								1.0 / 4.0 *xp3*(1.0 + xi_k);
+							fdot_f(1, 0) = -(1.0 / 4.0) *(1.0 - eta_k) *yp1 + 1.0 / 4.0 *(1.0 - eta_k) *yp2 + 1.0 / 4.0 *(1.0 + eta_k) *yp3 -
+								1.0 / 4.0 *(1.0 + eta_k) *yp4;
+							fdot_f(1, 1) = -(1.0 / 4.0) *(1.0 - xi_k) *yp1 - 1.0 / 4.0 *(1.0 + xi_k) *yp2 + 1.0 / 4.0 *(1.0 + xi_k) *yp3 +
+								1.0 / 4.0 *(1.0 - xi_k) *yp4;
+							f_f(0) = -xup + 1.0 / 4.0 *(1.0 - eta_k) *xp1*(1.0 - xi_k) + 1.0 / 4.0 *(1.0 + eta_k) *xp4*(1.0 - xi_k) +
+								1.0 / 4.0 *(1.0 - eta_k) *xp2*(1.0 + xi_k) + 1.0 / 4.0 *(1.0 + eta_k) *xp3*(1.0 + xi_k);
+							f_f(1) = -yup + 1.0 / 4.0 *(1.0 - eta_k) *(1.0 - xi_k) *yp1 + 1.0 / 4.0 *(1.0 - eta_k) *(1.0 + xi_k) *yp2 +
+								1.0 / 4.0 *(1.0 + eta_k) *(1.0 + xi_k) *yp3 + 1.0 / 4.0 *(1.0 + eta_k) *(1.0 - xi_k) *yp4;
 							dx_f = -fdot_f.inverse()*f_f; //delta x^k
-							diff = pow(pow(dx_f(0, 0), 2) + pow(dx_f(1, 0), 2), 0.5);
-							xi_k_1 = xi_k + dx_f(0, 0); eta_k_1 = eta_k + dx_f(1, 0);
+							diff = pow(pow(dx_f(0), 2) + pow(dx_f(1), 2), 0.5);
+							xi_k_1 = xi_k + dx_f(0); eta_k_1 = eta_k + dx_f(1);
 							xi_k = xi_k_1; eta_k = eta_k_1; //update the value
 						}
-						xi = xi_k; eta = eta_k; 
-						if (xi >= -1 && xi <= 1 && eta >= -1 && eta <= 1) {
+						xi = xi_k; eta = eta_k;
+						if (xi + 1 > -1e-5 && xi - 1 < 1e-5 && eta + 1 > -1e-5 && eta - 1 < 1e-5) {
 							//The point is indeed inside the searched element and we can store the local coordinate in that element
-							ol[z].flu_local[i*elenode2D + j][0] = xi; //xi
-							ol[z].flu_local[i*elenode2D + j][1] = eta; //eta
-							orphan = 0;
+							orphan = 0; //turn off the orphan flag
+							inelement = 1;
 						}
 						else { //The node is an orphan
-							orphan = 1;
+							//orphan = 1;
+							inelement = 0;
 						}
 						//End determining if the projected node is in the searched element and its local coordinate
 
@@ -618,6 +686,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							if (distance[1] < distance[0]) {
 								xu_searched = xu; yu_searched = yu; zu_searched = zu;
 								distance[0] = distance[1];
+								ol[z].flu_local[i*elenode2D + j][0] = xi; //xi
+								ol[z].flu_local[i*elenode2D + j][1] = eta; //eta
 								searched_ele = k + 1;
 							}
 						}
@@ -638,8 +708,12 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 				ol[z].flu_stru_global[i*elenode2D + j][1] = yu_searched;
 				ol[z].flu_stru_global[i*elenode2D + j][2] = zu_searched;
 			}
+			//Finish with all the nodes in the current fluid element
 		}
+		//Finish with all the nodes in the current physical group
 	}
+	//Finish all the fluid nodes
+	std::cout << " " << std::endl; 
 
 	return;
 }
