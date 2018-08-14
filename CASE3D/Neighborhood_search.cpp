@@ -621,14 +621,14 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						double xi, eta; //converged local coordinate
 						double xp1, xp2, xp3, xp4, yp1, yp2, yp3, yp4; //pseudo structural node coordinate 
 						double xup, yup; //pseudo projected point coordinate
-						//The derivative is obtained by Mathematica: /Users/zhaokuanlu/OneDrive/post_processing/Hex_global_to_local_coordinate_Newton_iteration.nb
+						//The derivative is obtained by Mathematica: /Users/zhaokuanlu/OneDrive/post_processing/.nb
 						//determine the local coordinate in the hexahedral element
 						//Since the equation system is nonlinear, we use the Newton iteration and set the initial value to be 0 
 						xi_k = 0.5; eta_k = 0.5;
 						x1 = GCOORD_stru[IEN_stru[0][k] - 1][0]; x2 = GCOORD_stru[IEN_stru[1][k] - 1][0]; x3 = GCOORD_stru[IEN_stru[2][k] - 1][0]; x4 = GCOORD_stru[IEN_stru[3][k] - 1][0];
 						y1 = GCOORD_stru[IEN_stru[0][k] - 1][1]; y2 = GCOORD_stru[IEN_stru[1][k] - 1][1]; y3 = GCOORD_stru[IEN_stru[2][k] - 1][1]; y4 = GCOORD_stru[IEN_stru[3][k] - 1][1];
 						z1 = GCOORD_stru[IEN_stru[0][k] - 1][2]; z2 = GCOORD_stru[IEN_stru[1][k] - 1][2]; z3 = GCOORD_stru[IEN_stru[2][k] - 1][2]; z4 = GCOORD_stru[IEN_stru[3][k] - 1][2];
-						if (x1 == x2 && x1 == x3 && x2 == x3) { //the element is parallel to yz plane, use y(xi,eta) and z(xi,eta) to determine xi and eta
+						if (x1 == x2 && x1 == x3 && x2 == x3) { //the element is parallel to yz plane (same x coordinate), use y(xi,eta) and z(xi,eta) to determine xi and eta
 							xp1 = y1; xp2 = y2; xp3 = y3; xp4 = y4; 
 							yp1 = z1; yp2 = z2; yp3 = z3; yp4 = z4; 
 							xup = yu; yup = zu; 
