@@ -18,7 +18,7 @@ void FSILINK(int*** LNA) {
 	//extern int owsfnumber;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[owsfnumber];
-
+	extern stru_wet_surf ss; //data structure used to store the properties on the structure wetted surface
 
 	if (element_type == 0) { //hex element
 		//MpCCI model file is written in meshgeneration code. 
@@ -94,16 +94,16 @@ void FSILINK(int*** LNA) {
 			}
 
 			for (e = 0; e < ol[z].FSNEL; e++) {
-				for (m = 0; m < 2; m++) {
+				for (m = 0; m < 2; m++) { //Interpolation points on the new linear base fluid mesh
 					for (n = 0; n < 2; n++) {
-						for (l = 0; l < NINT; l++) {
+						for (l = 0; l < NINT; l++) { //Interpolation points on the original fluid mesh
 							for (o = 0; o < NINT; o++) {
 								FUNC = 0.0; //accumulator 
 								for (i = 0; i < NqINT; i++) {
 									for (j = 0; j < NqINT; j++) {
 										FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * ol[z].Jacob_2D[e][i*NqINT + j];
 										//FUNC += gq.W[i] * gq.W[j] * (linear 2D shape function defined on Nq order GLL quadrature points) * (Nth order 2D shape function defined on Nq order GLL quadrature points) * ol[z].Jacob_2D[e][i*NqINT*NqINT + j*NqINT];
-										//FUNC += gq.W[i] * gq.W[j] * (ls_ln.SHOD[0][m][i] * ls_ln.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * (XHE / 2.0)*(YHE / 2.0);
+										//(ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) is used to map the pressure on interpolation nodes to the integration nodes (GLL nodes)
 									}
 								}
 								ol[z].FPMASTER_2D[e][ol[z].LNA_algo2[m][n] - 1][ol[z].LNA_2D[l][o] - 1] += FUNC;
@@ -113,7 +113,6 @@ void FSILINK(int*** LNA) {
 				}
 			}
 		}
-		std::cout << " " << std::endl;
 	}
 	if (element_type == 1) { //tetrahedral (3 nodes on the interface)
 		//Check out the Goodnote "Bounary force integration" or Evernote "Tetrahedral average integration"
@@ -141,6 +140,11 @@ void FSILINK(int*** LNA) {
 			}
 		}
 	}
+
+	if (mappingalgo == 5) {
+
+	}
+
 
 	std::cout << " " << std::endl;
 	return;

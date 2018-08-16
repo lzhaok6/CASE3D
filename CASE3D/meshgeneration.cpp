@@ -23,6 +23,7 @@ struct meshgenerationstruct meshgeneration() {
 	LOCAL_NODEstruct c;
 	extern OWETSURF ol[owsfnumber];
 	extern NRBSURF nr[nrbsurfnumber];
+	extern stru_wet_surf ss; //data structure used to store the properties on the structure wetted surface
 	c = LOCAL_NODE(N);
 
 	//We are assuming there is only one wetted surface. Thus, ol[0] is used throughout the loop below. 
@@ -957,33 +958,86 @@ struct meshgenerationstruct meshgeneration() {
 		//================================Write the model file for MpCCI here================================//
 		std::ofstream myfile;
 		myfile.open("model.txt");
-		for (z = 0; z < wt_pys_size; z++) {
-			std::string wetsurface_name;
-			//wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1";
-			wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1 " + std::to_string(element_type);
-			myfile << wetsurface_name << std::endl;
-			myfile << "NODES " << ol[z].GIDNct_MpCCI << std::endl;
-			for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
-				myfile << i << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][0] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][1] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][2] << " " << std::endl;
+		if (mappingalgo == 2) {
+			for (z = 0; z < wt_pys_size; z++) {
+				std::string wetsurface_name;
+				//wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1";
+				wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1 " + std::to_string(element_type);
+				myfile << wetsurface_name << std::endl;
+				myfile << "NODES " << ol[z].GIDNct_MpCCI << std::endl;
+				for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
+					myfile << i << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][0] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][1] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][2] << " " << std::endl;
+				}
+				myfile << "ELEMENTS " << ol[z].FSNEL << std::endl;
+				//Output connectivity matrix
+				for (i = 0; i < ol[z].FSNEL; i++) {
+					myfile << i;
+					if (element_type == 0) {
+						for (j = 0; j < 4; j++) {
+							myfile << " " << ol[z].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
+						}
+					}
+					if (element_type == 1) {
+						for (j = 0; j < 3; j++) {
+							myfile << " " << ol[z].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
+						}
+					}
+					myfile << std::endl;
+				}
 			}
-			myfile << "ELEMENTS " << ol[z].FSNEL << std::endl;
-			//Output connectivity matrix
-			for (i = 0; i < ol[z].FSNEL; i++) {
-				myfile << i;
-				if (element_type == 0) {
-					for (j = 0; j < 4; j++) {
-						myfile << " " << ol[z].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
+		}
+		else if (mappingalgo == 5) {
+			int flag;
+			ss.IEN_stru_MpCCI = new int*[4]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
+			for (i = 0; i < 4; i++) {
+				ss.IEN_stru_MpCCI[i] = new int[ss.ELE_stru];
+			}
+			ct = 0; //count the node number assigned
+			std::vector<int>dummy;
+			for (i = 0; i < ss.ELE_stru; i++) { //loop through each element
+				for (j = 0; j < 4; j++) { //the nodes in current element
+					flag = 1; //Initiate the flag to 1 
+					for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
+						for (l = 0; l < 4; l++) {
+							if (ss.IEN_stru[l][k] == ss.IEN_stru[j][i]) { //If this node has already been assigned, use the same numbering
+								ss.IEN_stru_MpCCI[j][i] = ss.IEN_stru_MpCCI[l][k];
+								flag = 0; //turn off the flag to assgin new number
+							}
+							else {
+								//If the number has not assigned yet the flag is still 1, thus a new number could be assigned. 
+							}
+						}
+					}
+					if (flag == 1) {
+						ct += 1;
+						dummy.push_back(ss.IEN_stru[j][i]); //associate the local 2D node with the global node numbering 
+						ss.IEN_stru_MpCCI[j][i] = ct; //assign a new number to MpCCI element connectivity
 					}
 				}
-				if (element_type == 1) {
-					for (j = 0; j < 3; j++) {
-						myfile << " " << ol[z].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
-					}
+			}
+			ss.Node_stru = dummy.size();
+			ss.Node_glob = new int[ss.Node_stru];
+			for (i = 0; i < ss.Node_stru; i++) {
+				ss.Node_glob[i] = dummy[i];
+			}
+
+			std::string wetsurface_name;
+			wetsurface_name = "EF wetsurface" + std::to_string(1) + " 3 1 " + std::to_string(0); //gonna be quad element no matter what element type is used by the fluid
+			myfile << wetsurface_name << std::endl;
+			myfile << "NODES " << ss.Node_stru << std::endl;
+			for (i = 0; i < ss.Node_stru; i++) {
+				myfile << i << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][0] << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][1] << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][2] << " " << std::endl;
+			}
+			myfile << "ELEMENTS " << ss.ELE_stru << std::endl;
+			//Output connectivity matrix
+			for (i = 0; i < ss.ELE_stru; i++) {
+				myfile << i;
+				for (j = 0; j < 4; j++) {
+					myfile << " " << ss.IEN_stru_MpCCI[j][i] - 1; //node numbering starts from 0 in model file
 				}
 				myfile << std::endl;
 			}
 		}
-	//}
 
 	//==============Extract the connectivity matrix on NRB surface (glue all physical groups corresponding to the NRB together)==============//
 	//All physical groups except for 3

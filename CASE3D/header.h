@@ -23,7 +23,7 @@ struct TIMINTstruct TIMINT(double LMAX);
 struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA);
 double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO);
 void FSILINK(int*** LNA);
-struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD);
+struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD, double* WP);
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT,
 	double*** HMASTER, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
 	double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double****Gn, double****SHG,
@@ -40,7 +40,7 @@ typedef struct owetsurf {
 	double **DISPI; //incident displacement
 	double **DISP; //total (actual) displacement (the combination of incident displacement and dynamic displacement)
 	double **DISP_norm; //normal displacement out of fluid domain for two concecutive time steps
-	double *WP; //wet surface pressure, representing AP, CP, DP previously
+	//double *WP; //wet surface pressure, representing AP, CP, DP previously
 	double *WPIN; //wet surface incident pressure, APIN, ...
 	double*** FPMASTER;
 	double*** FPMASTER_2D; 
@@ -88,6 +88,16 @@ typedef struct stru_wet_surf {
 	double**gs_flu_global;
 	double**gs_flu_local; //used to store the local coordinate of the projected structural gauss point on fluid element
 	std::vector<int>orphan_num_gs; //the container to store the node numbering of orphan nodes
+	int ELE_stru = 0; //total number of structural wetted surface elements
+	int** IEN_stru; //Connectivity matrix of the structural wetted surface elements
+	double **GCOORD_stru; //the coordinate of structure nodes
+	int** IEN_stru_MpCCI; //Renumber the node on wetted surface to start from 1
+	int Node_stru; //total node on structural wetted surface
+	int* Node_glob; //store the corresponding global node number to the local node in MpCCI model file
+	double** Jacob_stru; //the Jacobian determinant of the structural wetted surface element (the value is on quadrature node)
+	double*** FPMASTER_stru; 
+	int** LNA_stru; 
+	int** LNA_gs; 
 }STRU_WET_SURF;
 
 //Store the properties on NRB surface (currently just one)

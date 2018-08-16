@@ -23,11 +23,13 @@ The algorithm 4 is now the algorithm 3.
 A new algorithm 4 is added. 
 */
 
-struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD) {
+struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD, double* WP) {
 	interface_mappingstruct t;
-	int i, j, k, l, n, z;
+	extern stru_wet_surf ss; //data structure used to store the properties on the structure wetted surface
+	int i, j, k, l, m, n, z;
 	int u, v;
 	extern OWETSURF ol[owsfnumber];
+	extern stru_wet_surf ss; //data structure used to store the properties on the structure wetted surface
 	double accu = 0.0;
 	int ct = 0;
 	
@@ -64,7 +66,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 									for (v = 0; v < NINT; v++) {
 										for (n = 0; n < 3; n++) {
 											wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + n] //force in z direction
-												+= ol[z].norm[l][n] * ol[z].WP[ol[z].IEN_gb[ol[z].LNA_2D[u][v] - 1][l] - 1] * ol[z].FPMASTER_2D[l][ol[z].LNA_algo2[i][j] - 1][ol[z].LNA_2D[u][v] - 1];
+												+= ol[z].norm[l][n] * WP[ol[z].IEN_gb[ol[z].LNA_2D[u][v] - 1][l] - 1] * ol[z].FPMASTER_2D[l][ol[z].LNA_algo2[i][j] - 1][ol[z].LNA_2D[u][v] - 1];
 										}
 									}
 								}
@@ -100,13 +102,53 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								for (j = 0; j < 3; j++) {
 									for (n = 0; n < 3; n++) {
 										wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[i][l] - 1) + n] //force in z direction
-											+= ol[z].norm[l][n] * (1.0 / 3.0) * ol[z].WP[ol[z].IEN_gb[j][l] - 1] * (1.0 / 3.0) * ol[z].dimension[l];
+											+= ol[z].norm[l][n] * (1.0 / 3.0) * WP[ol[z].IEN_gb[j][l] - 1] * (1.0 / 3.0) * ol[z].dimension[l];
 									}
 								}
 							}
 						}
 					}
 					ct += 1;
+				}
+			}
+		}
+
+		else if (mappingalgo == 5) {
+			//Interpolate the pressure from fluid interpolation node to structure gauss node ss.P_gs[ss.LNA_gs[v][u] - 1][l]
+			for (l = 0; l < ss.ELE_stru; l++) {
+				for (i = 0; i < hprefg + 1; i++) {
+					for (j = 0; j < hprefg + 1; j++) {
+						for (l = 0; l < NINT; l++) {
+							for (m = 0; m < NINT; m++) {
+								ss.P_gs[ss.LNA_gs[i][j] - 1][l] =
+							}
+						}
+					}
+				}
+			}
+
+			//Assume structure has only one wetted surface and the element type is linear quad element
+			for (l = 0; l < ss.ELE_stru; l++) { //loop through each element first
+				for (i = 0; i < 4; i++) { //i,j stands for fem points y m 
+					wsflist[0]->nodeforce[3 * (ss.IEN_stru_MpCCI[i][l] - 1) + 0] = 0.0;
+					wsflist[0]->nodeforce[3 * (ss.IEN_stru_MpCCI[i][l] - 1) + 1] = 0.0;
+					wsflist[0]->nodeforce[3 * (ss.IEN_stru_MpCCI[i][l] - 1) + 2] = 0.0;
+				}
+			}
+			ct = 0;
+			//phi_femg: the linear shape function value at base mesh Gauss-Legendre nodes
+			for (l = 0; l < ss.ELE_stru; l++) {
+				for (i = 0; i < 2; i++) {
+					for (j = 0; j < 2; j++) {
+						for (u = 0; u < hprefg + 1; u++) { //u v stands for y x
+							for (v = 0; v < hprefg + 1; v++) {
+								for (n = 0; n < 3; n++) {
+									wsflist[ct]->nodeforce[3 * (ss.IEN_stru_MpCCI[ss.LNA_stru[i][j] - 1][l] - 1) + n] //force in m direction
+										+= ss.norm[l][n] * ss.W[u] * ss.W[v] * ss.P_gs[ss.LNA_gs[v][u] - 1][l] * phi_femg[ss.LNA_stru[i][j] - 1][v][u] * ss.Jacob_stru[l][u*(hprefg + 1) + v];
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -215,6 +257,12 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					}
 				}
 			}
+		}
+
+		else if (mappingalgo == 5) {
+
+
+
 		}
 
 		std::cout << " " << std::endl;
