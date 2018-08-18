@@ -12,9 +12,9 @@
 struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double***XS, double****SHG, double**JACOB, double* JACOB_tet, double*** SHG_tet) {
 	MATRIXstruct t;
 	double QFUNC;  //CAPACITANCE MATRIX SUM VARIABLE (mass matrix)
-	double HFUNC;  //REACTANCE MATRIX SUM VARIABLE (stiffness matrix)
+	//double HFUNC;  //REACTANCE MATRIX SUM VARIABLE (stiffness matrix)
 	int i, j, k, l, m, n, e, u, v;
-	double duration;
+	//double duration;
 	std::clock_t start;
 
 	t.QMASTER = new double**[NEL];

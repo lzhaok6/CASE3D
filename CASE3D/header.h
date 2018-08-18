@@ -23,7 +23,7 @@ struct TIMINTstruct TIMINT(double LMAX);
 struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA);
 double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO);
 void FSILINK(int*** LNA);
-struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD, double* WP);
+struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD, double* WP, int** IEN, int***LNA);
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT,
 	double*** HMASTER, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
 	double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double****Gn, double****SHG,
@@ -78,7 +78,7 @@ typedef struct owetsurf {
 	double *dimension; 
 	double** flu_local;//used to store the local coordinate of the projected fluid point on structural elements
 	int* flu_stru; 
-	std::vector<int>orphan_num_flu; 
+	std::vector<int>orphan_flag_flu; 
 	double** flu_stru_global;
 	int** IEN_flu_2D; 
 } OWETSURF;
@@ -87,17 +87,23 @@ typedef struct stru_wet_surf {
 	int*gs_flu; //used to store the corresponding fluid element or fluid point (for orphan node)
 	double**gs_flu_global;
 	double**gs_flu_local; //used to store the local coordinate of the projected structural gauss point on fluid element
-	std::vector<int>orphan_num_gs; //the container to store the node numbering of orphan nodes
-	int ELE_stru = 0; //total number of structural wetted surface elements
+	std::vector<int>orphan_flag_gs; //the container to store the node numbering of orphan nodes
+	int ELE_stru; //total number of structural wetted surface elements
 	int** IEN_stru; //Connectivity matrix of the structural wetted surface elements
 	double **GCOORD_stru; //the coordinate of structure nodes
 	int** IEN_stru_MpCCI; //Renumber the node on wetted surface to start from 1
 	int Node_stru; //total node on structural wetted surface
-	int* Node_glob; //store the corresponding global node number to the local node in MpCCI model file
+	int* Node_glob; //Associate the corresponding global node number to the local node in MpCCI model file
 	double** Jacob_stru; //the Jacobian determinant of the structural wetted surface element (the value is on quadrature node)
 	double*** FPMASTER_stru; 
 	int** LNA_stru; 
 	int** LNA_gs; 
+	double** P_gs;	
+	double** norm_stru; 
+	double W_stru[hprefg + 1];
+	double*** phi_stru;
+	double**** GSHL_2D; 
+	double****xs_2D; //for the 2D elements on wetted surface
 }STRU_WET_SURF;
 
 //Store the properties on NRB surface (currently just one)
@@ -198,6 +204,7 @@ struct LOCAL_GSHAPEstruct {
 	double***** GSHL;
 	//double****GSHL_2D; 
 	double MCOORD[8][3];
+	double MCOORD_2D[4][2];
 };
 
 struct JACOBIANstruct {
@@ -258,7 +265,7 @@ const int refine = 1; //The refinement rate of fluid mesh against base fluid mes
 const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
 //const int hprefg = 1;
-const int mappingalgo = 2; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
+const int mappingalgo = 5; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
 const double RHO = 1025.0; //original
 //const double RHO = 989.0; //Bleich-Sandler
 const int WAVE = 2; //1 for plane wave; 2 for spherical wave 

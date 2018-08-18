@@ -17,7 +17,7 @@
 void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) {
 	extern OWETSURF ol[owsfnumber];
 	extern stru_wet_surf ss; //data structure used to store the properties on the structure wetted surface
-	int i, j, k, l, m, n, o, z;
+	int i, j, k, l, m, n, o, z, h, e;
 
 	/*
 	Eigen::Matrix3d A;
@@ -29,7 +29,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 
 	int elenode2D;
 	if (element_type == 0) { //hex element
-		elenode2D = NINT*NINT;
+		elenode2D = NINT*NINT; 
 	}
 	if (element_type == 1) { //tet element
 		elenode2D = 3;
@@ -174,14 +174,24 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		ss.GCOORD_stru[i - nodestart][2] = stod(output[i][3]) + zoffset;
 	}
 	 
+	//Create the pressure on structure gauss nodes
+	ss.P_gs = new double*[(hprefg + 1)*(hprefg + 1)];
+	for (i = 0; i < (hprefg + 1)*(hprefg + 1); i++) {
+		ss.P_gs[i] = new double[ss.ELE_stru];
+	}
+	for (i = 0; i < (hprefg + 1)*(hprefg + 1); i++) {
+		for (j = 0; j < ss.ELE_stru; j++) {
+			ss.P_gs[i][j] = 0.0;
+		}
+	}
+
 	//Find the element set name corresponding to the structural wetted surface
 	std::vector<std::string> surface_name; 
 	std::vector<int> surface_orientation; //If the surface is positive, the value is 1; If the value is negative, the value is -1
 	for (i = 0; i < surface.size(); i++) {
 		surface_name.push_back(output[surface[i] + 1][0]); //http://www.cplusplus.com/reference/string/string/substr/
 		if (output[surface[i] + 1][1] == " SNEG") { //negative surface
-			//surface_orientation.push_back(-1);
-			surface_orientation.push_back(1);
+			surface_orientation.push_back(-1);
 		}
 		else if (output[surface[i] + 1][1] == " SPOS") { //positive surface 
 			surface_orientation.push_back(1);
@@ -194,16 +204,19 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	//store the element number on the wetted surface
 	std::vector<std::vector<int>> ele_num;
 	std::vector<int> ele_num_clm; 
+	std::vector<int> ele_num_sideset; 
 	ct = 0; 
 	for (i = 0; i < sidesets_start.size(); i++) { //loop through side sets to find the structural wetted surface element set
 		for (j = 0; j < surface.size(); j++) { //If the name of this sideset is the same with one of the wetted surfaces
 			if (sidesets_name[i].substr(7, std::string::npos) == surface_name[j]) {
 				ele_num_clm.clear(); 
 				//read all the nodes in this sideset
+				ct = 0; 
 				if (i < sidesets_start.size() - 1) {
 					for (k = sidesets_start[i]; k < sidesets_start[i + 1] - 1; k++) {
 						for (l = 0; l < output[k].size(); l++) {
 							ele_num_clm.push_back(stoi(output[k][l]));
+							ct += 1; 
 						}
 					}
 				}
@@ -211,48 +224,188 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 					for (k = sidesets_start[i]; k < surface[0]; k++) {
 						for (l = 0; l < output[k].size(); l++) {
 							ele_num_clm.push_back(stoi(output[k][l]));
+							ct += 1; 
 						}
 					}
 				}
 				ele_num.push_back(ele_num_clm);
-				std::cout << " " << std::endl;
+				ele_num_sideset.push_back(ct);
 			}
 		}
 	}
+	for (i = 0; i < surface.size(); i++) {
+		if (ele_num_sideset[i] != ele_num[i].size()) {
+			std::cout << "There is a problem with the counting of structural elements in each sideset" << std::endl;
+		}
+	}
+	
 	//Store the element connectivity 
 	//get the total number of structural wetted surface elements
 	//int ss.ELE_stru = 0; //total number of structural wetted surface elements
+	ss.ELE_stru = 0; 
 	for (i = 0; i < surface.size(); i++) {
-		ss.ELE_stru += ele_num[i].size();
+		//ss.ELE_stru += ele_num[i].size();
+		ss.ELE_stru += ele_num_sideset[i];
 	}
 	//int** ss.IEN_stru; 
 	ss.IEN_stru = new int*[4];
 	for (i = 0; i < 4; i++) {
 		ss.IEN_stru[i] = new int[ss.ELE_stru];
 	}
+	int** IEN_stru_norm; //used to derive the normal direction
+	IEN_stru_norm = new int*[4];
+	for (i = 0; i < 4; i++) {
+		IEN_stru_norm[i] = new int[ss.ELE_stru];
+	}
+
 	ct = 0; 
 	for (i = 0; i < surface.size(); i++) { //loop through structural wetted surfaces
-		for (j = 0; j < ele_num[i].size(); j++) { //loop through all the element in the wetted 
-			if (surface_orientation[i] == 1) { //positive surface, keep the original node sequence
-				ss.IEN_stru[0][ct] = IEN[0][ele_num[i][j] - 1 - (ele_start_num - 1)];
-				ss.IEN_stru[1][ct] = IEN[1][ele_num[i][j] - 1 - (ele_start_num - 1)];
-				ss.IEN_stru[2][ct] = IEN[2][ele_num[i][j] - 1 - (ele_start_num - 1)];
-				ss.IEN_stru[3][ct] = IEN[3][ele_num[i][j] - 1 - (ele_start_num - 1)];
-				ct += 1;
-			}
-			else { //revert the node sequence
-				ss.IEN_stru[0][ct] = IEN[3][ele_num[i][j] - 1 - (ele_start_num - 1)];
-				ss.IEN_stru[1][ct] = IEN[2][ele_num[i][j] - 1 - (ele_start_num - 1)];
-				ss.IEN_stru[2][ct] = IEN[1][ele_num[i][j] - 1 - (ele_start_num - 1)];
-				ss.IEN_stru[3][ct] = IEN[0][ele_num[i][j] - 1 - (ele_start_num - 1)];
-				ct += 1;
-			}
+		for (j = 0; j < ele_num_sideset[i]; j++) { //loop through all the element in the wetted 
+			//if (surface_orientation[i] == 1) { //positive surface, keep the original node sequence
+			ss.IEN_stru[0][ct] = IEN[0][ele_num[i][j] - 1 - (ele_start_num - 1)];
+			ss.IEN_stru[1][ct] = IEN[1][ele_num[i][j] - 1 - (ele_start_num - 1)];
+			ss.IEN_stru[2][ct] = IEN[2][ele_num[i][j] - 1 - (ele_start_num - 1)];
+			ss.IEN_stru[3][ct] = IEN[3][ele_num[i][j] - 1 - (ele_start_num - 1)];
+			ct += 1;
 		}
 	}
 	if (ct != ss.ELE_stru) {
 		std::cout << "The wetted surface elements are not fully defined" << std::endl;
 		system("PAUSE ");
 	}
+
+	ct = 0;
+	for (i = 0; i < surface.size(); i++) { //loop through structural wetted surfaces
+		for (j = 0; j < ele_num_sideset[i]; j++) { //loop through all the element in the wetted 
+			if (surface_orientation[i] == 1) { //out of the structure, revert the node sequence make it into the structure
+				IEN_stru_norm[3][ct] = IEN[0][ele_num[i][j] - 1 - (ele_start_num - 1)];
+				IEN_stru_norm[2][ct] = IEN[1][ele_num[i][j] - 1 - (ele_start_num - 1)];
+				IEN_stru_norm[1][ct] = IEN[2][ele_num[i][j] - 1 - (ele_start_num - 1)];
+				IEN_stru_norm[0][ct] = IEN[3][ele_num[i][j] - 1 - (ele_start_num - 1)];
+			}
+			else if (surface_orientation[i] == -1) { //into the structure, keep the original node sequence
+				IEN_stru_norm[0][ct] = IEN[0][ele_num[i][j] - 1 - (ele_start_num - 1)];
+				IEN_stru_norm[1][ct] = IEN[1][ele_num[i][j] - 1 - (ele_start_num - 1)];
+				IEN_stru_norm[2][ct] = IEN[2][ele_num[i][j] - 1 - (ele_start_num - 1)];
+				IEN_stru_norm[3][ct] = IEN[3][ele_num[i][j] - 1 - (ele_start_num - 1)];
+			}
+			ct += 1;
+		}
+	}
+	if (ct != ss.ELE_stru) {
+		std::cout << "The wetted surface elements are not fully defined" << std::endl;
+		system("PAUSE ");
+	}
+
+	//Determine the normal direction of the structure wetted surface elements for the calculation of the fluid force (pointing into the structure)
+	ss.norm_stru = new double*[ss.ELE_stru];
+	for (i = 0; i < ss.ELE_stru; i++) {
+		ss.norm_stru[i] = new double[3];
+	}
+	for (i = 0; i < ss.ELE_stru; i++) {
+		for (j = 0; j < 3; j++) {
+			ss.norm_stru[i][j] = 0.0;
+		}
+	}
+	if (mappingalgo == 5) {
+		double x1, x2, x3; double y1, y2, y3; double z1, z2, z3;
+		double ax, ay, az; double bx, by, bz;
+		double n1, n2, n3; double absn;
+		for (i = 0; i < ss.ELE_stru; i++) {
+			x1 = ss.GCOORD_stru[IEN_stru_norm[0][i] - 1][0]; x2 = ss.GCOORD_stru[IEN_stru_norm[1][i] - 1][0]; x3 = ss.GCOORD_stru[IEN_stru_norm[2][i] - 1][0];
+			y1 = ss.GCOORD_stru[IEN_stru_norm[0][i] - 1][1]; y2 = ss.GCOORD_stru[IEN_stru_norm[1][i] - 1][1]; y3 = ss.GCOORD_stru[IEN_stru_norm[2][i] - 1][1];
+			z1 = ss.GCOORD_stru[IEN_stru_norm[0][i] - 1][2]; z2 = ss.GCOORD_stru[IEN_stru_norm[1][i] - 1][2]; z3 = ss.GCOORD_stru[IEN_stru_norm[2][i] - 1][2];
+			ax = x2 - x1; ay = y2 - y1; az = z2 - z1;
+			bx = x3 - x2; by = y3 - y2; bz = z3 - z2;
+			n1 = ay*bz - az*by; n2 = az*bx - ax*bz; n3 = ax*by - ay*bx;
+			absn = sqrt(pow(n1, 2) + pow(n2, 2) + pow(n3, 2));
+			ss.norm_stru[i][0] = n1 / absn; ss.norm_stru[i][1] = n2 / absn; ss.norm_stru[i][2] = n3 / absn;
+			//std::cout << " " << std::endl;
+		}
+	}
+	//Define the local node connectivity on structural wetted surface mesh
+	TD_LOCAL_NODEstruct td;
+	td = TD_LOCAL_NODE(1);
+	ss.LNA_stru = new int*[2];
+	for (i = 0; i < 2; i++) {
+		ss.LNA_stru[i] = new int[2];
+	}
+	for (i = 0; i < 2; i++) {
+		for (j = 0; j < 2; j++) {
+			ss.LNA_stru[i][j] = td.LNA[i][j];
+		}
+	}
+	td = TD_LOCAL_NODE(hprefg);
+	ss.LNA_gs = new int*[hprefg + 1];
+	for (i = 0; i < hprefg + 1; i++) {
+		ss.LNA_gs[i] = new int[hprefg + 1];
+	}
+	for (i = 0; i < hprefg + 1; i++) {
+		for (j = 0; j < hprefg + 1; j++) {
+			ss.LNA_gs[i][j] = td.LNA[i][j];
+		}
+	}
+
+	//Define the quadrature node on linear structure element 
+	LOBATTOstruct bb;
+	bb = LOBATTO(hprefg);
+	GLLQUADstruct ff;
+	ff = GLLQUAD(bb.Z, bb.WL, hprefg, FEM);
+	for (i = 0; i < hprefg + 1; i++) {
+		ss.W_stru[i] = ff.W[i];
+	}
+	//Define the linear shape function on structure element (the value is on the gauss node)
+	double* basep; //interpolation node local coordinate
+	double* gsp; //quadrature node local coordinate
+	double nomx, nomy;
+	double denomx, denomy;
+	basep = new double[2]; 
+	for (i = 0; i < 2; i++) {
+		basep[i] = 0.0;
+	}
+	for (i = 0; i < 2; i++) {
+		basep[i] = -1.0 + i*(2.0 / (2 - 1));
+	}
+	gsp = new double[hprefg + 1]; 
+	for (i = 0; i < hprefg + 1; i++) {
+		gsp[i] = ff.S[i];
+	}
+	ss.phi_stru = new double**[4];
+	for (i = 0; i < 4; i++) { //for all the points in that element
+		ss.phi_stru[i] = new double*[hprefg + 1];
+		for (j = 0; j < hprefg + 1; j++) {
+			ss.phi_stru[i][j] = new double[hprefg + 1];
+		}
+	}
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < hprefg + 1; j++) {
+			for (k = 0; k < hprefg + 1; k++) {
+				ss.phi_stru[i][j][k] = 0.0;
+			}
+		}
+	}
+	for (h = 0; h < 2; h++) {
+		for (k = 0; k < 2; k++) {
+			for (i = 0; i < hprefg + 1; i++) {
+				for (j = 0; j < hprefg + 1; j++) {
+					nomx = 1.0; nomy = 1.0; //multiplier initialization
+					denomx = 1.0; denomy = 1.0; //multiplier initialization
+					for (e = 0; e < 2; e++) { //loop through nominator and denominator in basis function expression
+						if (e != h) {
+							nomx *= (gsp[i] - basep[e]);
+							denomx *= (gsp[h] - basep[e]);
+						}
+						if (e != k) {
+							nomy *= (gsp[j] - basep[e]);
+							denomy *= (gsp[k] - basep[e]);
+						}
+					}
+					ss.phi_stru[ss.LNA_stru[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
+				}
+			}
+		}
+	}
+
 	//Interpolate the ss.GCOORD_stru to obtain the GCOORD_stru_gs
 	double **GCOORD_stru_gs; //the coordinate of structure wetted surface gauss points
 	GCOORD_stru_gs = new double*[ss.ELE_stru*(hprefg + 1)*(hprefg + 1)];
@@ -321,26 +474,66 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		}
 	}
 
-	TD_LOCAL_NODEstruct td; 
-	td = TD_LOCAL_NODE(1);
-	ss.LNA_stru = new int*[2];
-	for (i = 0; i < 2; i++) {
-		ss.LNA_stru[i] = new int[2];
-	}
-	for (i = 0; i < 2; i++) {
-		for (j = 0; j < 2; j++) {
-			ss.LNA_stru[i][j] = td.LNA[i][j];
+	//Generate the model file
+	if (mappingalgo == 5) {
+		
+		std::ofstream myfile_algo5;
+		myfile_algo5.open("model.txt");
+		int flag;
+		ss.IEN_stru_MpCCI = new int*[4]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
+		for (i = 0; i < 4; i++) {
+			ss.IEN_stru_MpCCI[i] = new int[ss.ELE_stru];
 		}
-	}
-	td = TD_LOCAL_NODE(hprefg);
-	ss.LNA_gs = new int*[hprefg + 1];
-	for (i = 0; i < hprefg + 1; i++) {
-		ss.LNA_gs[i] = new int[hprefg + 1];
-	}
-	for (i = 0; i < hprefg + 1; i++) {
-		for (j = 0; j < hprefg + 1; j++) {
-			ss.LNA_gs[i][j] = td.LNA[i][j];
+		ct = 0; //count the node number assigned
+		std::vector<int>dummy;
+		for (i = 0; i < ss.ELE_stru; i++) { //loop through each element
+			for (j = 0; j < 4; j++) { //the nodes in current element
+				flag = 1; //Initiate the flag to 1 
+				for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
+					for (l = 0; l < 4; l++) {
+						if (ss.IEN_stru[l][k] == ss.IEN_stru[j][i]) { //If this node has already been assigned, use the same numbering
+							ss.IEN_stru_MpCCI[j][i] = ss.IEN_stru_MpCCI[l][k];
+							flag = 0; //turn off the flag to assgin new number
+						}
+						else {
+							//If the number has not assigned yet the flag is still 1, thus a new number could be assigned. 
+						}
+					}
+				}
+				if (flag == 1) {
+					ct += 1;
+					dummy.push_back(ss.IEN_stru[j][i]); //associate the local 2D node with the global node numbering 
+					ss.IEN_stru_MpCCI[j][i] = ct; //assign a new number to MpCCI element connectivity
+				}
+			}
 		}
+		//ss.Node_stru = dummy.size();
+		ss.Node_stru = ct;
+		if (ct != dummy.size()) {
+			std::cout << "There is a problem with ss.Node_stru" << std::endl;
+			system("PAUSE ");
+		}
+		ss.Node_glob = new int[ss.Node_stru];
+		for (i = 0; i < ss.Node_stru; i++) {
+			ss.Node_glob[i] = dummy[i];
+		}
+		std::string wetsurface_name;
+		wetsurface_name = "EF wetsurface" + std::to_string(1) + " 3 1 " + std::to_string(0); //gonna be quad element no matter what element type is used by the fluid
+		myfile_algo5 << wetsurface_name << std::endl;
+		myfile_algo5 << "NODES " << ss.Node_stru << std::endl;
+		for (i = 0; i < ss.Node_stru; i++) {
+			myfile_algo5 << i << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][0] << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][1] << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][2] << " " << std::endl;
+		}
+		myfile_algo5 << "ELEMENTS " << ss.ELE_stru << std::endl;
+		//Output connectivity matrix
+		for (i = 0; i < ss.ELE_stru; i++) {
+			myfile_algo5 << i;
+			for (j = 0; j < 4; j++) {
+				myfile_algo5 << " " << ss.IEN_stru_MpCCI[j][i] - 1; //node numbering starts from 0 in model file
+			}
+			myfile_algo5 << std::endl;
+		}
+		
 	}
 
 	int gs_nearest; //used to store the nearest fluid node on the fluid FSI interface
@@ -572,12 +765,14 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 				//Instead of storing the corresponding element in gs_flu, the stored value becomes the fluid mesh "node" number 
 				//At the same time, we keep track of which gauss node is orphan
 				ss.gs_flu[i*(hprefg + 1)*(hprefg + 1) + j] = gs_nearest;
-				ss.orphan_num_gs.push_back(i*(hprefg + 1)*(hprefg + 1) + j);
+				//ss.orphan_flag_gs.push_back(i*(hprefg + 1)*(hprefg + 1) + j);
+				ss.orphan_flag_gs.push_back(1); 
 			}
 			else {
 				//the corresponding fluid element and the projected node coordinate should be found at this stage
 				//store the corresponding element 
 				ss.gs_flu[i*(hprefg + 1)*(hprefg + 1) + j] = searched_ele;
+				ss.orphan_flag_gs.push_back(0);
 			}
 			//store the projected node location
 			ss.gs_flu_global[i*(hprefg + 1)*(hprefg + 1) + j][0] = xu_searched;
@@ -608,7 +803,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						range[0] = pow(pow(GCOORD[ol[z].IEN_gb[j][i] - 1][0] - ss.GCOORD_stru[ss.IEN_stru[l][k] - 1][0], 2) + pow(GCOORD[ol[z].IEN_gb[j][i] - 1][1] - ss.GCOORD_stru[ss.IEN_stru[l][k] - 1][1], 2) + pow(GCOORD[ol[z].IEN_gb[j][i] - 1][2] - ss.GCOORD_stru[ss.IEN_stru[l][k] - 1][2], 2), 0.5);
 						if (range[0] < range[1]) {
 							range[1] = range[0]; //range[1] is used to store the shortest distance so far
-							flu_nearest = ss.IEN_stru[l][k];
+							flu_nearest = ss.IEN_stru_MpCCI[l][k];
 						}
 						//At the same time, store the node with the shorted distance to the gauss node under searching. If the node is orphan, we use the value on this fluid node for the structure gauss node
 						if (range[0] > search_range) { //One of the corner nodes in the element is out of the searching range. Jump through this element
@@ -724,22 +919,23 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 					//Instead of storing the corresponding element in flu_stru, the stored value becomes the structure "node" number 
 					//At the same time, we keep track of which fluid node is orphan
 					ol[z].flu_stru[i*elenode2D + j] = flu_nearest;
-					ol[z].orphan_num_flu.push_back(i*elenode2D + j);
+					ol[z].orphan_flag_flu.push_back(1);
 				}
-				//the corresponding structural element and the projected node coordinate should be found at this stage
-				//store the corresponding element 
-				ol[z].flu_stru[i*elenode2D + j] = searched_ele;
+				else {
+					//store the corresponding element 
+					ol[z].flu_stru[i*elenode2D + j] = searched_ele;
+					ol[z].orphan_flag_flu.push_back(0);
+				}
 				//store the projected node location
 				ol[z].flu_stru_global[i*elenode2D + j][0] = xu_searched;
 				ol[z].flu_stru_global[i*elenode2D + j][1] = yu_searched;
-				ol[z].flu_stru_global[i*elenode2D + j][2] = zu_searched;
+				ol[z].flu_stru_global[i*elenode2D + j][2] = zu_searched; 
 			}
 			//Finish with all the nodes in the current fluid element
 		}
 		//Finish with all the nodes in the current physical group
 	}
-	//Finish all the fluid nodes
-	std::cout << " " << std::endl; 
-
+	//Finish all the fluid nodesS
+	std::cout << " " << std::endl;
 	return;
 }

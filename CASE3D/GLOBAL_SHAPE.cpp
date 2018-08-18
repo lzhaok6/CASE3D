@@ -11,7 +11,7 @@
 //GLOBAL_SHAPE determines the global shape function derivative at the Gauss quad. points.
 
 struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double***XS, double**JACOB, double**GCOORD, int**IEN, double* JACOB_tet) {
-	int i, j, k, l, m, n, e;
+	int i, j, k, l, m, n;
 	GLOBAL_SHAPEstruct t;
 
 	std::clock_t start;

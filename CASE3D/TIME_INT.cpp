@@ -110,7 +110,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	//time history record
 	std::clock_t start;
 	double duration;
-	double duration_int;
+	//double duration_int;
 	start = std::clock();
 	printf("3DFrigate - computation\n");
 	fflush(stdout);
@@ -687,29 +687,29 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	current_time = T[0];
 
 	interface_mappingstruct in;
-	in = interface_mapping(1, GCOORD,WP);
+	in = interface_mapping(1, GCOORD, WP, IEN, LNA_3D);
 	dotransfer();
-	in = interface_mapping(0, GCOORD,WP);
+	in = interface_mapping(0, GCOORD, WP, IEN, LNA_3D);
 
 	//Generate the information file
 	std::string name3 = "parameters_" + timestr + ".txt";
-	std::ofstream myfile;
-	myfile.open(name3);
+	std::ofstream myfile2;
+	myfile2.open(name3);
 	//General information:
-	myfile << "Code name: 3Dbarge_TFM_Abaqus_sym_mesh" << std::endl;
-	myfile << "Simulation date and time: " << timestr << std::endl;
-	myfile << "Mesh information:" << std::endl;
-	myfile << "N: " << N << " mesh size: "  << " wetted surface number: " << owsfnumber << " Nodenumber: " << NNODE << " Element number: " << NEL << " h/p refinement rate: " << refine << std::endl;
-	myfile << "Explosive information: " << std::endl;
-	myfile << "stdoff point (spherical): " << XO << " " << YO << " " << ZO << " explosion center: " << XC << " " << YC << " " << ZC << " peak pressure (Mpa): " << PPEAK << " decay rate: " << TAU << " WAVE (1: plane, 2: spherical): " << WAVE << std::endl;
-	myfile << "Time integration information" << std::endl;
-	myfile << "CFL: " << CFLFRAC << " dt: " << DT << " dt scale factor: " << dtscale << " total time: " << TTERM << " damping: " << BETA << " explicit central difference (Leap frog)" << std::endl;
-	myfile << "Fluid properties: " << std::endl;
-	myfile << "CAV: " << CAV << " C: " << C << " RHO: " << RHO << " atmospheric pressure: " << PATM << " saturated pressure: " << PSAT << std::endl;
-	myfile << "FSI coupling" << std::endl;
-	myfile << "mapping algorithm: " << mappingalgo << std::endl;
-	myfile << "debug mode: " << debug << std::endl;
-
+	myfile2 << "Code name: 3Dbarge_TFM_Abaqus_sym_mesh" << std::endl;
+	myfile2 << "Simulation date and time: " << timestr << std::endl;
+	myfile2 << "Mesh information:" << std::endl;
+	myfile2 << "N: " << N << " mesh size: "  << " wetted surface number: " << owsfnumber << " Nodenumber: " << NNODE << " Element number: " << NEL << " h/p refinement rate: " << refine << std::endl;
+	myfile2 << "Explosive information: " << std::endl;
+	myfile2 << "stdoff point (spherical): " << XO << " " << YO << " " << ZO << " explosion center: " << XC << " " << YC << " " << ZC << " peak pressure (Mpa): " << PPEAK << " decay rate: " << TAU << " WAVE (1: plane, 2: spherical): " << WAVE << std::endl;
+	myfile2 << "Time integration information" << std::endl;
+	myfile2 << "CFL: " << CFLFRAC << " dt: " << DT << " dt scale factor: " << dtscale << " total time: " << TTERM << " damping: " << BETA << " explicit central difference (Leap frog)" << std::endl;
+	myfile2 << "Fluid properties: " << std::endl;
+	myfile2 << "CAV: " << CAV << " C: " << C << " RHO: " << RHO << " atmospheric pressure: " << PATM << " saturated pressure: " << PSAT << std::endl;
+	myfile2 << "FSI coupling" << std::endl;
+	myfile2 << "mapping algorithm: " << mappingalgo << std::endl;
+	myfile2 << "debug mode: " << debug << std::endl;
+	
 	double angle = 0.0; double R = 0.0;
 
 	double* WPTEMP;
@@ -963,14 +963,14 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//start = std::clock();
 		//=======================define double* nodeforce in fluid code==========================//
 		//mapping the fluid force ABF from user defined mesh to MpCCI defined mesh on coupling surface using interpolation
-		in = interface_mapping(1, GCOORD, WP);
+		in = interface_mapping(1, GCOORD, WP, IEN, LNA_3D);
 		//after this subroutine, the nodeforce should already be mapped onto coupling surface (data.h)
 		//int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int NNODE, double *Z
 
 		dotransfer();
 
 		//=============map nodal displacement from coupled surface to fluid mesh===================//
-		in = interface_mapping(0, GCOORD, WP);
+		in = interface_mapping(0, GCOORD, WP, IEN, LNA_3D);
 
 		if (tfm == 0) { //Scattered field model
 			//double angle = 0.0; //cos value
@@ -1781,6 +1781,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//energyfilehd << current_time << " " << nr[0].angle_disp1[nr[0].DP_2D[2] - 1][94] << " " << nr[0].angle_disp2[nr[0].DP_2D[2] - 1][94] << " " << nr[0].P_dev[94][nr[0].DP_2D[2] - 1][0] << " " << nr[0].P_dev[94][nr[0].DP_2D[2] - 1][1] << " " << nr[0].P_dev[94][nr[0].DP_2D[2] - 1][2] << " " << P[nr[0].IEN_gb[nr[0].DP_2D[2] - 1][94] - 1][1] << std::endl;
 	}
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-	myfile << "total CPU time: " << duration << std::endl;
+	myfile2 << "total CPU time: " << duration << std::endl;
 	return;
 }

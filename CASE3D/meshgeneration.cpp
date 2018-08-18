@@ -19,7 +19,6 @@ It is controlled by the constant internalmesh in the header file.
 
 struct meshgenerationstruct meshgeneration() {
 	meshgenerationstruct t;
-	LOBATTOstruct b;
 	LOCAL_NODEstruct c;
 	extern OWETSURF ol[owsfnumber];
 	extern NRBSURF nr[nrbsurfnumber];
@@ -345,7 +344,7 @@ struct meshgenerationstruct meshgeneration() {
 				std::cout << "a physical group cannot be both wetted surface and nrb!";
 				system("PAUSE ");
 			}
-
+			//left face 
 			ct = 0;
 			for (j = 0; j < NINT; j++) {
 				for (k = 0; k < NINT; k++) {
@@ -720,6 +719,7 @@ struct meshgenerationstruct meshgeneration() {
 			//system("PAUSE ");
 			int flag;
 			std::vector<int>ele_num;
+			ct = 0;
 			for (e = 0; e < elenum; e++) {
 				flag = 1;
 				/*
@@ -731,12 +731,18 @@ struct meshgenerationstruct meshgeneration() {
 				*/
 				if (flag == 1) { //Then this element could be included the wetted surface element list
 					ele_num.push_back(e);
+					ct += 1; 
 				}
 			}
 			//ele_num is the elements for high-order element, we need to extract the corresponding linear elements from that. 
 
 			//Store the total number of element on wetted surface in FSNEL
-			ol[z].FSNEL = ele_num.size();
+			//ol[z].FSNEL = ele_num.size();
+			ol[z].FSNEL = ct;
+			if (ct != ele_num.size()) {
+				std::cout << "There is a problem with ol[z].FSNEL" << std::endl;
+				system("PAUSE "); 
+			}
 
 			ol[z].IEN_gb = new int*[elenode2D]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
 			for (i = 0; i < elenode2D; i++) {
@@ -837,7 +843,12 @@ struct meshgenerationstruct meshgeneration() {
 
 					}
 				}
-				ol[z].GIDNct_MpCCI = dummy.size();
+				//ol[z].GIDNct_MpCCI = dummy.size();
+				ol[z].GIDNct_MpCCI = ct; 
+				if (ct != dummy.size()) {
+					std::cout << "There is a problem with ol[z].GIDNct_MpCCI" << std::endl;
+					system("PAUSE "); 
+				}
 				ol[z].GIDN_MpCCI = new int[ol[z].GIDNct_MpCCI];
 				for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
 					ol[z].GIDN_MpCCI[i] = dummy[i];
@@ -873,7 +884,12 @@ struct meshgenerationstruct meshgeneration() {
 
 					}
 				}
-				ol[z].GIDNct_MpCCI = dummy.size();
+				//ol[z].GIDNct_MpCCI = dummy.size();
+				ol[z].GIDNct_MpCCI = ct; 
+				if (ct != dummy.size()) {
+					std::cout << "There is a problem with the ol[z].GIDNct_MpCCI" << std::endl;
+					system("PAUSE "); 
+				}
 				ol[z].GIDN_MpCCI = new int[ol[z].GIDNct_MpCCI];
 				for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
 					ol[z].GIDN_MpCCI[i] = dummy[i];
@@ -906,6 +922,7 @@ struct meshgenerationstruct meshgeneration() {
 
 			//Get the high-order global nodes on wetted surface (GIDN)
 			std::vector<int>dummy3;
+			ct = 0; 
 			for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
 				for (j = 0; j < elenode2D; j++) { //the nodes in current element
 					flag = 1; //Initiate the flag to 1 
@@ -921,10 +938,17 @@ struct meshgenerationstruct meshgeneration() {
 					}
 					if (flag == 1) {
 						dummy3.push_back(ol[z].IEN_gb[j][i]); //associate the local 2D node with the global node numbering 
+						ct += 1;
 					}
 				}
 			}
-			ol[z].GIDNct = dummy3.size();
+			//ol[z].GIDNct = dummy3.size();
+			ol[z].GIDNct = ct;
+			if (ct != dummy3.size()) {
+				std::cout << "There is a problem with GIDNct" << std::endl;
+				system("PAUSE "); 
+			}
+
 			ol[z].GIDN = new int[ol[z].GIDNct];
 			for (i = 0; i < ol[z].GIDNct; i++) {
 				ol[z].GIDN[i] = dummy3[i];
@@ -956,9 +980,10 @@ struct meshgenerationstruct meshgeneration() {
 		}
 
 		//================================Write the model file for MpCCI here================================//
-		std::ofstream myfile;
-		myfile.open("model.txt");
-		if (mappingalgo == 2) {
+		
+		if (mappingalgo == 2 || mappingalgo == 4) {
+			std::ofstream myfile;
+			myfile.open("model.txt");
 			for (z = 0; z < wt_pys_size; z++) {
 				std::string wetsurface_name;
 				//wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1";
@@ -984,58 +1009,6 @@ struct meshgenerationstruct meshgeneration() {
 					}
 					myfile << std::endl;
 				}
-			}
-		}
-		else if (mappingalgo == 5) {
-			int flag;
-			ss.IEN_stru_MpCCI = new int*[4]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
-			for (i = 0; i < 4; i++) {
-				ss.IEN_stru_MpCCI[i] = new int[ss.ELE_stru];
-			}
-			ct = 0; //count the node number assigned
-			std::vector<int>dummy;
-			for (i = 0; i < ss.ELE_stru; i++) { //loop through each element
-				for (j = 0; j < 4; j++) { //the nodes in current element
-					flag = 1; //Initiate the flag to 1 
-					for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
-						for (l = 0; l < 4; l++) {
-							if (ss.IEN_stru[l][k] == ss.IEN_stru[j][i]) { //If this node has already been assigned, use the same numbering
-								ss.IEN_stru_MpCCI[j][i] = ss.IEN_stru_MpCCI[l][k];
-								flag = 0; //turn off the flag to assgin new number
-							}
-							else {
-								//If the number has not assigned yet the flag is still 1, thus a new number could be assigned. 
-							}
-						}
-					}
-					if (flag == 1) {
-						ct += 1;
-						dummy.push_back(ss.IEN_stru[j][i]); //associate the local 2D node with the global node numbering 
-						ss.IEN_stru_MpCCI[j][i] = ct; //assign a new number to MpCCI element connectivity
-					}
-				}
-			}
-			ss.Node_stru = dummy.size();
-			ss.Node_glob = new int[ss.Node_stru];
-			for (i = 0; i < ss.Node_stru; i++) {
-				ss.Node_glob[i] = dummy[i];
-			}
-
-			std::string wetsurface_name;
-			wetsurface_name = "EF wetsurface" + std::to_string(1) + " 3 1 " + std::to_string(0); //gonna be quad element no matter what element type is used by the fluid
-			myfile << wetsurface_name << std::endl;
-			myfile << "NODES " << ss.Node_stru << std::endl;
-			for (i = 0; i < ss.Node_stru; i++) {
-				myfile << i << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][0] << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][1] << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][2] << " " << std::endl;
-			}
-			myfile << "ELEMENTS " << ss.ELE_stru << std::endl;
-			//Output connectivity matrix
-			for (i = 0; i < ss.ELE_stru; i++) {
-				myfile << i;
-				for (j = 0; j < 4; j++) {
-					myfile << " " << ss.IEN_stru_MpCCI[j][i] - 1; //node numbering starts from 0 in model file
-				}
-				myfile << std::endl;
 			}
 		}
 
@@ -1090,7 +1063,6 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 
-
 		ct = 0;
 		for (e = 0; e < nr[z].NEL_nrb; e++) {
 			for (j = 0; j < elenode2D; j++) {
@@ -1126,7 +1098,13 @@ struct meshgenerationstruct meshgeneration() {
 				}
 			}
 		}
-		nr[z].NRBNODE = dummy2.size();
+		//nr[z].NRBNODE = dummy2.size();
+		nr[z].NRBNODE = ct;
+		if (ct != dummy2.size()) {
+			std::cout << "There is a problem with nr[z].NRBNODE" << std::endl; 
+			system("PAUSE "); 
+		}
+
 		nr[z].NRBA = new int[nr[z].NRBNODE];
 		for (i = 0; i < nr[z].NRBNODE; i++) {
 			nr[z].NRBA[i] = dummy2[i];

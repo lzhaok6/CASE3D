@@ -64,7 +64,7 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT) {
 	//DEFINE LOCAL ELEMENT COORDINATES
 	//LOCAL COORDINATE [-1,1]
 
-	//X DIRECTION
+	//xi DIRECTION
 	t.MCOORD[0][0] = -1.0; //good
 	t.MCOORD[1][0] = 1.0; //good
 	t.MCOORD[2][0] = 1.0; //good
@@ -73,7 +73,7 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT) {
 	t.MCOORD[5][0] = 1.0; //good 
 	t.MCOORD[6][0] = 1.0; //good 
 	t.MCOORD[7][0] = -1.0; //good
-	//Y DIRECTION
+	//eta DIRECTION
 	t.MCOORD[0][1] = -1.0;
 	t.MCOORD[1][1] = -1.0;
 	t.MCOORD[2][1] = 1.0;
@@ -82,7 +82,7 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT) {
 	t.MCOORD[5][1] = -1.0;
 	t.MCOORD[6][1] = 1.0;
 	t.MCOORD[7][1] = 1.0;
-	//Z DIRECTION
+	//zeta DIRECTION
 	t.MCOORD[0][2] = -1.0;
 	t.MCOORD[1][2] = -1.0;
 	t.MCOORD[2][2] = -1.0;
@@ -91,6 +91,18 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT) {
 	t.MCOORD[5][2] = 1.0;
 	t.MCOORD[6][2] = 1.0;
 	t.MCOORD[7][2] = 1.0;
+
+	//Define 2D local coordinate
+	//xi DIRECTION
+	t.MCOORD_2D[0][0] = -1.0; //good
+	t.MCOORD_2D[1][0] = 1.0; //good
+	t.MCOORD_2D[2][0] = 1.0; //good
+	t.MCOORD_2D[3][0] = -1.0; //good 
+	//eta DIRECTION
+	t.MCOORD_2D[0][1] = -1.0;
+	t.MCOORD_2D[1][1] = -1.0;
+	t.MCOORD_2D[2][1] = 1.0;
+	t.MCOORD_2D[3][1] = 1.0;
 
 	/*
 	//X DIRECTION
