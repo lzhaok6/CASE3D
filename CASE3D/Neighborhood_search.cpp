@@ -6,7 +6,6 @@
 #include <math.h>
 #include <iostream>
 #include <fstream>
-#include <iostream>
 #include <Eigen/Dense>
 #include <Eigen/LU>
 #include <vector>
@@ -18,14 +17,6 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	extern OWETSURF ol[owsfnumber];
 	extern stru_wet_surf ss; //data structure used to store the properties on the structure wetted surface
 	int i, j, k, l, m, n, o, z, h, e;
-
-	/*
-	Eigen::Matrix3d A;
-	A(0, 0) = 1; A(0, 1) = 2; A(0, 2) = 3;
-	A(1, 0) = 4; A(1, 1) = 6; A(1, 2) = 2; 
-	A(2, 0) = 1; A(2, 1) = 9; A(2, 2) = 0; 
-	std::cout << A.inverse() << std::endl; 
-	*/
 
 	int elenode2D;
 	if (element_type == 0) { //hex element
@@ -91,8 +82,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	}
 
 	//First bring in the structural wetted surface mesh into the code
-	std::ifstream infile("C:/Users/lzhaok6/Desktop/FSP_canopy_0.3_abaqus_MpCCI_explicit_sym_0.3048wl.inp"); //The Abaqus input file
-	if (!infile) {
+	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.3_abaqus_MpCCI_explicit_sym_0.3048wl.inp"); //The Abaqus input file
+	if (!infile_algo5) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
 	}
@@ -111,7 +102,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	std::vector<int> sidesets_start;
 	std::vector<std::string> sidesets_name;
 	std::vector<int> surface;
-	while (getline(infile, csvLine))
+	while (getline(infile_algo5, csvLine))
 	{
 		ct = ct + 1; //the current line number (starting from 0)
 		std::istringstream csvStream(csvLine); //csvStream is a stream (turn the string csvLine to stream csvStream)
@@ -174,16 +165,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		ss.GCOORD_stru[i - nodestart][2] = stod(output[i][3]) + zoffset;
 	}
 	 
-	//Create the pressure on structure gauss nodes
-	ss.P_gs = new double*[(hprefg + 1)*(hprefg + 1)];
-	for (i = 0; i < (hprefg + 1)*(hprefg + 1); i++) {
-		ss.P_gs[i] = new double[ss.ELE_stru];
-	}
-	for (i = 0; i < (hprefg + 1)*(hprefg + 1); i++) {
-		for (j = 0; j < ss.ELE_stru; j++) {
-			ss.P_gs[i][j] = 0.0;
-		}
-	}
+
 
 	//Find the element set name corresponding to the structural wetted surface
 	std::vector<std::string> surface_name; 
@@ -297,6 +279,17 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		system("PAUSE ");
 	}
 
+	//Create the pressure on structure gauss nodes
+	ss.P_gs = new double*[(hprefg + 1)*(hprefg + 1)];
+	for (i = 0; i < (hprefg + 1)*(hprefg + 1); i++) {
+		ss.P_gs[i] = new double[ss.ELE_stru];
+	}
+	for (i = 0; i < (hprefg + 1)*(hprefg + 1); i++) {
+		for (j = 0; j < ss.ELE_stru; j++) {
+			ss.P_gs[i][j] = 0.0;
+		}
+	}
+
 	//Determine the normal direction of the structure wetted surface elements for the calculation of the fluid force (pointing into the structure)
 	ss.norm_stru = new double*[ss.ELE_stru];
 	for (i = 0; i < ss.ELE_stru; i++) {
@@ -393,11 +386,11 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 					for (e = 0; e < 2; e++) { //loop through nominator and denominator in basis function expression
 						if (e != h) {
 							nomx *= (gsp[i] - basep[e]);
-							denomx *= (gsp[h] - basep[e]);
+							denomx *= (basep[h] - basep[e]);
 						}
 						if (e != k) {
 							nomy *= (gsp[j] - basep[e]);
-							denomy *= (gsp[k] - basep[e]);
+							denomy *= (basep[k] - basep[e]);
 						}
 					}
 					ss.phi_stru[ss.LNA_stru[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
@@ -476,9 +469,6 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 
 	//Generate the model file
 	if (mappingalgo == 5) {
-		
-		std::ofstream myfile_algo5;
-		myfile_algo5.open("model.txt");
 		int flag;
 		ss.IEN_stru_MpCCI = new int*[4]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
 		for (i = 0; i < 4; i++) {
@@ -517,27 +507,33 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		for (i = 0; i < ss.Node_stru; i++) {
 			ss.Node_glob[i] = dummy[i];
 		}
-		std::string wetsurface_name;
-		wetsurface_name = "EF wetsurface" + std::to_string(1) + " 3 1 " + std::to_string(0); //gonna be quad element no matter what element type is used by the fluid
-		myfile_algo5 << wetsurface_name << std::endl;
-		myfile_algo5 << "NODES " << ss.Node_stru << std::endl;
-		for (i = 0; i < ss.Node_stru; i++) {
-			myfile_algo5 << i << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][0] << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][1] << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][2] << " " << std::endl;
-		}
-		myfile_algo5 << "ELEMENTS " << ss.ELE_stru << std::endl;
-		//Output connectivity matrix
-		for (i = 0; i < ss.ELE_stru; i++) {
-			myfile_algo5 << i;
-			for (j = 0; j < 4; j++) {
-				myfile_algo5 << " " << ss.IEN_stru_MpCCI[j][i] - 1; //node numbering starts from 0 in model file
+	
+		//start writing the file
+		if (debug_algo5 == 0) {
+			std::string wetsurface_name;
+			//wetsurface_name = "EF wetsurface" + std::to_string(1) + " 3 1 " + std::to_string(0); //gonna be quad element no matter what element type is used by the fluid
+			wetsurface_name = "EF wetsurface1 3 1 0";
+			std::ofstream myfile_algo5;
+			myfile_algo5.open("model.txt");
+			myfile_algo5 << wetsurface_name << std::endl;
+			myfile_algo5 << "NODES " << ss.Node_stru << std::endl;
+			for (i = 0; i < ss.Node_stru; i++) {
+				myfile_algo5 << i << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][0] << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][1] << " " << ss.GCOORD_stru[ss.Node_glob[i] - 1][2] << " " << std::endl;
 			}
-			myfile_algo5 << std::endl;
+			myfile_algo5 << "ELEMENTS " << ss.ELE_stru << std::endl;
+			//Output connectivity matrix
+			for (i = 0; i < ss.ELE_stru; i++) {
+				myfile_algo5 << i;
+				for (j = 0; j < 4; j++) {
+					myfile_algo5 << " " << ss.IEN_stru_MpCCI[j][i] - 1; //node numbering starts from 0 in model file
+				}
+				myfile_algo5 << std::endl;
+			}
 		}
-		
 	}
 
 	int gs_nearest; //used to store the nearest fluid node on the fluid FSI interface
-	int flu_nearest; //used to store the nearest structure node on the structural wetted surface
+	int flu_nearest = 0; //used to store the nearest structure node on the structural wetted surface
 	//Container to store the searching result (one gauss point corresponds to a fluid element)
 	int** FSNEL_stru_gs; //[gauss point][structural wetted surface element]
 
@@ -803,7 +799,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						range[0] = pow(pow(GCOORD[ol[z].IEN_gb[j][i] - 1][0] - ss.GCOORD_stru[ss.IEN_stru[l][k] - 1][0], 2) + pow(GCOORD[ol[z].IEN_gb[j][i] - 1][1] - ss.GCOORD_stru[ss.IEN_stru[l][k] - 1][1], 2) + pow(GCOORD[ol[z].IEN_gb[j][i] - 1][2] - ss.GCOORD_stru[ss.IEN_stru[l][k] - 1][2], 2), 0.5);
 						if (range[0] < range[1]) {
 							range[1] = range[0]; //range[1] is used to store the shortest distance so far
-							flu_nearest = ss.IEN_stru_MpCCI[l][k];
+							if (debug_algo5 == 0) {
+								flu_nearest = ss.IEN_stru_MpCCI[l][k];
+							}
 						}
 						//At the same time, store the node with the shorted distance to the gauss node under searching. If the node is orphan, we use the value on this fluid node for the structure gauss node
 						if (range[0] > search_range) { //One of the corner nodes in the element is out of the searching range. Jump through this element

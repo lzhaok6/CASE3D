@@ -687,10 +687,13 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	current_time = T[0];
 
 	interface_mappingstruct in;
-	in = interface_mapping(1, GCOORD, WP, IEN, LNA_3D);
+	
+	if (debug_algo5 == 0) {
+		in = interface_mapping(1, GCOORD, WP, IEN, LNA_3D);
+	}
 	dotransfer();
 	in = interface_mapping(0, GCOORD, WP, IEN, LNA_3D);
-
+	
 	//Generate the information file
 	std::string name3 = "parameters_" + timestr + ".txt";
 	std::ofstream myfile2;
@@ -963,15 +966,14 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//start = std::clock();
 		//=======================define double* nodeforce in fluid code==========================//
 		//mapping the fluid force ABF from user defined mesh to MpCCI defined mesh on coupling surface using interpolation
-		in = interface_mapping(1, GCOORD, WP, IEN, LNA_3D);
+		if (debug_algo5 == 0) {
+			in = interface_mapping(1, GCOORD, WP, IEN, LNA_3D);
+		}
 		//after this subroutine, the nodeforce should already be mapped onto coupling surface (data.h)
 		//int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int NNODE, double *Z
-
 		dotransfer();
-
 		//=============map nodal displacement from coupled surface to fluid mesh===================//
 		in = interface_mapping(0, GCOORD, WP, IEN, LNA_3D);
-
 		if (tfm == 0) { //Scattered field model
 			//double angle = 0.0; //cos value
 			double r = 0.0;

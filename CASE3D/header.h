@@ -296,6 +296,7 @@ const double output_int = 5e-4; //output file time interval (0.5ms)
 const int debug = 0; //is the code in debug mode?
 const int debug2 = 0; 
 const int debug3 = 0; 
+const int debug_algo5 = 0; 
 const int fsdebug = 0;
 const int tfm = 1; //is total field model used? 
 const int tensorfactorization = 0;

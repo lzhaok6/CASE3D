@@ -138,6 +138,10 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					for (q = 0; q < hprefg + 1; q++) {
 						ss.P_gs[ss.LNA_gs[h][q] - 1][l] = 0.0; //initialize the value 
 						if (ss.orphan_flag_gs[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] == 0) { //the node is not an orphan
+							if (l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q > ss.ELE_stru*4 - 1) {
+								std::cout << "access violation" << std::endl; 
+								system("PAUSE ");
+							}
 							//local coordinate of the projected structure gauss point
 							lcx = ss.gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][0];
 							lcy = ss.gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][1];
@@ -182,7 +186,6 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					wsflist[0]->nodeforce[3 * (ss.IEN_stru_MpCCI[i][l] - 1) + 2] = 0.0;
 				}
 			}
-			ct = 0;
 			//phi_femg: the linear shape function value at base mesh Gauss-Legendre nodes
 			for (l = 0; l < ss.ELE_stru; l++) {
 				for (i = 0; i < 2; i++) {
@@ -190,7 +193,11 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						for (u = 0; u < hprefg + 1; u++) { //u v stands for y x
 							for (v = 0; v < hprefg + 1; v++) {
 								for (n = 0; n < 3; n++) {
-									wsflist[ct]->nodeforce[3 * (ss.IEN_stru_MpCCI[ss.LNA_stru[i][j] - 1][l] - 1) + n] //force in m direction
+									if (ss.IEN_stru_MpCCI[ss.LNA_stru[i][j] - 1][l] > 435) {
+										std::cout << "Reading violation" << std::endl; 
+										system("PAUSE ");
+									}
+									wsflist[0]->nodeforce[3 * (ss.IEN_stru_MpCCI[ss.LNA_stru[i][j] - 1][l] - 1) + n] //force in m direction
 										+= ss.norm_stru[l][n] * ss.W_stru[u] * ss.W_stru[v] * ss.P_gs[ss.LNA_gs[v][u] - 1][l] * ss.phi_stru[ss.LNA_stru[i][j] - 1][v][u] * ss.Jacob_stru[l][u*(hprefg + 1) + v];
 									//ss.phi_stru is the linear shape function value on gauss node (Gauss-Legendre)
 								}
@@ -199,24 +206,18 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					}
 				}
 			}
+			double BF_val;
+			BF_val = 0.0;
+			for (j = 0; j < wsflist[0]->nnodes; j++) {
+				for (k = 0; k < 3; k++) {
+					BF_val += wsflist[0]->nodeforce[j * 3 + k];
+				}
+			}
+			std::cout << " " << std::endl;
 		}
 
-		/*
-		double BF_val[4];
-		ct = 0;
-		for (i = 0; i < owsfnumber; i++) {
-			if (ol[i].FSNEL > 0) {
-				BF_val[i] = 0.0;
-				for (j = 0; j < wsflist[ct]->nnodes; j++) {
-					for (k = 0; k < 3; k++) {
-						BF_val[i] += wsflist[ct]->nodeforce[j * 3 + k];
-					}
-				}
-				ct += 1;
-			}
-		}
-		std::cout << " " << std::endl;
-		*/
+		
+
 		break;
 
 	case 0: //map disp from coupling mesh(fem mesh) to user defined mesh(sem mesh)
@@ -339,6 +340,10 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 											}
 											phig = (nomx / denomx)*(nomy / denomy);
 											for (n = 0; n < 3; n++) {
+												if (ss.IEN_stru_MpCCI[ss.LNA_stru[u][v] - 1][ol[z].flu_stru[l] - 1] > 435 || ol[z].flu_stru[l] > 400 || ss.IEN_stru[ss.LNA_stru[u][v] - 1][ol[z].flu_stru[l] - 1] > 1957) {
+													std::cout << "access violation" << std::endl; 
+													system("PAUSE ");
+												}
 												DISPTEMP = wsflist[0]->nodecoord[3 * (ss.IEN_stru_MpCCI[ss.LNA_stru[u][v] - 1][ol[z].flu_stru[l] - 1] - 1) + n] - ss.GCOORD_stru[ss.IEN_stru[ss.LNA_stru[u][v] - 1][ol[z].flu_stru[l] - 1] - 1][n];
 												ol[z].DISP[ol[z].IEN_gb[i*NINT + j][l] - 1][n] += DISPTEMP * phig;
 											}
