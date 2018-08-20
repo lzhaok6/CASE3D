@@ -585,7 +585,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						flag = 1;
 						//First determine if the fluid element is inside the searching range
 						for (l = 0; l < elenode2D; l++) {
-							range[0] = pow(pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][0] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[j * (hprefg + 1) + q][i] - 1][0], 2) + pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][1] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[j * (hprefg + 1) + q][i] - 1][1], 2) + pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][2] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[j * (hprefg + 1) + q][i] - 1][2], 2), 0.5);
+							range[0] = pow(pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][0] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][0], 2) + pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][1] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][1], 2) + pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][2] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][2], 2), 0.5);
 							if (range[0] < range[1]) {
 								range[1] = range[0]; //range[1] is used to store the shortest distance so far
 								gs_nearest = ol[e].IEN_flu_2D[l][k];
@@ -603,7 +603,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							x1 = GCOORD[ol[e].IEN_flu_2D[0][k] - 1][0]; x2 = GCOORD[ol[e].IEN_flu_2D[1][k] - 1][0]; x3 = GCOORD[ol[e].IEN_flu_2D[2][k] - 1][0];
 							y1 = GCOORD[ol[e].IEN_flu_2D[0][k] - 1][1]; y2 = GCOORD[ol[e].IEN_flu_2D[1][k] - 1][1]; y3 = GCOORD[ol[e].IEN_flu_2D[2][k] - 1][1];
 							z1 = GCOORD[ol[e].IEN_flu_2D[0][k] - 1][2]; z2 = GCOORD[ol[e].IEN_flu_2D[1][k] - 1][2]; z3 = GCOORD[ol[e].IEN_flu_2D[2][k] - 1][2];
-							xn = ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[j * (hprefg + 1) + q][i] - 1][0]; yn = ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[j * (hprefg + 1) + q][i] - 1][1]; zn = ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[j * (hprefg + 1) + q][i] - 1][2];
+							xn = ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][0]; yn = ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][1]; zn = ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][2];
 							b(0) = -(-(-x1 + x3)*xn - (-y1 + y3)*yn - (-z1 + z3)*zn);
 							b(1) = -(-(-x1 + x2)*xn - (-y1 + y2)*yn - (-z1 + z2)*zn);
 							b(2) = -(-(x2*y1 - x3*y1 - x1*y2 + x3 *y2 + x1 *y3 - x2 *y3) *z1 -
@@ -644,9 +644,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 								if (local(0, 0) >= 0 && local(0, 0) <= 1 && local(1, 0) >= 0 && local(1, 0) <= 1 && local(2, 0) >= 0 && local(2, 0) <= 1
 									&& local(0, 0) + local(1, 0) + local(2, 0) <= 1) {
 									//The point is indeed inside the searched element and we can store the local coordinate in that element
-									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j][0] = local(0, 0); //xi
-									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j][1] = local(1, 0); //eta
-									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j][2] = local(2, 0); //zeta
+									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][0] = local(0, 0); //xi
+									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][1] = local(1, 0); //eta
+									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][2] = local(2, 0); //zeta
 									orphan = 0;
 								}
 								else { //The node is an orphan
