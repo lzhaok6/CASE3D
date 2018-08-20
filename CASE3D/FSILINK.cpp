@@ -18,7 +18,6 @@ void FSILINK(int*** LNA) {
 	//extern int owsfnumber;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[owsfnumber];
-	extern stru_wet_surf ss; //data structure used to store the properties on the structure wetted surface
 
 	if (element_type == 0) { //hex element
 		//MpCCI model file is written in meshgeneration code. 
@@ -139,10 +138,6 @@ void FSILINK(int*** LNA) {
 				}
 			}
 		}
-	}
-
-	if (mappingalgo == 5) {
-
 	}
 
 

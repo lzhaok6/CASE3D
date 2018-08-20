@@ -43,24 +43,24 @@ typedef struct owetsurf {
 	//double *WP; //wet surface pressure, representing AP, CP, DP previously
 	double *WPIN; //wet surface incident pressure, APIN, ...
 	double*** FPMASTER;
-	double*** FPMASTER_2D; 
+	double*** FPMASTER_2D;
 	int **IEN_2D; //wet surface connectivity matrix (used to write MpCCI model file and information mapping. The wetted surface information from MpCCI is defined this way)
 	int **IEN_algo2; //
 	int **IEN_gb; //connectivity matrix on 2D surface pointing to global points.
-	int FSNEL; 
+	int FSNEL;
 	int *GIDF;   //Coupled fluid element array (numbering)
 	int *GIDN_MpCCI; //wet nodes on coupling surfaces
 	int GIDNct_MpCCI; //wet nodes number on coupling surfaces
-	int *GIDN; 
-	int GIDNct; 
+	int *GIDN;
+	int GIDNct;
 	double** norm; //store the normal direction of linear elements 
 	double** Jacob_2D; //the Jacobian value of 2D element on wetted surface
-	double** Jacob_test; 
+	double** Jacob_test;
 	int LNA_2D[NINT][NINT];
 	int LNA_algo2[2][2]; //The local node orientation of the linear element in algorithm2
 	//int FP[NINT*NINT]; //The 1D version of DP in order to facilitate the calculation of FPMASTER
 	int FP_temp[NINT*NINT];
-	int **FP; 
+	int **FP;
 	int FP_2D[NINT*NINT];
 	double** JACOB;
 	int Jacob_face[2]; //Used to identify which coordinate dimension (x,y or z/xi,eta,zeta?) to be used for surface 2D Jacobian matrix calculation.  
@@ -70,24 +70,26 @@ typedef struct owetsurf {
 	double**** xs;
 	double****xs_2D; //for the 2D elements on wetted surface
 	double ***phi_fem;
-	int LNA_JB2D[4]; 
+	int LNA_JB2D[4];
 	//LNA_JB2D is the node numbering of the wetted surface 2D element in the linear element numbering scheme. Used to derive the 2D Jacobian matrix. The numbering sequence set to be the same as LNA_norm which is the local numbering of the 2D element used to obtain the coordinate. 
 	//LNA_norm is originally devised for mapping algorithm 2. However, it is leveraged in 2D Jacobian determinant derivation (assuming linear geometric mapping) because it numbering is the corner nodes of the 2D wetted surface element.  
 	double****GSHL_2D;
-	int dir; 
-	double *dimension; 
+	int dir;
+	double *dimension;
 	double** flu_local;//used to store the local coordinate of the projected fluid point on structural elements
-	int* flu_stru; 
-	std::vector<int>orphan_flag_flu; 
+	int* flu_stru;
+	//std::vector<int>orphan_flag_flu; 
+	int* orphan_flag_flu;
 	double** flu_stru_global;
-	int** IEN_flu_2D; 
+	int** IEN_flu_2D;
 } OWETSURF;
 
 typedef struct stru_wet_surf {
 	int*gs_flu; //used to store the corresponding fluid element or fluid point (for orphan node)
 	double**gs_flu_global;
 	double**gs_flu_local; //used to store the local coordinate of the projected structural gauss point on fluid element
-	std::vector<int>orphan_flag_gs; //the container to store the node numbering of orphan nodes
+	//std::vector<int>orphan_flag_gs; //the container to store the node numbering of orphan nodes
+	int* orphan_flag_gs; 
 	int ELE_stru; //total number of structural wetted surface elements
 	int** IEN_stru; //Connectivity matrix of the structural wetted surface elements
 	double **GCOORD_stru; //the coordinate of structure nodes
@@ -104,6 +106,10 @@ typedef struct stru_wet_surf {
 	double*** phi_stru;
 	double**** GSHL_2D; 
 	double****xs_2D; //for the 2D elements on wetted surface
+	int** IEN_stru_norm;
+	double **GCOORD_stru_gs; //the coordinate of structure wetted surface gauss points
+	int** IEN_stru_gs;
+	int gs_num; 
 }STRU_WET_SURF;
 
 //Store the properties on NRB surface (currently just one)
@@ -306,6 +312,7 @@ const int FEM = 0; //Is this a first order FEM code?
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
 const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
 const int nrbsurfnumber = 4; //The number of NRB surface. 
+const int ssnumber = 4; //The number of structural wetted surface
 //const int owsfnumber = 1; //For the FSP case, we defined 4 wetted surfaces. 
 //const int nrbsurfnumber = 1; //The number of NRB surface. 
 const int wt_pys_num[4] = { 0,1,2,3 };  //the physical group number that corresponds to the wet surface (physical group 3)

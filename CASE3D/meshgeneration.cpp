@@ -22,7 +22,6 @@ struct meshgenerationstruct meshgeneration() {
 	LOCAL_NODEstruct c;
 	extern OWETSURF ol[owsfnumber];
 	extern NRBSURF nr[nrbsurfnumber];
-	extern stru_wet_surf ss; //data structure used to store the properties on the structure wetted surface
 	c = LOCAL_NODE(N);
 
 	//We are assuming there is only one wetted surface. Thus, ol[0] is used throughout the loop below. 
@@ -33,7 +32,7 @@ struct meshgenerationstruct meshgeneration() {
 	//system("PAUSE "); 
 	//std::ifstream infile("Bleich_Sandler_0.1surface_0.01m.msh");
 	//::ifstream infile("../../Bleich_Sandler_0.1surface_0.01m.msh");
-	std::ifstream infile("C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2.msh");
+	std::ifstream infile("C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=1.msh");
 	if (!infile) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");

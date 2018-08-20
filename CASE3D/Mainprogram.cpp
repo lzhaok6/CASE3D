@@ -22,7 +22,7 @@ double time_step_size;
 double current_time;
 OWETSURF ol[owsfnumber]; //declear the data structure globally
 NRBSURF nr[nrbsurfnumber]; 
-STRU_WET_SURF ss;
+STRU_WET_SURF ss[ssnumber];
 int main()
 {	
 	double LMAX;

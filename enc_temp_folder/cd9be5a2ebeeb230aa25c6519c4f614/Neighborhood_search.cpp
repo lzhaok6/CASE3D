@@ -399,7 +399,6 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		}
 	}
 
-	TD_LOCAL_NODEstruct ct_gs;
 	//Interpolate the ss.GCOORD_stru to obtain the GCOORD_stru_gs
 	for (z = 0; z < ssnumber; z++) {
 		ss[z].GCOORD_stru_gs = new double*[ss[z].ELE_stru*(hprefg + 1)*(hprefg + 1)];
@@ -420,7 +419,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			}
 		}
 		//Derive the coordinate of the gauss nodes 
-		//TD_LOCAL_NODEstruct ct_gs;
+		TD_LOCAL_NODEstruct ct_gs;
 		ct_gs = TD_LOCAL_NODE(hprefg);
 		TD_LOCAL_NODEstruct ct_ln;
 		ct_ln = TD_LOCAL_NODE(1);

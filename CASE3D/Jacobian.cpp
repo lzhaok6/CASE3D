@@ -12,7 +12,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 	JACOBIANstruct t;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[nrbsurfnumber];
-	extern stru_wet_surf ss; //data structure used to store the properties on the structure wetted surface
+	extern STRU_WET_SURF ss[ssnumber]; //data structure used to store the properties on the structure wetted surface
 
 	if (element_type == 0) { //hex element
 		//initialize t.XS
@@ -402,66 +402,68 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 	LOCAL_GSHAPEstruct lg;
 	lg = LOCAL_GSHAPE(gq.S, LNA, hprefg + 1);
 
-	ss.GSHL_2D = new double***[3]; 
-	for (i = 0; i < 3; i++) {
-		ss.GSHL_2D[i] = new double**[4]; //4 points
-		for (j = 0; j < 4; j++) {
-			ss.GSHL_2D[i][j] = new double*[hprefg + 1];
-			for (k = 0; k < hprefg + 1; k++) {
-				ss.GSHL_2D[i][j][k] = new double[hprefg + 1];
-			}
-		}
-	}
-	for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
-		for (j = 0; j < hprefg + 1; j++) { // j k are integration point where discrete value of shape function is derived
-			for (k = 0; k < hprefg + 1; k++) {
-				ss.GSHL_2D[2][i][j][k] = (1.0 / 4.0)*(1 + lg.MCOORD_2D[i][0] * gq.S[j])*(1 + lg.MCOORD_2D[i][1] * gq.S[k]);
-				//not derivative
-				ss.GSHL_2D[0][i][j][k] = (1.0 / 4.0)*lg.MCOORD_2D[i][0] * (1 + lg.MCOORD_2D[i][1] * gq.S[k]);
-				//xi direction derivative
-				ss.GSHL_2D[1][i][j][k] = (1.0 / 4.0)*lg.MCOORD_2D[i][1] * (1 + lg.MCOORD_2D[i][0] * gq.S[j]);
-				//eta direction derivatived
-			}
-		}
-	}
-	ss.Jacob_stru = new double*[ss.ELE_stru];
-	for (i = 0; i < ss.ELE_stru; i++) {
-		ss.Jacob_stru[i] = new double[(hprefg + 1)*(hprefg + 1)];
-	}
-	ss.xs_2D = new double***[ss.ELE_stru];
-	for (i = 0; i < ss.ELE_stru; i++) {
-		ss.xs_2D[i] = new double**[3];
-		for (j = 0; j < 3; j++) {
-			ss.xs_2D[i][j] = new double*[2];
-			for (k = 0; k < 2; k++) {
-				ss.xs_2D[i][j][k] = new double[(hprefg + 1)*(hprefg + 1)];
-			}
-		}
-	}
-	for (i = 0; i < ss.ELE_stru; i++) {
-		for (j = 0; j < 3; j++) {
-			for (k = 0; k < 2; k++) {
-				for (l = 0; l < (hprefg + 1)*(hprefg + 1); l++) {
-					ss.xs_2D[i][j][k][l] = 0.0;
+	for (z = 0; z < ssnumber; z++) {
+		ss[z].GSHL_2D = new double***[3];
+		for (i = 0; i < 3; i++) {
+			ss[z].GSHL_2D[i] = new double**[4]; //4 points
+			for (j = 0; j < 4; j++) {
+				ss[z].GSHL_2D[i][j] = new double*[hprefg + 1];
+				for (k = 0; k < hprefg + 1; k++) {
+					ss[z].GSHL_2D[i][j][k] = new double[hprefg + 1];
 				}
 			}
 		}
-	}
-	for (m = 0; m < ss.ELE_stru; m++) { //loop through each element on wetted surface
-		for (i = 0; i < (hprefg + 1); i++) {
-			for (j = 0; j < (hprefg + 1); j++) {
-				for (l = 0; l < 4; l++) { //4 nodes on the linear element
-					//Is the l in ss.GSHL_2D[0][l][i][j] and in ss.LNA_norm[l] must be consistent (the same surface). 
-					ss.xs_2D[m][0][0][i * (hprefg + 1) + j] += ss.GSHL_2D[0][l][i][j] * ss.GCOORD_stru[ss.IEN_stru[l][m] - 1][0]; //dx/dnu
-					ss.xs_2D[m][1][0][i * (hprefg + 1) + j] += ss.GSHL_2D[0][l][i][j] * ss.GCOORD_stru[ss.IEN_stru[l][m] - 1][1]; //dy/dnu
-					ss.xs_2D[m][2][0][i * (hprefg + 1) + j] += ss.GSHL_2D[0][l][i][j] * ss.GCOORD_stru[ss.IEN_stru[l][m] - 1][2]; //dz/dnu
-					ss.xs_2D[m][0][1][i * (hprefg + 1) + j] += ss.GSHL_2D[1][l][i][j] * ss.GCOORD_stru[ss.IEN_stru[l][m] - 1][0]; //dx/dmu
-					ss.xs_2D[m][1][1][i * (hprefg + 1) + j] += ss.GSHL_2D[1][l][i][j] * ss.GCOORD_stru[ss.IEN_stru[l][m] - 1][1]; //dy/dmu
-					ss.xs_2D[m][2][1][i * (hprefg + 1) + j] += ss.GSHL_2D[1][l][i][j] * ss.GCOORD_stru[ss.IEN_stru[l][m] - 1][2]; //dz/dmu
+		for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
+			for (j = 0; j < hprefg + 1; j++) { // j k are integration point where discrete value of shape function is derived
+				for (k = 0; k < hprefg + 1; k++) {
+					ss[z].GSHL_2D[2][i][j][k] = (1.0 / 4.0)*(1 + lg.MCOORD_2D[i][0] * gq.S[j])*(1 + lg.MCOORD_2D[i][1] * gq.S[k]);
+					//not derivative
+					ss[z].GSHL_2D[0][i][j][k] = (1.0 / 4.0)*lg.MCOORD_2D[i][0] * (1 + lg.MCOORD_2D[i][1] * gq.S[k]);
+					//xi direction derivative
+					ss[z].GSHL_2D[1][i][j][k] = (1.0 / 4.0)*lg.MCOORD_2D[i][1] * (1 + lg.MCOORD_2D[i][0] * gq.S[j]);
+					//eta direction derivatived
 				}
-				ss.Jacob_stru[m][i * (hprefg + 1) + j] = pow(pow((ss.xs_2D[m][0][0][i * (hprefg + 1) + j] * ss.xs_2D[m][1][1][i * (hprefg + 1) + j] - ss.xs_2D[m][0][1][i * (hprefg + 1) + j] * ss.xs_2D[m][1][0][i * (hprefg + 1) + j]), 2) +
-					pow((ss.xs_2D[m][0][0][i * (hprefg + 1) + j] * ss.xs_2D[m][2][1][i * (hprefg + 1) + j] - ss.xs_2D[m][0][1][i * (hprefg + 1) + j] * ss.xs_2D[m][2][0][i * (hprefg + 1) + j]), 2) +
-					pow((ss.xs_2D[m][1][0][i * (hprefg + 1) + j] * ss.xs_2D[m][2][1][i * (hprefg + 1) + j] - ss.xs_2D[m][1][1][i * (hprefg + 1) + j] * ss.xs_2D[m][2][0][i * (hprefg + 1) + j]), 2), 0.5);
+			}
+		}
+		ss[z].Jacob_stru = new double*[ss[z].ELE_stru];
+		for (i = 0; i < ss[z].ELE_stru; i++) {
+			ss[z].Jacob_stru[i] = new double[(hprefg + 1)*(hprefg + 1)];
+		}
+		ss[z].xs_2D = new double***[ss[z].ELE_stru];
+		for (i = 0; i < ss[z].ELE_stru; i++) {
+			ss[z].xs_2D[i] = new double**[3];
+			for (j = 0; j < 3; j++) {
+				ss[z].xs_2D[i][j] = new double*[2];
+				for (k = 0; k < 2; k++) {
+					ss[z].xs_2D[i][j][k] = new double[(hprefg + 1)*(hprefg + 1)];
+				}
+			}
+		}
+		for (i = 0; i < ss[z].ELE_stru; i++) {
+			for (j = 0; j < 3; j++) {
+				for (k = 0; k < 2; k++) {
+					for (l = 0; l < (hprefg + 1)*(hprefg + 1); l++) {
+						ss[z].xs_2D[i][j][k][l] = 0.0;
+					}
+				}
+			}
+		}
+		for (m = 0; m < ss[z].ELE_stru; m++) { //loop through each element on wetted surface
+			for (i = 0; i < (hprefg + 1); i++) {
+				for (j = 0; j < (hprefg + 1); j++) {
+					for (l = 0; l < 4; l++) { //4 nodes on the linear element
+						//Is the l in ss[z].GSHL_2D[0][l][i][j] and in ss[z].LNA_norm[l] must be consistent (the same surface). 
+						ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][0]; //dx/dnu
+						ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][1]; //dy/dnu
+						ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][2]; //dz/dnu
+						ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][0]; //dx/dmu
+						ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][1]; //dy/dmu
+						ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][2]; //dz/dmu
+					}
+					ss[z].Jacob_stru[m][i * (hprefg + 1) + j] = pow(pow((ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j]), 2) +
+						pow((ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j]), 2) +
+						pow((ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j]), 2), 0.5);
+				}
 			}
 		}
 	}
