@@ -688,9 +688,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 	interface_mappingstruct in;
 	
-	if (debug_algo5 == 0) {
-		in = interface_mapping(1, GCOORD, WP, IEN, LNA_3D);
-	}
+	in = interface_mapping(1, GCOORD, WP, IEN, LNA_3D);
 	dotransfer();
 	in = interface_mapping(0, GCOORD, WP, IEN, LNA_3D);
 	
@@ -925,7 +923,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						else {
 							WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0];
 						}
-													   //ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
+						//ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
 					//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
 					}
 					else { //absolute pressure
@@ -966,9 +964,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//start = std::clock();
 		//=======================define double* nodeforce in fluid code==========================//
 		//mapping the fluid force ABF from user defined mesh to MpCCI defined mesh on coupling surface using interpolation
-		if (debug_algo5 == 0) {
-			in = interface_mapping(1, GCOORD, WP, IEN, LNA_3D);
-		}
+		in = interface_mapping(1, GCOORD, WP, IEN, LNA_3D);
 		//after this subroutine, the nodeforce should already be mapped onto coupling surface (data.h)
 		//int fluid2structure, int**IEN_3D, int***LNA_3D, int**LNA_2D, int NNODE, double *Z
 		dotransfer();

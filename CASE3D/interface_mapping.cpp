@@ -133,15 +133,26 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			double lcx, lcy, lcz;
 			double nomx, nomy, nomz; double denomx, denomy, denomz; 
 			double phig; 
+
+			/*
+			if (debug_algo5 == 1) {
+				for (l = 0; l < ss.ELE_stru; l++) {
+					for (ii = 0; ii < NINT; ii++) {
+						for (jj = 0; jj < NINT; jj++) {
+							for (kk = 0; kk < NINT; kk++) {
+								WP[IEN[LNA[ii][jj][kk] - 1][ss.gs_flu[l] - 1] - 1] = 1.0;
+							}
+						}
+					}
+				}
+			}
+			*/
+
 			for (l = 0; l < ss.ELE_stru; l++) {
 				for (h = 0; h < hprefg + 1; h++) {
 					for (q = 0; q < hprefg + 1; q++) {
 						ss.P_gs[ss.LNA_gs[h][q] - 1][l] = 0.0; //initialize the value 
 						if (ss.orphan_flag_gs[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] == 0) { //the node is not an orphan
-							if (l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q > ss.ELE_stru*4 - 1) {
-								std::cout << "access violation" << std::endl; 
-								system("PAUSE ");
-							}
 							//local coordinate of the projected structure gauss point
 							lcx = ss.gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][0];
 							lcy = ss.gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][1];
@@ -166,18 +177,47 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 											}
 										}
 										phig = (nomx / denomx)*(nomy / denomy)*(nomz / denomz);
-										ss.P_gs[ss.LNA_gs[h][q] - 1][l] += WP[IEN[LNA[ii][jj][kk] - 1][ss.gs_flu[l] - 1] - 1] * phig;
+										ss.P_gs[ss.LNA_gs[h][q] - 1][l] += WP[IEN[LNA[ii][jj][kk] - 1][ss.gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1] - 1] * phig;
 										//P_gs is created in Neighborhood_search.cpp 
 									}
 								}
 							}
 						}
 						else { //the node is an orphan, directly give the value on the nearest node 
-							ss.P_gs[ss.LNA_gs[h][q] - 1][l] = WP[ss.gs_flu[l] - 1];
+							ss.P_gs[ss.LNA_gs[h][q] - 1][l] = WP[ss.gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1];
 						}
 					}
 				}
 			}
+			double hd = 0.0;
+			if (debug_algo5 == 1) {
+				for (l = 0; l < ss.ELE_stru; l++) {
+					for (h = 0; h < hprefg + 1; h++) {
+						for (q = 0; q < hprefg + 1; q++) {
+							hd += ss.P_gs[ss.LNA_gs[h][q] - 1][l];
+						}
+					}
+				}
+			} //wrong 
+			/*
+			if (debug_algo5 == 1) {
+				for (l = 0; l < ss.ELE_stru; l++) {
+					for (h = 0; h < hprefg + 1; h++) {
+						for (q = 0; q < hprefg + 1; q++) {
+							ss.P_gs[ss.LNA_gs[h][q] - 1][l] = 0.0;
+						}
+					}
+				}
+				for (h = 0; h < hprefg + 1; h++) {
+					for (q = 0; q < hprefg + 1; q++) {
+						ss.P_gs[ss.LNA_gs[0][0] - 1][0] = 1.0;
+						ss.P_gs[ss.LNA_gs[1][0] - 1][0] = 2.0;
+						ss.P_gs[ss.LNA_gs[1][1] - 1][0] = 3.0;
+						ss.P_gs[ss.LNA_gs[0][1] - 1][0] = 4.0;
+					}
+				}
+			}
+			*/
 			//Assume structure has only one wetted surface and the element type is linear quad element
 			for (l = 0; l < ss.ELE_stru; l++) { //loop through each element first
 				for (i = 0; i < 4; i++) { //i,j stands for fem points y m 
@@ -215,9 +255,6 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			}
 			std::cout << " " << std::endl;
 		}
-
-		
-
 		break;
 
 	case 0: //map disp from coupling mesh(fem mesh) to user defined mesh(sem mesh)
@@ -311,8 +348,16 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			double lcx, lcy;
 			double nomx, nomy; double denomx, denomy;
 			double phig;
-
 			double DISPTEMP = 0.0;
+
+			if (debug_algo5 == 1) {
+				for (i = 0; i < ss.Node_stru; i++) {
+					for (n = 0; n < 3; n++) {
+						wsflist[0]->nodecoord[3 * i + n] = ss.GCOORD_stru[ss.Node_glob[i] - 1][n] + 1;
+					}
+				}
+			}
+
 			for (z = 0; z < owsfnumber; z++) {
 				if (ol[z].FSNEL > 0) {
 					for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
@@ -340,11 +385,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 											}
 											phig = (nomx / denomx)*(nomy / denomy);
 											for (n = 0; n < 3; n++) {
-												if (ss.IEN_stru_MpCCI[ss.LNA_stru[u][v] - 1][ol[z].flu_stru[l] - 1] > 435 || ol[z].flu_stru[l] > 400 || ss.IEN_stru[ss.LNA_stru[u][v] - 1][ol[z].flu_stru[l] - 1] > 1957) {
-													std::cout << "access violation" << std::endl; 
-													system("PAUSE ");
-												}
-												DISPTEMP = wsflist[0]->nodecoord[3 * (ss.IEN_stru_MpCCI[ss.LNA_stru[u][v] - 1][ol[z].flu_stru[l] - 1] - 1) + n] - ss.GCOORD_stru[ss.IEN_stru[ss.LNA_stru[u][v] - 1][ol[z].flu_stru[l] - 1] - 1][n];
+												DISPTEMP = wsflist[0]->nodecoord[3 * (ss.IEN_stru_MpCCI[ss.LNA_stru[u][v] - 1][ol[z].flu_stru[l*NINT*NINT + i*NINT + j] - 1] - 1) + n] - ss.GCOORD_stru[ss.IEN_stru[ss.LNA_stru[u][v] - 1][ol[z].flu_stru[l*NINT*NINT + i*NINT + j] - 1] - 1][n];
 												ol[z].DISP[ol[z].IEN_gb[i*NINT + j][l] - 1][n] += DISPTEMP * phig;
 											}
 										}
@@ -352,7 +393,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								}
 								else { //the node is an orphan
 									for (n = 0; n < 3; n++) {
-										ol[z].DISP[ol[z].IEN_gb[i*NINT + j][l] - 1][n] = wsflist[0]->nodecoord[3 * (ol[z].flu_stru[l] - 1) + n] - ss.GCOORD_stru[ss.Node_glob[ol[z].flu_stru[l] - 1] - 1][n];
+										ol[z].DISP[ol[z].IEN_gb[i*NINT + j][l] - 1][n] = wsflist[0]->nodecoord[3 * (ol[z].flu_stru[l*NINT*NINT + i*NINT + j] - 1) + n] - ss.GCOORD_stru[ss.Node_glob[ol[z].flu_stru[l*NINT*NINT + i*NINT + j] - 1] - 1][n];
 										//flu_stru for orphan node is actually the node number instead of the element number 
 									}
 								}
@@ -369,9 +410,10 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					}
 				}
 			}
+			std::cout << " " << std::endl;
 		}
 
-		std::cout << " " << std::endl;
+		
 		break;
 	}
 	t.energy_rec = 0;

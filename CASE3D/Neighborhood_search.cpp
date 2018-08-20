@@ -165,8 +165,6 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		ss.GCOORD_stru[i - nodestart][2] = stod(output[i][3]) + zoffset;
 	}
 	 
-
-
 	//Find the element set name corresponding to the structural wetted surface
 	std::vector<std::string> surface_name; 
 	std::vector<int> surface_orientation; //If the surface is positive, the value is 1; If the value is negative, the value is -1
@@ -509,7 +507,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		}
 	
 		//start writing the file
-		if (debug_algo5 == 0) {
+		if (mappingalgo == 5) {
 			std::string wetsurface_name;
 			//wetsurface_name = "EF wetsurface" + std::to_string(1) + " 3 1 " + std::to_string(0); //gonna be quad element no matter what element type is used by the fluid
 			wetsurface_name = "EF wetsurface1 3 1 0";

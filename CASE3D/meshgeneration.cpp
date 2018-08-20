@@ -980,68 +980,33 @@ struct meshgenerationstruct meshgeneration() {
 		}
 
 		//================================Write the model file for MpCCI here================================//
-		
-		if (debug_algo5 == 0) {
-			if (mappingalgo == 2 || mappingalgo == 4) {
-				std::ofstream myfile;
-				myfile.open("model.txt");
-				for (z = 0; z < wt_pys_size; z++) {
-					std::string wetsurface_name;
-					//wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1";
-					wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1 " + std::to_string(element_type);
-					myfile << wetsurface_name << std::endl;
-					myfile << "NODES " << ol[z].GIDNct_MpCCI << std::endl;
-					for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
-						myfile << i << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][0] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][1] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][2] << " " << std::endl;
-					}
-					myfile << "ELEMENTS " << ol[z].FSNEL << std::endl;
-					//Output connectivity matrix
-					for (i = 0; i < ol[z].FSNEL; i++) {
-						myfile << i;
-						if (element_type == 0) {
-							for (j = 0; j < 4; j++) {
-								myfile << " " << ol[z].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
-							}
-						}
-						if (element_type == 1) {
-							for (j = 0; j < 3; j++) {
-								myfile << " " << ol[z].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
-							}
-						}
-						myfile << std::endl;
-					}
+		if (mappingalgo == 2 || mappingalgo == 4) {
+			std::ofstream myfile;
+			myfile.open("model.txt");
+			for (z = 0; z < wt_pys_size; z++) {
+				std::string wetsurface_name;
+				//wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1";
+				wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1 " + std::to_string(element_type);
+				myfile << wetsurface_name << std::endl;
+				myfile << "NODES " << ol[z].GIDNct_MpCCI << std::endl;
+				for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
+					myfile << i << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][0] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][1] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][2] << " " << std::endl;
 				}
-			}
-		}
-		else {
-			if (mappingalgo == 2 || mappingalgo == 4 || mappingalgo == 5) {
-				std::ofstream myfile;
-				myfile.open("model.txt");
-				for (z = 0; z < wt_pys_size; z++) {
-					std::string wetsurface_name;
-					//wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1";
-					wetsurface_name = "EF wetsurface" + std::to_string(z + 1) + " 3 1 " + std::to_string(element_type);
-					myfile << wetsurface_name << std::endl;
-					myfile << "NODES " << ol[z].GIDNct_MpCCI << std::endl;
-					for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
-						myfile << i << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][0] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][1] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][2] << " " << std::endl;
-					}
-					myfile << "ELEMENTS " << ol[z].FSNEL << std::endl;
-					//Output connectivity matrix
-					for (i = 0; i < ol[z].FSNEL; i++) {
-						myfile << i;
-						if (element_type == 0) {
-							for (j = 0; j < 4; j++) {
-								myfile << " " << ol[z].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
-							}
+				myfile << "ELEMENTS " << ol[z].FSNEL << std::endl;
+				//Output connectivity matrix
+				for (i = 0; i < ol[z].FSNEL; i++) {
+					myfile << i;
+					if (element_type == 0) {
+						for (j = 0; j < 4; j++) {
+							myfile << " " << ol[z].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
 						}
-						if (element_type == 1) {
-							for (j = 0; j < 3; j++) {
-								myfile << " " << ol[z].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
-							}
-						}
-						myfile << std::endl;
 					}
+					if (element_type == 1) {
+						for (j = 0; j < 3; j++) {
+							myfile << " " << ol[z].IEN_2D[j][i] - 1; //node numbering starts from 0 in model file
+						}
+					}
+					myfile << std::endl;
 				}
 			}
 		}
