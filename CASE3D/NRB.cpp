@@ -83,26 +83,74 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA) {
 		}
 	}
 	if (element_type == 1) {
-		for (z = 0; z < nrbsurfnumber; z++) {
-			nr[z].ADMASTER = new double**[nr[z].NEL_nrb];
-			for (i = 0; i < nr[z].NEL_nrb; i++) {
-				nr[z].ADMASTER[i] = new double*[3];
-				for (j = 0; j < 3; j++) {
-					nr[z].ADMASTER[i][j] = new double[3];
+
+		if (mappingalgo == 4) {
+			for (z = 0; z < nrbsurfnumber; z++) {
+				nr[z].ADMASTER = new double**[nr[z].NEL_nrb];
+				for (i = 0; i < nr[z].NEL_nrb; i++) {
+					nr[z].ADMASTER[i] = new double*[3];
+					for (j = 0; j < 3; j++) {
+						nr[z].ADMASTER[i][j] = new double[3];
+					}
 				}
-			}
-			for (i = 0; i < nr[z].NEL_nrb; i++) {
-				for (j = 0; j < 3; j++) {
-					for (k = 0; k < 3; k++) {
-						nr[z].ADMASTER[i][j][k] = 0.0;
+				for (i = 0; i < nr[z].NEL_nrb; i++) {
+					for (j = 0; j < 3; j++) {
+						for (k = 0; k < 3; k++) {
+							nr[z].ADMASTER[i][j][k] = 0.0;
+						}
+					}
+				}
+				//Check out the Goodnote "Bounary force integration" or Evernote "Tetrahedral average integration"
+				for (e = 0; e < nr[z].NEL_nrb; e++) {
+					for (m = 0; m < 3; m++) {
+						for (n = 0; n < 3; n++) {
+							nr[z].ADMASTER[e][m][n] = (1.0 / 9.0) * nr[z].dimension[e];
+						}
+					}
+				}
+				for (e = 0; e < nr[z].NEL_nrb; e++) {
+					for (j = 0; j < 3; j++) {
+						for (k = 0; k < 3; k++) {
+							t.ADMASTERG[nr[z].IEN_gb[k][e] - 1] += nr[z].ADMASTER[e][j][k];
+						}
 					}
 				}
 			}
-			//Check out the Goodnote "Bounary force integration" or Evernote "Tetrahedral average integration"
-			for (e = 0; e < nr[z].NEL_nrb; e++) {
-				for (m = 0; m < 3; m++) {
-					for (n = 0; n < 3; n++) {
-						nr[z].ADMASTER[e][m][n] = (1.0 / 9.0) * nr[z].dimension[e];
+		}
+
+		if (mappingalgo == 5) {
+			double xi[3]; double eta[3]; double phi[3][3];
+			xi[0] = 1.0 / 6.0; xi[1] = 2.0 / 3.0; xi[2] = 1.0 / 6.0;
+			eta[0] = 1.0 / 6.0; eta[1] = 1.0 / 6.0; eta[2] = 2.0 / 3.0;
+			double w[3]; //integration weight
+			w[0] = 1.0 / 3.0; w[1] = 1.0 / 3.0; w[2] = 1.0 / 3.0;
+			for (z = 0; z < owsfnumber; z++) {
+				nr[z].ADMASTER = new double**[nr[z].NEL_nrb];
+				for (i = 0; i < nr[z].NEL_nrb; i++) {
+					nr[z].ADMASTER[i] = new double*[3];
+					for (j = 0; j < 3; j++) {
+						nr[z].ADMASTER[i][j] = new double[3];
+					}
+				}
+				for (i = 0; i < nr[z].NEL_nrb; i++) {
+					for (j = 0; j < 3; j++) {
+						for (k = 0; k < 3; k++) {
+							nr[z].ADMASTER[i][j][k] = 0.0;
+						}
+					}
+				}
+				for (n = 0; n < 3; n++) {
+					phi[0][n] = 1 - xi[n] - eta[n];
+					phi[1][n] = xi[n];
+					phi[2][n] = eta[n];
+				}
+				for (e = 0; e < nr[z].NEL_nrb; e++) {
+					for (m = 0; m < 3; m++) {
+						for (n = 0; n < 3; n++) {
+							for (o = 0; o < 3; o++) { //o is the 3-point quadrature point
+								nr[z].ADMASTER[e][m][n] += (1.0 / 2.0) * w[o] * phi[m][o] * phi[n][o] * (2 * ol[z].dimension[e]);
+							}
+						}
 					}
 				}
 			}
@@ -114,6 +162,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA) {
 				}
 			}
 		}
+
 	}
 
 	//Obtain NRB node numbering for all nodes from ol[z].NRBA

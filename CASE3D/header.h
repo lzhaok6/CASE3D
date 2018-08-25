@@ -32,7 +32,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 const int N = 1;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;
-const int hprefg = 1; ////The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5)
+const int hprefg = 1; //The level of Gauss-Legendre integration on the structure mesh (for mapping algorithm 5)
 typedef struct owetsurf {
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
 	double *PSI; //integrated incident pressure 
@@ -62,12 +62,12 @@ typedef struct owetsurf {
 	int FP_temp[NINT*NINT];
 	int **FP;
 	int FP_2D[NINT*NINT];
-	double** JACOB;
+	//double** JACOB;
 	int Jacob_face[2]; //Used to identify which coordinate dimension (x,y or z/xi,eta,zeta?) to be used for surface 2D Jacobian matrix calculation.  
 	//int LNA_norm[4];
 	int* LNA_norm;
 	int** IEN_py; //the linear element connectivity matrix of 2D physical groups (boundaries) separated from the original 2D high-order elements
-	double**** xs;
+	//double**** xs;
 	double****xs_2D; //for the 2D elements on wetted surface
 	double ***phi_fem;
 	int LNA_JB2D[4];
@@ -82,6 +82,8 @@ typedef struct owetsurf {
 	int* orphan_flag_flu;
 	double** flu_stru_global;
 	int** IEN_flu_2D;
+	double** GCOORD_flu_gs; //the gauss point on fluid element 
+	double** DISP_gs; //The displacement on gauss nodes 
 } OWETSURF;
 
 typedef struct stru_wet_surf {
@@ -117,7 +119,7 @@ typedef struct stru_wet_surf {
 typedef struct nrbsurf {
 	double*** ADMASTER; //The boundary force integration weight for each element on NRB surface
 	//double* ADMASTERG; //the lumped boundary force integration weight for each node on NRB surface
-	double** JACOB; //3D Jacobian determinant with one additional quadrature point (Dedicated for boundary force integration on boundaries). 
+	//double** JACOB; //3D Jacobian determinant with one additional quadrature point (Dedicated for boundary force integration on boundaries). 
 	int** IEN_gb; //connectivity matrix on 2D surface pointing to global points. (From the physical group definition of the mesh file)
 	int NEL_nrb; //the element number of the 2D element 
 	//int NNODE_nrb; //The total number of node on NRBC
@@ -131,7 +133,7 @@ typedef struct nrbsurf {
 	double**norm; 
 	//int LNA_norm[4];
 	int* LNA_norm; 
-	double**** xs;
+	//double**** xs;
 	double **XEST_kn;
 	double **XEST;
 	double **XEST_ukn;
@@ -265,13 +267,13 @@ const double SZ = 4.8768; //16ft
 //const double SZ = 0.1;
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;
-const int Nq = N + 1; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
+const int Nq = N; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
 const int NqINT = Nq + 1;
 const int refine = 1; //The refinement rate of fluid mesh against base fluid mesh for h refinement. 
 const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
 //const int hprefg = 1;
-const int mappingalgo = 5; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
+const int mappingalgo = 4; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
 const double RHO = 1025.0; //original
 //const double RHO = 989.0; //Bleich-Sandler
 const int WAVE = 2; //1 for plane wave; 2 for spherical wave 
@@ -308,7 +310,7 @@ const int tfm = 1; //is total field model used?
 const int tensorfactorization = 0;
 const int TNT = 1;
 const int output = 0;
-const int FEM = 0; //Is this a first order FEM code? 
+const int FEM = 1; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
 const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
 const int nrbsurfnumber = 4; //The number of NRB surface. 
@@ -329,4 +331,4 @@ const int SYNEL = 4 * refine;
 const double xo = SY;
 const int Bleich = 0; 
 const int improvednrb = 0;
-const int element_type = 0; //0 for hexahedral element; 1 for tetrahedral element; 
+const int element_type = 1; //0 for hexahedral element; 1 for tetrahedral element; 

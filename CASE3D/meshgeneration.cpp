@@ -32,7 +32,7 @@ struct meshgenerationstruct meshgeneration() {
 	//system("PAUSE "); 
 	//std::ifstream infile("Bleich_Sandler_0.1surface_0.01m.msh");
 	//::ifstream infile("../../Bleich_Sandler_0.1surface_0.01m.msh");
-	std::ifstream infile("C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=1.msh");
+	std::ifstream infile("C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_tet_0_15m.msh");
 	if (!infile) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -880,7 +880,6 @@ struct meshgenerationstruct meshgeneration() {
 							dummy.push_back(ol[z].IEN_gb[j][i]); //associate the local 2D node with the global node numbering 
 							ol[z].IEN_2D[j][i] = ct; //assign a new number to MpCCI element connectivity
 						}
-
 					}
 				}
 				//ol[z].GIDNct_MpCCI = dummy.size();

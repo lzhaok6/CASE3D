@@ -133,63 +133,90 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			double nomx, nomy, nomz; double denomx, denomy, denomz; 
 			double phig; 
 
-			/*
+			
 			if (debug_algo5 == 1) {
-				for (l = 0; l < ss[z].ELE_stru; l++) {
-					for (ii = 0; ii < NINT; ii++) {
-						for (jj = 0; jj < NINT; jj++) {
-							for (kk = 0; kk < NINT; kk++) {
-								WP[IEN[LNA[ii][jj][kk] - 1][ss[z].gs_flu[l] - 1] - 1] = 1.0;
-							}
-						}
-					}
-				}
-			}
-			*/
-			for (z = 0; z < ssnumber; z++) {
-				for (l = 0; l < ss[z].ELE_stru; l++) {
-					for (h = 0; h < hprefg + 1; h++) {
-						for (q = 0; q < hprefg + 1; q++) {
-							ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] = 0.0; //initialize the value 
-							if (ss[z].orphan_flag_gs[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] == 0) { //the node is not an orphan
-								//local coordinate of the projected structure gauss point
-								lcx = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][0];
-								lcy = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][1];
-								lcz = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][2];
-								for (ii = 0; ii < NINT; ii++) {
-									for (jj = 0; jj < NINT; jj++) {
-										for (kk = 0; kk < NINT; kk++) {
-											nomx = 1.0; nomy = 1.0; nomz = 1.0; //multiplier initialization
-											denomx = 1.0; denomy = 1.0; denomz = 1.0; //multiplier initialization
-											for (m = 0; m < NINT; m++) {
-												if (m != ii) {
-													nomx *= (lcx - basep[m]);
-													denomx *= (basep[ii] - basep[m]);
-												}
-												if (m != jj) {
-													nomy *= (lcy - basep[m]);
-													denomy *= (basep[jj] - basep[m]);
-												}
-												if (m != kk) {
-													nomz *= (lcz - basep[m]);
-													denomz *= (basep[kk] - basep[m]);
-												}
-											}
-											phig = (nomx / denomx)*(nomy / denomy)*(nomz / denomz);
-											ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] += WP[IEN[LNA[ii][jj][kk] - 1][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1] - 1] * phig;
-											//P_gs is created in Neighborhood_search.cpp 
-										}
-									}
+				for (z = 0; z < ssnumber; z++) {
+					for (l = 0; l < ss[z].ELE_stru*(hprefg + 1)*(hprefg + 1); l++) {
+						for (ii = 0; ii < NINT; ii++) {
+							for (jj = 0; jj < NINT; jj++) {
+								for (kk = 0; kk < NINT; kk++) {
+									WP[IEN[LNA[ii][jj][kk] - 1][ss[z].gs_flu[l] - 1] - 1] = 1.0;
 								}
-							}
-							else { //the node is an orphan, directly give the value on the nearest node 
-								ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] = WP[ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1];
 							}
 						}
 					}
 				}
 			}
 
+			if (element_type == 0) {
+				for (z = 0; z < ssnumber; z++) {
+					for (l = 0; l < ss[z].ELE_stru; l++) {
+						for (h = 0; h < hprefg + 1; h++) {
+							for (q = 0; q < hprefg + 1; q++) {
+								ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] = 0.0; //initialize the value 
+								if (ss[z].orphan_flag_gs[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] == 0) { //the node is not an orphan
+									//local coordinate of the projected structure gauss point
+									lcx = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][0];
+									lcy = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][1];
+									lcz = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][2];
+									for (ii = 0; ii < NINT; ii++) {
+										for (jj = 0; jj < NINT; jj++) {
+											for (kk = 0; kk < NINT; kk++) {
+												nomx = 1.0; nomy = 1.0; nomz = 1.0; //multiplier initialization
+												denomx = 1.0; denomy = 1.0; denomz = 1.0; //multiplier initialization
+												for (m = 0; m < NINT; m++) {
+													if (m != ii) {
+														nomx *= (lcx - basep[m]);
+														denomx *= (basep[ii] - basep[m]);
+													}
+													if (m != jj) {
+														nomy *= (lcy - basep[m]);
+														denomy *= (basep[jj] - basep[m]);
+													}
+													if (m != kk) {
+														nomz *= (lcz - basep[m]);
+														denomz *= (basep[kk] - basep[m]);
+													}
+												}
+												phig = (nomx / denomx)*(nomy / denomy)*(nomz / denomz);
+												ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] += WP[IEN[LNA[ii][jj][kk] - 1][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1] - 1] * phig;
+												//P_gs is created in Neighborhood_search.cpp 
+											}
+										}
+									}
+								}
+								else { //the node is an orphan, directly give the value on the nearest node 
+									ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] = WP[ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1];
+								}
+							}
+						}
+					}
+				}
+			}
+			if (element_type == 1) {
+				for (z = 0; z < ssnumber; z++) {
+					for (l = 0; l < ss[z].ELE_stru; l++) {
+						for (h = 0; h < hprefg + 1; h++) {
+							for (q = 0; q < hprefg + 1; q++) {
+								ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] = 0.0; //initialize the value 
+								if (ss[z].orphan_flag_gs[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] == 0) { //the node is not an orphan
+									//local coordinate of the projected structure gauss point
+									lcx = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][0];
+									lcy = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][1];
+									lcz = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][2];
+									ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] += WP[IEN[0][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1] - 1] * (1 - lcx - lcy - lcz) +
+										WP[IEN[1][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1] - 1] * lcx +
+										WP[IEN[2][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1] - 1] * lcy +
+										WP[IEN[3][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1] - 1] * lcz;
+								}
+								else { //the node is an orphan, directly give the value on the nearest node 
+									ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] = WP[ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1];
+								}
+							}
+						}
+					}
+				}
+			}
 			/*
 			double hd = 0.0;
 			if (debug_algo5 == 1) {
@@ -221,8 +248,6 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 				}
 			}
 			*/
-
-
 			for (z = 0; z < ssnumber; z++) {
 				for (l = 0; l < ss[z].ELE_stru; l++) { //loop through each element first
 					for (i = 0; i < 4; i++) { //i,j stands for fem points y m 
@@ -363,48 +388,56 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 				}
 			}
 			*/
+
+			int elenode2D_gs;
+			if (element_type == 0) { //hex element
+				elenode2D_gs = NINT*NINT;
+			}
+			if (element_type == 1) { //tet element
+				elenode2D_gs = 3;
+			}
+
 			for (z = 0; z < owsfnumber; z++) {
 				for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
-					for (i = 0; i < NINT; i++) { //loop through each point on element surface 
-						for (j = 0; j < NINT; j++) {
-							ol[z].DISP[ol[z].IEN_gb[i*NINT + j][l] - 1][0] = 0.0;
-							ol[z].DISP[ol[z].IEN_gb[i*NINT + j][l] - 1][1] = 0.0;
-							ol[z].DISP[ol[z].IEN_gb[i*NINT + j][l] - 1][2] = 0.0;
-							if (ol[z].orphan_flag_flu[l] == 0) { //the node is not an orphan
-								lcx = ol[z].flu_local[l*NINT*NINT + i*NINT + j][0];
-								lcy = ol[z].flu_local[l*NINT*NINT + i*NINT + j][1];
-								for (u = 0; u < 2; u++) { //u,v stands for fem points 
-									for (v = 0; v < 2; v++) {
-										nomx = 1.0; nomy = 1.0; //multiplier initialization
-										denomx = 1.0; denomy = 1.0; //multiplier initialization
-										for (m = 0; m < 2; m++) {
-											if (m != u) {
-												nomx *= (lcx - basep[m]);
-												denomx *= (basep[u] - basep[m]);
-											}
-											if (m != v) {
-												nomy *= (lcy - basep[m]);
-												denomy *= (basep[v] - basep[m]);
-											}
+					for (i = 0; i < elenode2D_gs; i++) { //loop through each point on element surface
+						ol[z].DISP_gs[l*elenode2D_gs + i][0] = 0.0;
+						ol[z].DISP_gs[l*elenode2D_gs + i][1] = 0.0;
+						ol[z].DISP_gs[l*elenode2D_gs + i][2] = 0.0;
+						if (ol[z].orphan_flag_flu[l*elenode2D_gs + i] == 0) { //the node is not an orphan
+							lcx = ol[z].flu_local[l*elenode2D_gs + i][0];
+							lcy = ol[z].flu_local[l*elenode2D_gs + i][1];
+							for (u = 0; u < 2; u++) { //u,v stands for fem points 
+								for (v = 0; v < 2; v++) {
+									nomx = 1.0; nomy = 1.0; //multiplier initialization
+									denomx = 1.0; denomy = 1.0; //multiplier initialization
+									for (m = 0; m < 2; m++) {
+										if (m != u) {
+											nomx *= (lcx - basep[m]);
+											denomx *= (basep[u] - basep[m]);
 										}
-										phig = (nomx / denomx)*(nomy / denomy);
-										for (n = 0; n < 3; n++) {
-											DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[ss[z].LNA_stru[u][v] - 1][ol[z].flu_stru[l*NINT*NINT + i*NINT + j] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[ss[z].LNA_stru[u][v] - 1][ol[z].flu_stru[l*NINT*NINT + i*NINT + j] - 1] - 1][n];
-											ol[z].DISP[ol[z].IEN_gb[i*NINT + j][l] - 1][n] += DISPTEMP * phig;
+										if (m != v) {
+											nomy *= (lcy - basep[m]);
+											denomy *= (basep[v] - basep[m]);
 										}
+									}
+									phig = (nomx / denomx)*(nomy / denomy);
+									for (n = 0; n < 3; n++) {
+										DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[ss[z].LNA_stru[u][v] - 1][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[ss[z].LNA_stru[u][v] - 1][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
+										ol[z].DISP_gs[l*elenode2D_gs + i][n] += DISPTEMP * phig;
 									}
 								}
 							}
-							else { //the node is an orphan
-								for (n = 0; n < 3; n++) {
-									ol[z].DISP[ol[z].IEN_gb[i*NINT + j][l] - 1][n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*NINT*NINT + i*NINT + j] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*NINT*NINT + i*NINT + j] - 1] - 1][n];
-									//flu_stru for orphan node is actually the node number instead of the element number 
-								}
+						}
+						else { //the node is an orphan
+							for (n = 0; n < 3; n++) {
+								ol[z].DISP_gs[l*elenode2D_gs + i][n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*elenode2D_gs + i] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
+								//flu_stru for orphan node is actually the node number instead of the element number 
 							}
 						}
 					}
 				}
 			}
+
 			hd = 0.0;
 			for (z = 0; z < owsfnumber; z++) {
 				for (i = 0; i < ol[z].GIDNct; i++) {

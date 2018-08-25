@@ -13,6 +13,8 @@
 #include <cstring>
 
 //This function serves to associate the fluid interface mesh with structure interface mesh. The relationship is used for interface mapping later on
+//Please note that each the sequence of the structural wetted surface has to be the same with the fluid wetted surface. For example, if the front structure wetted surface (ss[0])
+//is the first surface, then the fluid wetted surface has to be the first surface ol[0] as well. 
 void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) {
 	extern OWETSURF ol[owsfnumber];
 	extern STRU_WET_SURF ss[ssnumber]; //data structure used to store the properties on the structure wetted surface
@@ -70,13 +72,15 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			IEN_flu_3D[2][i] = IEN_flu[2][i];
 			IEN_flu_3D[3][i] = IEN_flu[3][i];
 		}
-		ol[z].IEN_flu_2D = new int*[3];
-		for (i = 0; i < 3; i++) {
-			ol[z].IEN_flu_2D[i] = new int[ol[z].FSNEL];
-		}
-		for (i = 0; i < ol[z].FSNEL; i++) {
-			for (j = 0; j < 3; j++) {
-				ol[z].IEN_flu_2D[j][i] = IEN_flu[ol[z].FP[i][j] - 1][ol[z].GIDF[i] - 1];
+		for (z = 0; z < owsfnumber; z++) {
+			ol[z].IEN_flu_2D = new int*[3];
+			for (i = 0; i < 3; i++) {
+				ol[z].IEN_flu_2D[i] = new int[ol[z].FSNEL];
+			}
+			for (i = 0; i < ol[z].FSNEL; i++) {
+				for (j = 0; j < 3; j++) {
+					ol[z].IEN_flu_2D[j][i] = IEN_flu[ol[z].FP[i][j] - 1][ol[z].GIDF[i] - 1];
+				}
 			}
 		}
 	}
@@ -549,6 +553,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	Eigen::Vector3d b; //RHS coefficient
 	Eigen::Vector3d dx;
 	Eigen::Vector3d x; 
+	Eigen::Matrix3d AA;
+	Eigen::Vector3d BB;
+	Eigen::Vector3d local; //store the local coordinate
 	double search_range = 1; //set the searching range to 1m (only the element with all points in the range will be searched)
 	double range[2];
 	range[1] = search_range; 
@@ -622,39 +629,40 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							xu = x(0); yu = x(1); zu = x(2);
 							//We need to determine at this stage if the projected node is within the searched element, if not we need to pass this element. 
 							if (element_type == 1) { //tetrahedral element
-								//Need to change the name of the matrix and vectors. also need to change the if(){} below
-								Eigen::Vector3d b;
-								Eigen::Matrix3d A;
-								Eigen::Vector3d local; //store the local coordinate 
+								//Need to change the name of the matrix and vectors. also need to change the if(){} below 
 								//determine the local coordinate in the tetrahedral element
-								A(0, 0) = GCOORD[IEN_flu_3D[1][ol[e].GIDF[k] - 1] - 1][0] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][0];
-								A(0, 1) = GCOORD[IEN_flu_3D[2][ol[e].GIDF[k] - 1] - 1][0] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][0];
-								A(0, 2) = GCOORD[IEN_flu_3D[3][ol[e].GIDF[k] - 1] - 1][0] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][0];
-								A(1, 0) = GCOORD[IEN_flu_3D[1][ol[e].GIDF[k] - 1] - 1][1] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][1];
-								A(1, 1) = GCOORD[IEN_flu_3D[2][ol[e].GIDF[k] - 1] - 1][1] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][1];
-								A(1, 2) = GCOORD[IEN_flu_3D[3][ol[e].GIDF[k] - 1] - 1][1] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][1];
-								A(2, 0) = GCOORD[IEN_flu_3D[1][ol[e].GIDF[k] - 1] - 1][2] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][2];
-								A(2, 1) = GCOORD[IEN_flu_3D[2][ol[e].GIDF[k] - 1] - 1][2] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][2];
-								A(2, 2) = GCOORD[IEN_flu_3D[3][ol[e].GIDF[k] - 1] - 1][2] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][2];
-								b(0) = xu - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][0];
-								b(1) = yu - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][1];
-								b(2) = zu - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][2];
-								local = A.inverse()*b;
+								AA(0, 0) = GCOORD[IEN_flu_3D[1][ol[e].GIDF[k] - 1] - 1][0] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][0];
+								AA(0, 1) = GCOORD[IEN_flu_3D[2][ol[e].GIDF[k] - 1] - 1][0] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][0];
+								AA(0, 2) = GCOORD[IEN_flu_3D[3][ol[e].GIDF[k] - 1] - 1][0] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][0];
+								AA(1, 0) = GCOORD[IEN_flu_3D[1][ol[e].GIDF[k] - 1] - 1][1] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][1];
+								AA(1, 1) = GCOORD[IEN_flu_3D[2][ol[e].GIDF[k] - 1] - 1][1] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][1];
+								AA(1, 2) = GCOORD[IEN_flu_3D[3][ol[e].GIDF[k] - 1] - 1][1] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][1];
+								AA(2, 0) = GCOORD[IEN_flu_3D[1][ol[e].GIDF[k] - 1] - 1][2] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][2];
+								AA(2, 1) = GCOORD[IEN_flu_3D[2][ol[e].GIDF[k] - 1] - 1][2] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][2];
+								AA(2, 2) = GCOORD[IEN_flu_3D[3][ol[e].GIDF[k] - 1] - 1][2] - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][2];
+								BB(0) = xu - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][0];
+								BB(1) = yu - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][1];
+								BB(2) = zu - GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][2];
+								local = AA.inverse()*BB;
 								//determine if the point is inside the searched element
-								if (local(0, 0) >= 0 && local(0, 0) <= 1 && local(1, 0) >= 0 && local(1, 0) <= 1 && local(2, 0) >= 0 && local(2, 0) <= 1
-									&& local(0, 0) + local(1, 0) + local(2, 0) <= 1) {
+								if (local(0) > -1e-5 && (local(0) - 1) < 1e-5 && local(1) > -1e-5 && (local(1) - 1) < 1e-5 && local(2) > -1e-5 && (local(2) - 1) < 1e-5
+									&& (local(0) + local(1) + local(2) - 1) < 1e-5) {
 									//The point is indeed inside the searched element and we can store the local coordinate in that element
-									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][0] = local(0, 0); //xi
-									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][1] = local(1, 0); //eta
-									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][2] = local(2, 0); //zeta
+									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][0] = local(0); //xi
+									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][1] = local(1); //eta
+									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][2] = local(2); //zeta
 									orphan = 0;
+									inelement = 1;
 								}
 								else { //The node is an orphan
-									   //Search for the nearest point on the fluid FSI interface
-									orphan = 1;
+									//Search for the nearest point on the fluid FSI interface
+									//orphan = 1;
+									inelement = 0;
 								}
 							}
-							double xi, eta, zeta; //converged local coordinate
+							double xi = 0.0; 
+							double eta = 0.0; 
+							double zeta = 0.0;  //converged local coordinate
 							if (element_type == 0) { //hex element
 								double xi_k, eta_k, zeta_k;
 								double xi_k_1, eta_k_1, zeta_k_1;
@@ -786,6 +794,64 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		}
 	}
 
+	//Derive the Gauss-Legendre points on fluid elements (for displacement integration)
+	//We can first use equal amount of interpolation node for GL nodes. This would guarantee the accuracy of the integrated nodal boundary force.
+	//The same connectivity matrix could be used (ol[z].IEN_gb[j][i])
+	//Derive the coordinate of the gauss nodes 
+	if (element_type == 0) {
+		ct_gs = TD_LOCAL_NODE(N);
+		LOCAL_SHAPEstruct ls_ln; //ln means linear
+		ls_ln = LOCAL_SHAPE(LNA, 1, hprefg, 1); //Get the 2D linear shape function value on Nth order Gauss-Legendre nodes
+		for (z = 0; z < owsfnumber; z++) {
+			ol[z].GCOORD_flu_gs = new double*[ol[z].FSNEL*NINT*NINT];
+			for (i = 0; i < ol[z].FSNEL*NINT*NINT; i++) {
+				ol[z].GCOORD_flu_gs[i] = new double[3];
+			}
+			int LNA_2D[2][2];
+			LNA_2D[0][0] = ol[z].LNA_2D[0][0]; LNA_2D[1][0] = ol[z].LNA_2D[N][0]; LNA_2D[0][1] = ol[z].LNA_2D[0][N]; LNA_2D[1][1] = ol[z].LNA_2D[N][N];
+			for (i = 0; i < ol[z].FSNEL; i++) { //loop through all the elements
+				for (m = 0; m < NINT; m++) { //m, n, o stands for internal nodes in one element (all but except for corner nodes)
+					for (n = 0; n < NINT; n++) {
+						ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][0] = 0.0; //m and n equivalent to LNA[m][n]
+						ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][1] = 0.0;
+						ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][2] = 0.0;
+						for (j = 0; j < 2; j++) { //j, k stands for corner nodes
+							for (k = 0; k < 2; k++) {
+								ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][0] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][0] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*(hprefg + 1) + n];
+								ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][1] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][1] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*(hprefg + 1) + n];
+								ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][2] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][2] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*(hprefg + 1) + n];
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if (element_type == 1) {
+		//Derive the 3-point quadrature node location on the interface triangle elements
+		double xi[3]; double eta[3]; double phi[3];
+		xi[0] = 1.0 / 6.0; xi[1] = 2.0 / 3.0; xi[2] = 1.0 / 6.0;
+		eta[0] = 1.0 / 6.0; eta[1] = 1.0 / 6.0; eta[2] = 2.0 / 3.0;
+		for (z = 0; z < owsfnumber; z++) {
+			ol[z].GCOORD_flu_gs = new double*[ol[z].FSNEL * 3];
+			for (i = 0; i < ol[z].FSNEL * 3; i++) {
+				ol[z].GCOORD_flu_gs[i] = new double[3];
+			}
+			for (i = 0; i < ol[z].FSNEL; i++) { //loop through all the elements
+				for (m = 0; m < 3; m++) { //m stands for the gauss point to be determined
+					ol[z].GCOORD_flu_gs[i * 3 + m][0] = 0.0;
+					ol[z].GCOORD_flu_gs[i * 3 + m][1] = 0.0;
+					ol[z].GCOORD_flu_gs[i * 3 + m][2] = 0.0;
+					phi[0] = 1 - xi[m] - eta[m]; phi[1] = xi[m]; phi[2] = eta[m];
+					for (j = 0; j < 3; j++) { //j stands for corner nodes
+						ol[z].GCOORD_flu_gs[i * 3 + m][0] += GCOORD[ol[z].IEN_gb[j][i] - 1][0] * phi[j];
+						ol[z].GCOORD_flu_gs[i * 3 + m][1] += GCOORD[ol[z].IEN_gb[j][i] - 1][1] * phi[j];
+						ol[z].GCOORD_flu_gs[i * 3 + m][2] += GCOORD[ol[z].IEN_gb[j][i] - 1][2] * phi[j];
+					}
+				}
+			}
+		}
+	}
 	//Node projection from fluid to structure (Project the fluid interpolation points to structural elements)
 	Eigen::Matrix2d fdot_f;
 	Eigen::Vector2d f_f;
@@ -793,9 +859,16 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	diff = 1.0;
 	range[1] = search_range;
 	distance[0] = search_range;
+	int elenode2D_gs = 0; 
+	if (element_type == 0) {
+		elenode2D_gs = NINT*NINT; 
+	}
+	if (element_type == 1) {
+		elenode2D_gs = 3;
+	}
 	for (z = 0; z < owsfnumber; z++) {
 		for (i = 0; i < ol[z].FSNEL; i++) { //loop through fluid elements
-			for (j = 0; j < elenode2D; j++) { //loop through each node on the fluid FSI 
+			for (j = 0; j < elenode2D_gs; j++) { //loop through each (gauss) node on the fluid FSI 
 				orphan = 1; //let's first assume the node is an orphan. If the corresponding element is found, the flag is turned to 0 and stays the same for the current node
 				distance[0] = search_range;
 				range[1] = search_range;
@@ -805,7 +878,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 				for (k = 0; k < ss[z].ELE_stru; k++) { //looping through structure wetted elements
 					flag = 1;
 					for (l = 0; l < 4; l++) {
-						range[0] = pow(pow(GCOORD[ol[z].IEN_gb[j][i] - 1][0] - ss[z].GCOORD_stru[ss[z].IEN_stru[l][k] - 1][0], 2) + pow(GCOORD[ol[z].IEN_gb[j][i] - 1][1] - ss[z].GCOORD_stru[ss[z].IEN_stru[l][k] - 1][1], 2) + pow(GCOORD[ol[z].IEN_gb[j][i] - 1][2] - ss[z].GCOORD_stru[ss[z].IEN_stru[l][k] - 1][2], 2), 0.5);
+						range[0] = pow(pow(ol[z].GCOORD_flu_gs[i*elenode2D_gs + j][0] - ss[z].GCOORD_stru[ss[z].IEN_stru[l][k] - 1][0], 2) + pow(ol[z].GCOORD_flu_gs[i*elenode2D_gs + j][1] - ss[z].GCOORD_stru[ss[z].IEN_stru[l][k] - 1][1], 2) + pow(ol[z].GCOORD_flu_gs[i*elenode2D_gs + j][2] - ss[z].GCOORD_stru[ss[z].IEN_stru[l][k] - 1][2], 2), 0.5);
 						if (range[0] < range[1]) {
 							range[1] = range[0]; //range[1] is used to store the shortest distance so far
 							if (debug_algo5 == 0) {
@@ -824,7 +897,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						x1 = ss[z].GCOORD_stru[ss[z].IEN_stru[0][k] - 1][0]; x2 = ss[z].GCOORD_stru[ss[z].IEN_stru[1][k] - 1][0]; x3 = ss[z].GCOORD_stru[ss[z].IEN_stru[2][k] - 1][0];
 						y1 = ss[z].GCOORD_stru[ss[z].IEN_stru[0][k] - 1][1]; y2 = ss[z].GCOORD_stru[ss[z].IEN_stru[1][k] - 1][1]; y3 = ss[z].GCOORD_stru[ss[z].IEN_stru[2][k] - 1][1];
 						z1 = ss[z].GCOORD_stru[ss[z].IEN_stru[0][k] - 1][2]; z2 = ss[z].GCOORD_stru[ss[z].IEN_stru[1][k] - 1][2]; z3 = ss[z].GCOORD_stru[ss[z].IEN_stru[2][k] - 1][2];
-						xn = GCOORD[ol[z].IEN_gb[j][i] - 1][0]; yn = GCOORD[ol[z].IEN_gb[j][i] - 1][1]; zn = GCOORD[ol[z].IEN_gb[j][i] - 1][2];
+						xn = ol[z].GCOORD_flu_gs[i*elenode2D_gs + j][0]; yn = ol[z].GCOORD_flu_gs[i*elenode2D_gs + j][1]; zn = ol[z].GCOORD_flu_gs[i*elenode2D_gs + j][2]; //the fluid node to be projected
 						b(0) = -(-(-x1 + x3)*xn - (-y1 + y3)*yn - (-z1 + z3)*zn);
 						b(1) = -(-(-x1 + x2)*xn - (-y1 + y2)*yn - (-z1 + z2)*zn);
 						b(2) = -(-(x2*y1 - x3*y1 - x1*y2 + x3 *y2 + x1 *y3 - x2 *y3) *z1 -

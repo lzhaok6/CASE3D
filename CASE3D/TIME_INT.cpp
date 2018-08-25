@@ -480,13 +480,19 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	for (z = 0; z < owsfnumber; z++) { //this memory allocation scheme could have been improved
 		ol[z].WBS = new double[NNODE];
 		ol[z].DISP = new double*[NNODE];
-		ol[z].DISP_norm = new double*[NNODE];
-		//ol[z].WP = new double[NNODE];
+		//ol[z].DISP_norm = new double*[NNODE];
+		ol[z].DISP_gs = new double*[ol[z].FSNEL*elenode2D];
+		ol[z].DISP_norm = new double*[ol[z].FSNEL*elenode2D];
+		for (j = 0; j < ol[z].FSNEL*elenode2D; j++) {
+			ol[z].DISP_norm[j] = new double[2];
+			ol[z].DISP_gs[j] = new double[2];
+		}
 		for (j = 0; j < NNODE; j++) {
 			ol[z].DISP[j] = new double[3]; //defined in 3 directions 
-			ol[z].DISP_norm[j] = new double[2]; //norm displacement for two concecutive time steps
+			//ol[z].DISP_norm[j] = new double[2]; //norm displacement for two concecutive time steps
 		}
 	}
+
 	
 	for (z = 0; z < owsfnumber; z++) {
 		for (j = 0; j < NNODE; j++) {
@@ -495,8 +501,13 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			for (k = 0; k < 3; k++) {
 				ol[z].DISP[j][k] = 0.0;
 			}
+		}
+		for (j = 0; j < ol[z].FSNEL*elenode2D; j++) {
 			for (k = 0; k < 2; k++) {
 				ol[z].DISP_norm[j][k] = 0.0;
+			}
+			for (k = 0; k < 3; k++) {
+				ol[z].DISP_gs[j][k] = 0.0;
 			}
 		}
 	}
@@ -1017,9 +1028,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				for (j = 0; j < ol[z].FSNEL; j++) { //for every fluid element linked to structure
 					for (h = 0; h < elenode2D; h++) {
 						WBSTEMP[h] = 0.0;
-						for (k = 0; k < elenode2D; k++) {
-							ol[z].DISP_norm[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][2];
-							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + (ol[z].DISP_norm[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] - ol[z].DISP_norm[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0]));
+						for (k = 0; k < elenode2D; k++) { //For mappingalgo 5, k stands for the quadrature nodes; For mappingalgo2, k stands for the interpolation nodes
+							//ol[z].DISP_norm[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][2];
+							//WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + (ol[z].DISP_norm[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] - ol[z].DISP_norm[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0]));
+							ol[z].DISP_norm[j*elenode2D + k][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][2];
+							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D + k][1] + (ol[z].DISP_norm[j*elenode2D + k][1] - ol[z].DISP_norm[j*elenode2D + k][0]));
 						}
 					}
 					for (k = 0; k < elenode2D; k++) {
@@ -1034,8 +1047,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					for (h = 0; h < elenode2D; h++) {
 						WBSTEMP[h] = 0.0;
 						for (k = 0; k < elenode2D; k++) {
-							ol[z].DISP_norm[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][2];
-							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + (ol[z].DISP_norm[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] - ol[z].DISP_norm[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0]) - ol[z].DISPI[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1]); 
+							ol[z].DISP_norm[j*elenode2D + k][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][2];
+							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D + k][1] + (ol[z].DISP_norm[j*elenode2D + k][1] - ol[z].DISP_norm[j*elenode2D + k][0]) - ol[z].DISPI[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1]);
 						}
 					}
 					for (k = 0; k < elenode2D; k++) {
@@ -1756,8 +1769,15 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 
 		for (z = 0; z < owsfnumber; z++) {
+			/*
 			for (j = 0; j < ol[z].GIDNct; j++) {
 				ol[z].DISP_norm[ol[z].GIDN[j] - 1][0] = ol[z].DISP_norm[ol[z].GIDN[j] - 1][1];
+			}
+			*/
+			for (j = 0; j < ol[z].FSNEL; j++) {
+				for (k = 0; k < elenode2D; k++) {
+					ol[z].DISP_norm[j*elenode2D + k][0] = ol[z].DISP_norm[j*elenode2D + k][1];
+				}
 			}
 		}
 

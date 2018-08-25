@@ -208,7 +208,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 			for (i = 0; i < 4; i++) {     //totally NINT*NINT*NINT points for an element
 				for (j = 0; j < 4; j++) { //the transpose of shape function
 					if (i == j) { //diagonal terms
-						t.QMASTER[e][i][j] = Vol*(1.0 / 4.0)*1.0;  //the mass matrix is directly diagonalized
+						t.QMASTER[e][i][j] = Vol*(1.0 / 4.0)*1.0;  //the mass matrix is directly diagonalized (Pozrikidis 8.2.38)
 						t.Q[IEN[i][e] - 1] = t.Q[IEN[i][e] - 1] + t.QMASTER[e][i][j];
 					}
 				}
