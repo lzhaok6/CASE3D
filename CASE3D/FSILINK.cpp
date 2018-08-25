@@ -77,18 +77,17 @@ void FSILINK(int*** LNA) {
 				gq = GLLQUAD(bq.Z, bq.WL, N, FEM);
 				ls = LOCAL_SHAPE(LNA, N, N, 1); 
 				for (e = 0; e < ol[z].FSNEL; e++) {
-					for (m = 0; m < NINT; m++) {
+					for (m = 0; m < NINT; m++) { //interpolation point 
 						for (n = 0; n < NINT; n++) {
-							FUNC = 0.0; //accumulator 
 							for (i = 0; i < NINT; i++) { //quadrature point 
 								for (j = 0; j < NINT; j++) {
-									FUNC = gq.W[i] * gq.W[j] * (ls.SHOD[0][m][i] * ls.SHOD[0][n][j]) * (ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) * ol[z].Jacob_2D[e][i*NINT + j];
+									ol[z].FPMASTER[e][m*NINT + n][i*NINT + j] = gq.W[i] * gq.W[j] * (ls.SHOD[0][m][i] * ls.SHOD[0][n][j]) * ol[z].Jacob_2D[e][i*NINT + j];
 								}
 							}
-							ol[z].FPMASTER[e][m*NINT + n][i*NINT + j] += FUNC;
 						}
 					}
 				}
+				std::cout << " " << std::endl;
 			}
 		}
 

@@ -987,8 +987,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							if (distance[1] - distance[0] < -1e-5) {
 								xu_searched = xu; yu_searched = yu; zu_searched = zu;
 								distance[0] = distance[1];
-								ol[z].flu_local[i*elenode2D + j][0] = xi; //xi
-								ol[z].flu_local[i*elenode2D + j][1] = eta; //eta
+								ol[z].flu_local[i*elenode2D_gs + j][0] = xi; //xi
+								ol[z].flu_local[i*elenode2D_gs + j][1] = eta; //eta
 								searched_ele = k + 1;
 							}
 						}
@@ -998,18 +998,18 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 					//the orphan node and the other nodes should be treated separately
 					//Instead of storing the corresponding element in flu_stru, the stored value becomes the structure "node" number 
 					//At the same time, we keep track of which fluid node is orphan
-					ol[z].flu_stru[i*elenode2D + j] = flu_nearest;
-					ol[z].orphan_flag_flu[i*elenode2D + j] = 1;
+					ol[z].flu_stru[i*elenode2D_gs + j] = flu_nearest;
+					ol[z].orphan_flag_flu[i*elenode2D_gs + j] = 1;
 				}
 				else {
 					//store the corresponding element 
-					ol[z].flu_stru[i*elenode2D + j] = searched_ele;
-					ol[z].orphan_flag_flu[i*elenode2D + j] = 0;
+					ol[z].flu_stru[i*elenode2D_gs + j] = searched_ele;
+					ol[z].orphan_flag_flu[i*elenode2D_gs + j] = 0;
 				}
 				//store the projected node location
-				ol[z].flu_stru_global[i*elenode2D + j][0] = xu_searched;
-				ol[z].flu_stru_global[i*elenode2D + j][1] = yu_searched;
-				ol[z].flu_stru_global[i*elenode2D + j][2] = zu_searched;
+				ol[z].flu_stru_global[i*elenode2D_gs + j][0] = xu_searched;
+				ol[z].flu_stru_global[i*elenode2D_gs + j][1] = yu_searched;
+				ol[z].flu_stru_global[i*elenode2D_gs + j][2] = zu_searched;
 			}
 			//Finish with all the nodes in the current fluid element
 		}

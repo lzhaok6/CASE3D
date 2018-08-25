@@ -379,16 +379,17 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			double nomx, nomy; double denomx, denomy;
 			double phig;
 			double DISPTEMP = 0.0;
-			/*
+			
 			if (debug_algo5 == 1) {
-				for (i = 0; i < ss[z].Node_stru; i++) {
-					for (n = 0; n < 3; n++) {
-						wsflist[0]->nodecoord[3 * i + n] = ss[z].GCOORD_stru[ss[z].Node_glob[i] - 1][n] + 1;
+				for (z = 0; z < ssnumber; z++) {
+					for (i = 0; i < ss[z].Node_stru; i++) {
+						for (n = 0; n < 3; n++) {
+							wsflist[z]->nodecoord[3 * i + n] = ss[z].GCOORD_stru[ss[z].Node_glob[i] - 1][n] + 1;
+						}
 					}
 				}
 			}
-			*/
-
+			
 			int elenode2D_gs;
 			if (element_type == 0) { //hex element
 				elenode2D_gs = NINT*NINT;
@@ -440,9 +441,9 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 
 			hd = 0.0;
 			for (z = 0; z < owsfnumber; z++) {
-				for (i = 0; i < ol[z].GIDNct; i++) {
+				for (i = 0; i < ol[z].FSNEL*elenode2D_gs; i++) {
 					for (n = 0; n < 3; n++) {
-						hd += ol[z].DISP[ol[z].GIDN[i] - 1][n];
+						hd += ol[z].DISP_gs[i][n];
 					}
 				}
 			}
