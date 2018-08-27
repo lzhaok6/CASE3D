@@ -35,50 +35,48 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 	//This subroutine is temporarily changed to test the BS fluid domain (without side modules)
 	switch (fluid2structure) //sem points to fem points
 	{
-	case 1: 
+	case 1:
 		if (mappingalgo == 2) {
-			//In this code, we use the 2nd order GLL integration instead of 1st order GL integration in FSP case since we have to include a 2D Jacobian determinate to accommodate the geometric mapping
-			ct = 0;
-			for (z = 0; z < owsfnumber; z++) {
-				if (ol[z].FSNEL > 0) {
-					for (l = 0; l < ol[z].FSNEL; l++) { //loop through each element
-						for (i = 0; i < 2; i++) {
-							for (j = 0; j < 2; j++) {
-								wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + 0] = 0.0;
-								wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + 1] = 0.0;
-								wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + 2] = 0.0;
+			if (element_type == 0) { //hexahedral element 
+				//In this code, we use the 2nd order GLL integration instead of 1st order GL integration in FSP case since we have to include a 2D Jacobian determinate to accommodate the geometric mapping
+				ct = 0;
+				for (z = 0; z < owsfnumber; z++) {
+					if (ol[z].FSNEL > 0) {
+						for (l = 0; l < ol[z].FSNEL; l++) { //loop through each element
+							for (i = 0; i < 2; i++) {
+								for (j = 0; j < 2; j++) {
+									wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + 0] = 0.0;
+									wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + 1] = 0.0;
+									wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + 2] = 0.0;
+								}
 							}
 						}
+						ct += 1;
 					}
-					ct += 1;
 				}
-			}
-
-			ct = 0;
-			//The problem remains to be fixed is that the pressure value is at the interpolation point instead of the quadrature point
-			for (z = 0; z < owsfnumber; z++) {
-				if (ol[z].FSNEL > 0) {
-					for (l = 0; l < ol[z].FSNEL; l++) {
-						for (i = 0; i < 2; i++) {
-							for (j = 0; j < 2; j++) {
-								for (u = 0; u < NINT; u++) { //u v stands for y x
-									for (v = 0; v < NINT; v++) {
-										for (n = 0; n < 3; n++) {
-											wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + n] //force in z direction
-												+= ol[z].norm[l][n] * WP[ol[z].IEN_gb[ol[z].LNA_2D[u][v] - 1][l] - 1] * ol[z].FPMASTER_2D[l][ol[z].LNA_algo2[i][j] - 1][ol[z].LNA_2D[u][v] - 1];
+				ct = 0;
+				//The problem remains to be fixed is that the pressure value is at the interpolation point instead of the quadrature point
+				for (z = 0; z < owsfnumber; z++) {
+					if (ol[z].FSNEL > 0) {
+						for (l = 0; l < ol[z].FSNEL; l++) {
+							for (i = 0; i < 2; i++) {
+								for (j = 0; j < 2; j++) {
+									for (u = 0; u < NINT; u++) { //u v stands for y x
+										for (v = 0; v < NINT; v++) {
+											for (n = 0; n < 3; n++) {
+												wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[i][j] - 1][l] - 1) + n] //force in z direction
+													+= ol[z].norm[l][n] * WP[ol[z].IEN_gb[ol[z].LNA_2D[u][v] - 1][l] - 1] * ol[z].FPMASTER_2D[l][ol[z].LNA_algo2[i][j] - 1][ol[z].LNA_2D[u][v] - 1];
+											}
 										}
 									}
 								}
 							}
 						}
+						ct += 1;
 					}
-					ct += 1;
 				}
 			}
-		}
-
-		else if (mappingalgo == 4) {
-			if (element_type == 1) { //tetrahedral element
+			if (element_type == 1) { //tetrahedral element 
 				ct = 0;
 				for (z = 0; z < owsfnumber; z++) {
 					if (ol[z].FSNEL > 0) {
@@ -111,7 +109,40 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 				}
 			}
 		}
-
+		else if (mappingalgo == 4) {
+			int elenode2D = 0;
+			if (element_type == 0) { //hex element
+				elenode2D = NINT*NINT;
+			}
+			if (element_type == 1) { //tet element
+				if (N == 1) {
+					elenode2D = 3;
+				}
+				else {
+					std::cout << "High-order tet element is not supported yet" << std::endl;
+					system("PAUSE ");
+				}
+			}
+			double phig = 0.0;
+			for (z = 0; z < ssnumber; z++) {
+				for (l = 0; l < ss[z].ELE_stru; l++) {
+					for (h = 0; h < hprefg + 1; h++) {
+						for (q = 0; q < hprefg + 1; q++) {
+							ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] = 0.0; //initialize the value 
+							if (ss[z].orphan_flag_gs[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] == 0) { //the node is not an orphan
+								for (ii = 0; ii < elenode2D; ii++) {
+									phig = 1.0 / elenode2D;
+									ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] += WP[IEN[ss[z].FP_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q][ii] - 1][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1] - 1] * phig;
+								}
+							}
+							else { //the node is an orphan, directly give the value on the nearest node 
+								ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] = WP[ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + h*(hprefg + 1) + q] - 1];
+							}
+						}
+					}
+				}
+			}
+		}
 		else if (mappingalgo == 5) {
 			//Interpolate the pressure from fluid interpolation node to structure gauss node ss[z].P_gs[ss[z].LNA_gs[v][u] - 1][l]
 			LOBATTOstruct b;
@@ -130,23 +161,8 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 				basep[1] = 1;
 			}
 			double lcx, lcy, lcz;
-			double nomx, nomy, nomz; double denomx, denomy, denomz; 
-			double phig; 
-
-			
-			if (debug_algo5 == 1) {
-				for (z = 0; z < ssnumber; z++) {
-					for (l = 0; l < ss[z].ELE_stru*(hprefg + 1)*(hprefg + 1); l++) {
-						for (ii = 0; ii < NINT; ii++) {
-							for (jj = 0; jj < NINT; jj++) {
-								for (kk = 0; kk < NINT; kk++) {
-									WP[IEN[LNA[ii][jj][kk] - 1][ss[z].gs_flu[l] - 1] - 1] = 1.0;
-								}
-							}
-						}
-					}
-				}
-			}
+			double nomx, nomy, nomz; double denomx, denomy, denomz;
+			double phig;
 
 			if (element_type == 0) {
 				for (z = 0; z < ssnumber; z++) {
@@ -227,7 +243,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						}
 					}
 				}
-			} //wrong 
+			} //wrong
 			*/
 			/*
 			if (debug_algo5 == 1) {
@@ -275,7 +291,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			}
 			double BF_val[ssnumber];
 			for (z = 0; z < ssnumber; z++) {
-				BF_val[z] = 0.0; 
+				BF_val[z] = 0.0;
 				for (j = 0; j < wsflist[z]->nnodes; j++) {
 					for (k = 0; k < 3; k++) {
 						BF_val[z] += wsflist[z]->nodeforce[j * 3 + k];
@@ -289,65 +305,64 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 	case 0: //map disp from coupling mesh(fem mesh) to user defined mesh(sem mesh)
 		//The displacement is mapped from the linear element to the corresponding high-order element
 		double hd = 0.0; 
+
+		int elenode2D_gs;
+		if (element_type == 0) { //hex element
+			elenode2D_gs = NINT*NINT;
+		}
+		if (element_type == 1) { //tet element
+			elenode2D_gs = 3;
+		}
+
 		if (mappingalgo == 2) {
-			hd = 0.0;
-			for (z = 0; z < owsfnumber; z++) {
-				for (j = 0; j < wsflist[z]->nnodes; j++) {
-					for (k = 0; k < 3; k++) {
-						hd += wsflist[z]->nodecoord[j * 3 + k];
+			
+			if (element_type == 0) {
+				hd = 0.0;
+				for (z = 0; z < owsfnumber; z++) {
+					for (j = 0; j < wsflist[z]->nnodes; j++) {
+						for (k = 0; k < 3; k++) {
+							hd += wsflist[z]->nodecoord[j * 3 + k];
+						}
 					}
 				}
-			}
-			std::cout << " " << std::endl;
+				std::cout << " " << std::endl;
 
-			double DISPTEMP = 0.0;
+				double DISPTEMP = 0.0;
 
-			ct = 0;
-			for (z = 0; z < owsfnumber; z++) {
-				if (ol[z].FSNEL > 0) {
-					for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
-						for (i = 0; i < NINT; i++) { //loop through each point on element surface 
-							for (j = 0; j < NINT; j++) {
-								ol[z].DISP[ol[z].IEN_gb[ol[z].LNA_2D[i][j] - 1][l] - 1][0] = 0.0;
-								ol[z].DISP[ol[z].IEN_gb[ol[z].LNA_2D[i][j] - 1][l] - 1][1] = 0.0;
-								ol[z].DISP[ol[z].IEN_gb[ol[z].LNA_2D[i][j] - 1][l] - 1][2] = 0.0;
-								for (u = 0; u < 2; u++) {
-									for (v = 0; v < 2; v++) {
-										for (n = 0; n < 3; n++) {
-											//DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_2D[u][v] - 1][l] - 1][n];
-											DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[ol[z].LNA_algo2[u][v] - 1] - 1][l] - 1][n];
-											ol[z].DISP[ol[z].IEN_gb[ol[z].LNA_2D[i][j] - 1][l] - 1][n] += DISPTEMP * ol[z].phi_fem[ol[z].LNA_algo2[u][v] - 1][i][j];
+				ct = 0;
+				for (z = 0; z < owsfnumber; z++) {
+					if (ol[z].FSNEL > 0) {
+						for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
+							for (i = 0; i < NINT; i++) { //loop through each point on element surface 
+								for (j = 0; j < NINT; j++) {
+									ol[z].DISP[ol[z].IEN_gb[ol[z].LNA_2D[i][j] - 1][l] - 1][0] = 0.0;
+									ol[z].DISP[ol[z].IEN_gb[ol[z].LNA_2D[i][j] - 1][l] - 1][1] = 0.0;
+									ol[z].DISP[ol[z].IEN_gb[ol[z].LNA_2D[i][j] - 1][l] - 1][2] = 0.0;
+									for (u = 0; u < 2; u++) {
+										for (v = 0; v < 2; v++) {
+											for (n = 0; n < 3; n++) {
+												//DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_2D[u][v] - 1][l] - 1][n];
+												DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[ol[z].LNA_algo2[u][v] - 1] - 1][l] - 1][n];
+												ol[z].DISP[ol[z].IEN_gb[ol[z].LNA_2D[i][j] - 1][l] - 1][n] += DISPTEMP * ol[z].phi_fem[ol[z].LNA_algo2[u][v] - 1][i][j];
+											}
 										}
 									}
 								}
 							}
 						}
-					}
-					ct += 1;
-				}
-			}
-			hd = 0.0;
-			for (z = 0; z < owsfnumber; z++) {
-				for (i = 0; i < ol[z].GIDNct; i++) {
-					for (n = 0; n < 3; n++) {
-						hd += ol[z].DISP[ol[z].GIDN[i] - 1][n];
+						ct += 1;
 					}
 				}
-			}
-		}
-
-		else if (mappingalgo == 4) {
-			/*
-			if (debug2 == 1) {
+				hd = 0.0;
 				for (z = 0; z < owsfnumber; z++) {
-					for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
-						for (i = 0; i < 3; i++) { //loop through each point on element surface 
-							wsflist[z]->nodecoord[3 * (ol[z].IEN_2D[i][l] - 1) + 1] = GCOORD[ol[z].IEN_gb[i][l] - 1][1] + 1;
+					for (i = 0; i < ol[z].GIDNct; i++) {
+						for (n = 0; n < 3; n++) {
+							hd += ol[z].DISP[ol[z].GIDN[i] - 1][n];
 						}
 					}
 				}
 			}
-			*/
+
 			if (element_type == 1) { //tetrahedral element
 				double DISPTEMP = 0.0;
 				ct = 0;
@@ -368,6 +383,38 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					}
 				}
 			}
+
+		}
+
+		else if (mappingalgo == 4) {
+			double phig = 0.0;
+			double DISPTEMP = 0.0;
+			for (z = 0; z < owsfnumber; z++) {
+				for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
+					for (i = 0; i < elenode2D_gs; i++) { //loop through each point on element surface
+						ol[z].DISP_gs[l*elenode2D_gs + i][0] = 0.0;
+						ol[z].DISP_gs[l*elenode2D_gs + i][1] = 0.0;
+						ol[z].DISP_gs[l*elenode2D_gs + i][2] = 0.0;
+						if (ol[z].orphan_flag_flu[l*elenode2D_gs + i] == 0) { //the node is not an orphan
+							for (u = 0; u < 2; u++) { //u,v stands for fem points 
+								for (v = 0; v < 2; v++) {
+									phig = 1.0 / 4.0;
+									for (n = 0; n < 3; n++) {
+										DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[ss[z].LNA_stru[u][v] - 1][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[ss[z].LNA_stru[u][v] - 1][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
+										ol[z].DISP_gs[l*elenode2D_gs + i][n] += DISPTEMP * phig;
+									}
+								}
+							}
+						}
+						else { //the node is an orphan
+							for (n = 0; n < 3; n++) {
+								ol[z].DISP_gs[l*elenode2D_gs + i][n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*elenode2D_gs + i] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
+								//flu_stru for orphan node is actually the node number instead of the element number 
+							}
+						}
+					}
+				}
+			}
 		}
 
 		else if (mappingalgo == 5) {
@@ -379,7 +426,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			double nomx, nomy; double denomx, denomy;
 			double phig;
 			double DISPTEMP = 0.0;
-			
+			/*
 			if (debug_algo5 == 1) {
 				for (z = 0; z < ssnumber; z++) {
 					for (i = 0; i < ss[z].Node_stru; i++) {
@@ -389,15 +436,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					}
 				}
 			}
-			
-			int elenode2D_gs;
-			if (element_type == 0) { //hex element
-				elenode2D_gs = NINT*NINT;
-			}
-			if (element_type == 1) { //tet element
-				elenode2D_gs = 3;
-			}
-
+			*/
 			for (z = 0; z < owsfnumber; z++) {
 				for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
 					for (i = 0; i < elenode2D_gs; i++) { //loop through each point on element surface

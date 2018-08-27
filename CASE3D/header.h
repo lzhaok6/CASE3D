@@ -83,7 +83,7 @@ typedef struct owetsurf {
 	double** flu_stru_global;
 	int** IEN_flu_2D;
 	double** GCOORD_flu_gs; //the gauss point on fluid element 
-	double** DISP_gs; //The displacement on gauss nodes 
+	double** DISP_gs; //The displacement on gauss nodes  
 } OWETSURF;
 
 typedef struct stru_wet_surf {
@@ -112,6 +112,7 @@ typedef struct stru_wet_surf {
 	double **GCOORD_stru_gs; //the coordinate of structure wetted surface gauss points
 	int** IEN_stru_gs;
 	int gs_num; 
+	int** FP_flu; //store the interface node for mapping algorithm 4
 }STRU_WET_SURF;
 
 //Store the properties on NRB surface (currently just one)
@@ -267,7 +268,7 @@ const double SZ = 4.8768; //16ft
 //const double SZ = 0.1;
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;
-const int Nq = N + 1; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
+const int Nq = N; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
 const int NqINT = Nq + 1;
 const int refine = 1; //The refinement rate of fluid mesh against base fluid mesh for h refinement. 
 const int hpref = refine*N; //total refinement level of h and p refinement
@@ -310,7 +311,7 @@ const int tfm = 1; //is total field model used?
 const int tensorfactorization = 0;
 const int TNT = 1;
 const int output = 0;
-const int FEM = 0; //Is this a first order FEM code? 
+const int FEM = 1; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
 const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
 const int nrbsurfnumber = 4; //The number of NRB surface. 
@@ -331,4 +332,4 @@ const int SYNEL = 4 * refine;
 const double xo = SY;
 const int Bleich = 0; 
 const int improvednrb = 0;
-const int element_type = 0; //0 for hexahedral element; 1 for tetrahedral element; 
+const int element_type = 1; //0 for hexahedral element; 1 for tetrahedral element; 

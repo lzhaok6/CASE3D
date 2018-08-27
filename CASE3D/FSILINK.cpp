@@ -195,6 +195,7 @@ void FSILINK(int*** LNA) {
 					for (m = 0; m < 3; m++) {
 						for (n = 0; n < 3; n++) { //n is the 3-point quadrature point
 							ol[z].FPMASTER[e][m][n] = (1.0 / 2.0) * w[n] * phi[m][n] * (2 * ol[z].dimension[e]);
+							//2 * ol[z].dimension[e] is the value of Jacobian determinant
 						}
 					}
 				}

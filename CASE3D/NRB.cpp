@@ -148,21 +148,20 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA) {
 					for (m = 0; m < 3; m++) {
 						for (n = 0; n < 3; n++) {
 							for (o = 0; o < 3; o++) { //o is the 3-point quadrature point
-								nr[z].ADMASTER[e][m][n] += (1.0 / 2.0) * w[o] * phi[m][o] * phi[n][o] * (2 * ol[z].dimension[e]);
+								nr[z].ADMASTER[e][m][n] += (1.0 / 2.0) * w[o] * phi[m][o] * phi[n][o] * (2 * nr[z].dimension[e]);
 							}
 						}
 					}
 				}
-			}
-			for (e = 0; e < nr[z].NEL_nrb; e++) {
-				for (j = 0; j < 3; j++) {
-					for (k = 0; k < 3; k++) {
-						t.ADMASTERG[nr[z].IEN_gb[k][e] - 1] += nr[z].ADMASTER[e][j][k];
+				for (e = 0; e < nr[z].NEL_nrb; e++) {
+					for (j = 0; j < 3; j++) {
+						for (k = 0; k < 3; k++) {
+							t.ADMASTERG[nr[z].IEN_gb[k][e] - 1] += nr[z].ADMASTER[e][j][k];
+						}
 					}
 				}
 			}
 		}
-
 	}
 
 	//Obtain NRB node numbering for all nodes from ol[z].NRBA

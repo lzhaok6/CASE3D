@@ -18,7 +18,7 @@
 void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) {
 	extern OWETSURF ol[owsfnumber];
 	extern STRU_WET_SURF ss[ssnumber]; //data structure used to store the properties on the structure wetted surface
-	int i, j, k, l, m, n, o, h, e, z, q;
+	int i, j, k, l, m, n, o, h, e, z, q, ii;
 
 	int elenode2D;
 	if (element_type == 0) { //hex element
@@ -86,7 +86,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	}
 
 	//First bring in the structural wetted surface mesh into the code
-	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.3_abaqus_MpCCI_explicit_sym_0.3048wl.inp"); //The Abaqus input file
+	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.3_abaqus_MpCCI_explicit_sym_0.3048wl_tet.inp"); //The Abaqus input file
 	if (!infile_algo5) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -474,6 +474,18 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		ol[z].orphan_flag_flu = new int[ol[z].FSNEL*elenode2D];
 	}
 
+	for (z = 0; z < owsfnumber; z++) {
+		ss[z].FP_flu = new int*[ss[z].ELE_stru * (hprefg + 1) * (hprefg + 1)];
+		for (i = 0; i < ss[z].ELE_stru * (hprefg + 1) * (hprefg + 1); i++) {
+			ss[z].FP_flu[i] = new int[elenode2D];
+		}
+	}
+
+	int* FP_searched = new int[elenode2D];
+	for (i = 0; i < elenode2D; i++) {
+		FP_searched[i] = 0.0;
+	}
+
 	//Generate the model file
 	if (mappingalgo == 5) {
 		int flag;
@@ -628,6 +640,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							x = A.inverse()*b;
 							xu = x(0); yu = x(1); zu = x(2);
 							//We need to determine at this stage if the projected node is within the searched element, if not we need to pass this element. 
+							double xi = 0.0;
+							double eta = 0.0;
+							double zeta = 0.0;  //converged local coordinate
 							if (element_type == 1) { //tetrahedral element
 								//Need to change the name of the matrix and vectors. also need to change the if(){} below 
 								//determine the local coordinate in the tetrahedral element
@@ -648,9 +663,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 								if (local(0) > -1e-5 && (local(0) - 1) < 1e-5 && local(1) > -1e-5 && (local(1) - 1) < 1e-5 && local(2) > -1e-5 && (local(2) - 1) < 1e-5
 									&& (local(0) + local(1) + local(2) - 1) < 1e-5) {
 									//The point is indeed inside the searched element and we can store the local coordinate in that element
-									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][0] = local(0); //xi
-									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][1] = local(1); //eta
-									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][2] = local(2); //zeta
+									xi = local(0); //xi
+									eta = local(1); //eta
+									zeta = local(2); //zeta
 									orphan = 0;
 									inelement = 1;
 								}
@@ -660,9 +675,6 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 									inelement = 0;
 								}
 							}
-							double xi = 0.0; 
-							double eta = 0.0; 
-							double zeta = 0.0;  //converged local coordinate
 							if (element_type == 0) { //hex element
 								double xi_k, eta_k, zeta_k;
 								double xi_k_1, eta_k_1, zeta_k_1;
@@ -767,6 +779,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 									xu_searched = xu; yu_searched = yu; zu_searched = zu;
 									distance[0] = distance[1]; //update the shortest orthogonal distance so far
 									searched_ele = ol[e].GIDF[k];
+									for (ii = 0; ii < elenode2D; ii++) {
+										FP_searched[ii] = ol[e].FP[k][ii];
+									}
 								}
 							}
 						}
@@ -784,6 +799,22 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						//store the corresponding element 
 						ss[e].gs_flu[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q] = searched_ele;
 						ss[e].orphan_flag_gs[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q] = 0;
+						for (ii = 0; ii < elenode2D; ii++) {
+							ss[e].FP_flu[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][ii] = FP_searched[ii];
+						}
+					}
+					//Check if the searched node is on the element surface
+					if (element_type == 1) {
+						double xi_fd = ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][0];
+						double eta_fd = ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][1];
+						double zeta_fd = ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][2];
+						if (abs(xi_fd) < 1e-5 || abs(eta_fd) < 1e-5 || abs(zeta_fd) < 1e-5 || abs(xi_fd + eta_fd + zeta_fd - 1) < 1e-5) {
+							//the node is on one of the surfaces
+						}
+						else {
+							std::cout << "The local node is not on one of the surfaces" << std::endl;
+							system("PAUSE ");
+						}
 					}
 					//store the projected node location
 					ss[e].gs_flu_global[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][0] = xu_searched;

@@ -574,7 +574,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 			}
 		}
 	}
-	
+	std::cout << " " << std::endl; 
 	/*
 	//The total value of the Jacobian determinant should be the 6 times of the total volume 
 	double hd = 0.0; 

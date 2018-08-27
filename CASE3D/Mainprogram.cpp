@@ -61,8 +61,8 @@ int main()
 		std::cout << "The other mapping algorithm is not available for hexahedral element" << std::endl;
 		system("PAUSE ");
 	}
-	if (element_type == 1 && mappingalgo != 4) {
-		std::cout << "The other mapping algorithm is not available for tetrahedral element" << std::endl;
+	if (element_type == 1 && mappingalgo == 2) {
+		std::cout << "The mapping algorithm 2 is not available for tetrahedral element" << std::endl;
 		system("PAUSE ");
 	}
 	if (FEM == 1 && Nq != N) {
