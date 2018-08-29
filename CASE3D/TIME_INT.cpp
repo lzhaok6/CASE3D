@@ -1255,7 +1255,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						for (h = 0; h < elenode2D; h++) {
 							BNRBTEMP[h] = 0.0;
 							for (k = 0; k < elenode2D; k++) {
-								BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRBORG2[nr[z].DP_2D[k] - 1][j]);
+								if (debug_algo5 == 0) {
+									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRBORG2[nr[z].DP_2D[k] - 1][j]);
+								}
+								else {
+									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (1);
+								}
 							}
 						}
 						for (k = 0; k < elenode2D; k++) {
@@ -1337,11 +1342,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						for (h = 0; h < elenode2D; h++) {
 							BNRBTEMP[h] = 0.0;
 							for (k = 0; k < elenode2D; k++) {
-								if (debug == 0) {
+								if (debug_algo5 == 0) {
 									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1]);
 								}
 								else {
-									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1]);
+									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (1);
 								}
 							}
 						}
@@ -1352,12 +1357,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 			}
 		}
-		/*
 		hd = 0.0;
 		for (j = 0; j < NNODE; j++) {
-			hd += ol[0].WBS[j];
+			hd += BNRB[j];
 		}
-		*/	
+
 		//time integration
 		//start = std::clock();
 		#pragma omp parallel for num_threads(6)
@@ -1525,11 +1529,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			FFORCE[nrb.NRBA_t[j] - 1] += BNRB[nrb.NRBA_t[j] - 1];
 		}
 		//The combination of FFORCE passes the test
-
-		hd = 0.0;
-		for (j = 0; j < NNODE; j++) {
-			hd += BNRB[j];
-		}
 
 		if (tfm == 1) {
 			for (j = 0; j < fspt_num; j++) {

@@ -86,7 +86,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	}
 
 	//First bring in the structural wetted surface mesh into the code
-	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.3_abaqus_MpCCI_explicit_sym_0.3048wl_tet.inp"); //The Abaqus input file
+	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.3_abaqus_MpCCI_explicit_sym_0.3048wl.inp"); //The Abaqus input file
 	if (!infile_algo5) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -428,8 +428,10 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		ct_gs = TD_LOCAL_NODE(hprefg);
 		TD_LOCAL_NODEstruct ct_ln;
 		ct_ln = TD_LOCAL_NODE(1);
+		LOCAL_NODEstruct lna; 
+		lna = LOCAL_NODE(1);
 		LOCAL_SHAPEstruct ls_ln; //ln means linear
-		ls_ln = LOCAL_SHAPE(LNA, 1, hprefg, 1); //Get the 2D linear shape function value on Nth order Gauss-Legendre nodes
+		ls_ln = LOCAL_SHAPE(lna.LNA, 1, hprefg, 1); //Get the 2D linear shape function value on Nth order Gauss-Legendre nodes
 		for (i = 0; i < ss[z].ELE_stru; i++) { //loop through all the elements
 			for (m = 0; m < hprefg + 1; m++) { //m, n, o stands for internal nodes in one element (all but except for corner nodes)
 				for (n = 0; n < hprefg + 1; n++) {
@@ -603,7 +605,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 					for (k = 0; k < ol[e].FSNEL; k++) { //looping through fluid wetted elements
 						flag = 1;
 						//First determine if the fluid element is inside the searching range
-						for (l = 0; l < elenode2D; l++) {
+						for (l = 0; l < 4; l++) {
 							range[0] = pow(pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][0] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][0], 2) + pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][1] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][1], 2) + pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][2] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][2], 2), 0.5);
 							if (range[0] < range[1]) {
 								range[1] = range[0]; //range[1] is used to store the shortest distance so far
@@ -831,8 +833,10 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	//Derive the coordinate of the gauss nodes 
 	if (element_type == 0) {
 		ct_gs = TD_LOCAL_NODE(N);
+		LOCAL_NODEstruct lna; 
+		lna = LOCAL_NODE(1);
 		LOCAL_SHAPEstruct ls_ln; //ln means linear
-		ls_ln = LOCAL_SHAPE(LNA, 1, hprefg, 1); //Get the 2D linear shape function value on Nth order Gauss-Legendre nodes
+		ls_ln = LOCAL_SHAPE(lna.LNA, 1, N, 1); //Get the 2D linear shape function value on Nth order Gauss-Legendre nodes
 		for (z = 0; z < owsfnumber; z++) {
 			ol[z].GCOORD_flu_gs = new double*[ol[z].FSNEL*NINT*NINT];
 			for (i = 0; i < ol[z].FSNEL*NINT*NINT; i++) {
@@ -848,15 +852,16 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][2] = 0.0;
 						for (j = 0; j < 2; j++) { //j, k stands for corner nodes
 							for (k = 0; k < 2; k++) {
-								ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][0] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][0] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*(hprefg + 1) + n];
-								ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][1] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][1] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*(hprefg + 1) + n];
-								ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][2] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][2] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*(hprefg + 1) + n];
+								ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][0] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][0] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*NINT + n];
+								ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][1] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][1] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*NINT + n];
+								ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][2] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][2] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*NINT + n];
 							}
 						}
 					}
 				}
 			}
 		}
+		std::cout << " " << std::endl; 
 	}
 	if (element_type == 1) {
 		//Derive the 3-point quadrature node location on the interface triangle elements

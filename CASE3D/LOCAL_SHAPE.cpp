@@ -55,18 +55,20 @@ struct LOCAL_SHAPEstruct LOCAL_SHAPE(int*** LNA, int n, int NQUAD, int fem) {
 
 	if (fem == 1) {
 		LOBATTOstruct b;
-		b = LOBATTO(n);
+		//b = LOBATTO(n);
+		b = LOBATTO(NQUAD);
 		GLLQUADstruct g;
-		g = GLLQUAD(b.Z, b.WL, n, 0); //Obtain Gauss-Legendre point (not Lobatto point)
+		//g = GLLQUAD(b.Z, b.WL, n, 0); //Obtain Gauss-Legendre point (not Lobatto point)
+		g = GLLQUAD(b.Z, b.WL, NQUAD, 0); //Obtain Gauss-Legendre point (not Lobatto point)
 		double* femp; 
 		femp = new double[nint];
 		//double femp[nint];  //local Lagrange interpolation nodes
 		for (i = 0; i < nint; i++) {
-			femp[i] = -1 + (2 / n)*i;
+			femp[i] = -1 + (2.0 / n)*i;
 		}
 		double nom; double denom;
 		for (i = 0; i < nint; i++) {
-			for (j = 0; j < nint; j++) {
+			for (j = 0; j < NQUAD + 1; j++) {
 				nom = 1.0; denom = 1.0;
 				for (m = 0; m < nint; m++) { //loop through every interpolation point 
 					if (m != i) { //loop through nominator and denominator in basis function expression

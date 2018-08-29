@@ -32,7 +32,7 @@ struct meshgenerationstruct meshgeneration() {
 	//system("PAUSE "); 
 	//std::ifstream infile("Bleich_Sandler_0.1surface_0.01m.msh");
 	//::ifstream infile("../../Bleich_Sandler_0.1surface_0.01m.msh");
-	std::ifstream infile("C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_tet_0_05m.msh");
+	std::ifstream infile("C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=3.msh");
 	if (!infile) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
