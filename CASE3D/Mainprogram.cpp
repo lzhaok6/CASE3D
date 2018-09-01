@@ -57,7 +57,7 @@ int main()
 		std::cout << "The tet element is only FEM type" << std::endl;
 		system("PAUSE ");
 	}
-	if (element_type == 0 && (mappingalgo != 2 && mappingalgo != 5)) {
+	if (element_type == 0 && (mappingalgo != 2 && mappingalgo != 4 && mappingalgo != 5)) {
 		std::cout << "The other mapping algorithm is not available for hexahedral element" << std::endl;
 		system("PAUSE ");
 	}
@@ -86,7 +86,7 @@ int main()
 	c = LOCAL_NODE(N);
 	std::cout << "LOCAL_NODE(N) done" << std::endl;
 
-	if (mappingalgo == 5) {
+	if (mappingalgo == 4 || mappingalgo == 5) {
 		Neighborhood_search(a.GCOORD, c.LNA, a.IEN, a.NEL);
 	}
 

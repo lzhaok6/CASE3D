@@ -1029,13 +1029,18 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					for (h = 0; h < elenode2D; h++) {
 						WBSTEMP[h] = 0.0;
 						for (k = 0; k < elenode2D; k++) { //For mappingalgo 5, k stands for the quadrature nodes; For mappingalgo2, k stands for the interpolation nodes
-							if (mappingalgo == 5) {
+							if (mappingalgo == 5 || mappingalgo == 4) {
 								ol[z].DISP_norm[j*elenode2D + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[j*elenode2D + k][0] + ol[z].norm[j][1] * ol[z].DISP_gs[j*elenode2D + k][1] + ol[z].norm[j][2] * ol[z].DISP_gs[j*elenode2D + k][2];
 							}
 							else {
 								ol[z].DISP_norm[j*elenode2D + k][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][2];
 							}
-							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D + k][1] + (ol[z].DISP_norm[j*elenode2D + k][1] - ol[z].DISP_norm[j*elenode2D + k][0]));
+							if (debug_algo5 == 0) {
+								WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D + k][1] + (ol[z].DISP_norm[j*elenode2D + k][1] - ol[z].DISP_norm[j*elenode2D + k][0]));
+							}
+							else {
+								WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (ol[z].DISP_norm[j*elenode2D + k][1] + (ol[z].DISP_norm[j*elenode2D + k][1] - ol[z].DISP_norm[j*elenode2D + k][0]));
+							}
 						}
 					}
 					for (k = 0; k < elenode2D; k++) {
@@ -1050,7 +1055,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					for (h = 0; h < elenode2D; h++) {
 						WBSTEMP[h] = 0.0;
 						for (k = 0; k < elenode2D; k++) {
-							if (mappingalgo == 5) {
+							if (mappingalgo == 5 || mappingalgo == 4) {
 								ol[z].DISP_norm[j*elenode2D + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[j*elenode2D + k][0] + ol[z].norm[j][1] * ol[z].DISP_gs[j*elenode2D + k][1] + ol[z].norm[j][2] * ol[z].DISP_gs[j*elenode2D + k][2];
 							}
 							else {

@@ -109,6 +109,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 				}
 			}
 		}
+
 		else if (mappingalgo == 4) {
 			int elenode2D = 0;
 			if (element_type == 0) { //hex element
@@ -142,7 +143,43 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					}
 				}
 			}
+			for (z = 0; z < ssnumber; z++) {
+				for (l = 0; l < ss[z].ELE_stru; l++) { //loop through each element first
+					for (i = 0; i < 4; i++) { //i,j stands for fem points y m 
+						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[i][l] - 1) + 0] = 0.0;
+						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[i][l] - 1) + 1] = 0.0;
+						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[i][l] - 1) + 2] = 0.0;
+					}
+				}
+				//phi_femg: the linear shape function value at base mesh Gauss-Legendre nodes
+				for (l = 0; l < ss[z].ELE_stru; l++) {
+					for (i = 0; i < 2; i++) {
+						for (j = 0; j < 2; j++) {
+							for (u = 0; u < hprefg + 1; u++) { //u v stands for y x
+								for (v = 0; v < hprefg + 1; v++) {
+									for (n = 0; n < 3; n++) {
+										wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[ss[z].LNA_stru[i][j] - 1][l] - 1) + n] //force in m direction
+											+= ss[z].norm_stru[l][n] * ss[z].W_stru[u] * ss[z].W_stru[v] * ss[z].P_gs[ss[z].LNA_gs[v][u] - 1][l] * ss[z].phi_stru[ss[z].LNA_stru[i][j] - 1][v][u] * ss[z].Jacob_stru[l][u*(hprefg + 1) + v];
+										//ss[z].phi_stru is the linear shape function value on gauss node (Gauss-Legendre)
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			double BF_val[ssnumber];
+			for (z = 0; z < ssnumber; z++) {
+				BF_val[z] = 0.0;
+				for (j = 0; j < wsflist[z]->nnodes; j++) {
+					for (k = 0; k < 3; k++) {
+						BF_val[z] += wsflist[z]->nodeforce[j * 3 + k];
+					}
+				}
+			}
+			//std::cout << " " << std::endl; 
 		}
+
 		else if (mappingalgo == 5) {
 			//Interpolate the pressure from fluid interpolation node to structure gauss node ss[z].P_gs[ss[z].LNA_gs[v][u] - 1][l]
 			LOBATTOstruct b;
@@ -325,7 +362,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						}
 					}
 				}
-				std::cout << " " << std::endl;
+				//std::cout << " " << std::endl;
 
 				double DISPTEMP = 0.0;
 
@@ -387,6 +424,15 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 		}
 
 		else if (mappingalgo == 4) {
+			if (debug_algo5 == 1) {
+				//for (z = 0; z < ssnumber; z++) {
+					//for (i = 0; i < ss[z].Node_stru; i++) {
+				//for (n = 0; n < 3; n++) {
+				wsflist[0]->nodecoord[3 * 61 + 2] = -2.4384 + 1;
+				//}
+				//}
+			//}
+			}
 			double phig = 0.0;
 			double DISPTEMP = 0.0;
 			for (z = 0; z < owsfnumber; z++) {
@@ -402,6 +448,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 									for (n = 0; n < 3; n++) {
 										DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[ss[z].LNA_stru[u][v] - 1][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[ss[z].LNA_stru[u][v] - 1][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
 										ol[z].DISP_gs[l*elenode2D_gs + i][n] += DISPTEMP * phig;
+										//std::cout << " " << std::endl;
 									}
 								}
 							}
@@ -409,6 +456,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						else { //the node is an orphan
 							for (n = 0; n < 3; n++) {
 								ol[z].DISP_gs[l*elenode2D_gs + i][n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*elenode2D_gs + i] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
+								
 								//flu_stru for orphan node is actually the node number instead of the element number 
 							}
 						}
@@ -486,7 +534,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					}
 				}
 			}
-			std::cout << " " << std::endl;
+			//std::cout << " " << std::endl;
 		}
 
 		

@@ -71,7 +71,7 @@ void FSILINK(int*** LNA) {
 					}
 				}
 			}
-			if (mappingalgo == 5) {
+			if (mappingalgo == 5 || mappingalgo == 4) {
 				//Take a look at "The integration matrix in mapping algorithm 5.pdf" in post-processing folder
 				bq = LOBATTO(N); //one unit higher than the interpolation order
 				gq = GLLQUAD(bq.Z, bq.WL, N, FEM);

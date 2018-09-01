@@ -328,7 +328,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				//check if the value is positive and check if i and j is exchanged, would the value of FPMASTER_2D be changed!!!
 			}
 		}
-		if (mappingalgo == 5) {
+		if (mappingalgo == 5 || mappingalgo == 4) {
 			bq = LOBATTO(N);
 			gq = GLLQUAD(bq.Z, bq.WL, N, 0);
 			//the quadrature point is Gauss-Legendre point for whatever element type.  

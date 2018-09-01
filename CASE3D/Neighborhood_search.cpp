@@ -21,11 +21,14 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	int i, j, k, l, m, n, o, h, e, z, q, ii;
 
 	int elenode2D;
+	int elenode2D_ln; 
 	if (element_type == 0) { //hex element
 		elenode2D = NINT*NINT; 
+		elenode2D_ln = 4; 
 	}
 	if (element_type == 1) { //tet element
 		elenode2D = 3;
+		elenode2D_ln = 3;
 	}
 
 	//Get the corner point of the fluid elements 
@@ -86,7 +89,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	}
 
 	//First bring in the structural wetted surface mesh into the code
-	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.3_abaqus_MpCCI_explicit_sym_0.3048wl.inp"); //The Abaqus input file
+	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp"); //The Abaqus input file
 	if (!infile_algo5) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -198,20 +201,34 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 				//read all the nodes in this sideset
 				ct = 0; 
 				if (i < sidesets_start.size() - 1) {
-					for (k = sidesets_start[i]; k < sidesets_start[i + 1] - 1; k++) {
-						for (l = 0; l < output[k].size(); l++) {
-							ele_num_clm.push_back(stoi(output[k][l]));
-							ct += 1; 
+					if (sidesets_start[i + 1] - 1 == sidesets_start[i] + 1) { //the element number is expressed as initial,end,internal way (only one line is used) 
+						for (k = stoi(output[sidesets_start[i]][0]); k < stoi(output[sidesets_start[i]][1]) + 1; k += stoi(output[sidesets_start[i]][2])) {
+							ele_num_clm.push_back(k);
+							ct += 1;
+						}
+					}
+					else {
+						for (k = sidesets_start[i]; k < sidesets_start[i + 1] - 1; k++) {
+							for (l = 0; l < output[k].size(); l++) {
+								ele_num_clm.push_back(stoi(output[k][l]));
+								ct += 1;
+							}
 						}
 					}
 				}
 				else { //for the last sideset, there is no sidesets_start[i + 1], we assume the surface definition follows the last side set
+					if (surface[0] - 1 == sidesets_start[i] + 1) { //the element number is expressed as initial,end,internal way (only one line is used) 
+						for (k = stoi(output[sidesets_start[i]][0]); k < stoi(output[sidesets_start[i]][1]) + 1; k += stoi(output[sidesets_start[i]][2])) {
+							ele_num_clm.push_back(k);
+						}
+					}
 					for (k = sidesets_start[i]; k < surface[0]; k++) {
 						for (l = 0; l < output[k].size(); l++) {
 							ele_num_clm.push_back(stoi(output[k][l]));
 							ct += 1; 
 						}
 					}
+
 				}
 				ele_num.push_back(ele_num_clm);
 				ele_num_sideset.push_back(ct);
@@ -295,7 +312,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			}
 		}
 	}
-	if (mappingalgo == 5) {
+	if (mappingalgo == 4 || mappingalgo == 5) {
 		double x1, x2, x3; double y1, y2, y3; double z1, z2, z3;
 		double ax, ay, az; double bx, by, bz;
 		double n1, n2, n3; double absn;
@@ -489,7 +506,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	}
 
 	//Generate the model file
-	if (mappingalgo == 5) {
+	if (mappingalgo == 4 || mappingalgo == 5) {
 		int flag;
 		for (z = 0; z < owsfnumber; z++) {
 			ss[z].IEN_stru_MpCCI = new int*[4]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
@@ -533,7 +550,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	}
 
 	//start writing the file
-	if (mappingalgo == 5) {
+	if (mappingalgo == 4 || mappingalgo == 5) {
 		std::ofstream myfile_algo5;
 		myfile_algo5.open("model.txt");
 		for (z = 0; z < owsfnumber; z++) {
@@ -605,7 +622,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 					for (k = 0; k < ol[e].FSNEL; k++) { //looping through fluid wetted elements
 						flag = 1;
 						//First determine if the fluid element is inside the searching range
-						for (l = 0; l < 4; l++) {
+						for (l = 0; l < elenode2D_ln; l++) {
 							range[0] = pow(pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][0] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][0], 2) + pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][1] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][1], 2) + pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][2] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][2], 2), 0.5);
 							if (range[0] < range[1]) {
 								range[1] = range[0]; //range[1] is used to store the shortest distance so far
