@@ -30,7 +30,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	double****gamma_t, double ****gamma, double*****G);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
-const int N = 2;    //N is the element order of fluid mesh 
+const int N = 1;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;
 const int hprefg = 1; //The level of Gauss-Legendre integration on the structure mesh (for mapping algorithm 5)
 typedef struct owetsurf {
