@@ -32,17 +32,35 @@ void FSILINK(int*** LNA) {
 		double FUNC;
 		//Check out Evernote "Some thoughts on boundary force integration"
 		for (z = 0; z < owsfnumber; z++) {
-			ol[z].FPMASTER = new double**[ol[z].FSNEL];
-			for (e = 0; e < ol[z].FSNEL; e++) {
-				ol[z].FPMASTER[e] = new double*[NINT*NINT];
-				for (m = 0; m < NINT*NINT; m++) {
-					ol[z].FPMASTER[e][m] = new double[NINT*NINT];
+			if (mappingalgo == 4 || mappingalgo == 5) {
+				ol[z].FPMASTER = new double**[ol[z].FSNEL];
+				for (e = 0; e < ol[z].FSNEL; e++) {
+					ol[z].FPMASTER[e] = new double*[NINT*NINT];
+					for (m = 0; m < NINT*NINT; m++) {
+						ol[z].FPMASTER[e][m] = new double[(hprefg_flu + 1)*(hprefg_flu + 1)];
+					}
+				}
+				for (e = 0; e < ol[z].FSNEL; e++) {
+					for (m = 0; m < NINT*NINT; m++) {
+						for (n = 0; n < (hprefg_flu + 1)*(hprefg_flu + 1); n++) {
+							ol[z].FPMASTER[e][m][n] = 0.0;
+						}
+					}
 				}
 			}
-			for (e = 0; e < ol[z].FSNEL; e++) {
-				for (m = 0; m < NINT*NINT; m++) {
-					for (n = 0; n < NINT*NINT; n++) {
-						ol[z].FPMASTER[e][m][n] = 0.0;
+			else {
+				ol[z].FPMASTER = new double**[ol[z].FSNEL];
+				for (e = 0; e < ol[z].FSNEL; e++) {
+					ol[z].FPMASTER[e] = new double*[NINT*NINT];
+					for (m = 0; m < NINT*NINT; m++) {
+						ol[z].FPMASTER[e][m] = new double[NINT*NINT];
+					}
+				}
+				for (e = 0; e < ol[z].FSNEL; e++) {
+					for (m = 0; m < NINT*NINT; m++) {
+						for (n = 0; n < NINT*NINT; n++) {
+							ol[z].FPMASTER[e][m][n] = 0.0;
+						}
 					}
 				}
 			}
@@ -72,23 +90,25 @@ void FSILINK(int*** LNA) {
 				}
 			}
 			if (mappingalgo == 5 || mappingalgo == 4) {
+
 				//Take a look at "The integration matrix in mapping algorithm 5.pdf" in post-processing folder
-				bq = LOBATTO(N); //one unit higher than the interpolation order
-				gq = GLLQUAD(bq.Z, bq.WL, N, FEM);
-				ls = LOCAL_SHAPE(LNA, N, N, 1); 
+				bq = LOBATTO(hprefg_flu);
+				gq = GLLQUAD(bq.Z, bq.WL, hprefg_flu, FEM);
+				ls = LOCAL_SHAPE(LNA, N, hprefg_flu, 1);
 				for (e = 0; e < ol[z].FSNEL; e++) {
 					for (m = 0; m < NINT; m++) { //interpolation point 
 						for (n = 0; n < NINT; n++) {
-							for (i = 0; i < NINT; i++) { //quadrature point 
-								for (j = 0; j < NINT; j++) {
-									ol[z].FPMASTER[e][m*NINT + n][i*NINT + j] = gq.W[i] * gq.W[j] * (ls.SHOD[0][m][i] * ls.SHOD[0][n][j]) * ol[z].Jacob_2D[e][i*NINT + j];
+							for (i = 0; i < hprefg_flu + 1; i++) { //quadrature point 
+								for (j = 0; j < hprefg_flu + 1; j++) {
+									ol[z].FPMASTER[e][m*NINT + n][i*(hprefg_flu + 1) + j] = gq.W[i] * gq.W[j] * (ls.SHOD[0][m][i] * ls.SHOD[0][n][j]) * ol[z].Jacob_2D[e][i*(hprefg_flu + 1) + j];
 								}
 							}
 						}
 					}
 				}
-				//std::cout << " " << std::endl;
+				std::cout << " " << std::endl;
 			}
+
 		}
 
 		if (mappingalgo == 2) {

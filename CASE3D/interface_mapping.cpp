@@ -345,7 +345,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 
 		int elenode2D_gs;
 		if (element_type == 0) { //hex element
-			elenode2D_gs = NINT*NINT;
+			elenode2D_gs = (hprefg_flu + 1)*(hprefg_flu + 1);
 		}
 		if (element_type == 1) { //tet element
 			elenode2D_gs = 3;
@@ -474,17 +474,17 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			double nomx, nomy; double denomx, denomy;
 			double phig;
 			double DISPTEMP = 0.0;
-			/*
+			
 			if (debug_algo5 == 1) {
 				for (z = 0; z < ssnumber; z++) {
 					for (i = 0; i < ss[z].Node_stru; i++) {
 						for (n = 0; n < 3; n++) {
-							wsflist[z]->nodecoord[3 * i + n] = ss[z].GCOORD_stru[ss[z].Node_glob[i] - 1][n] + 1;
+							wsflist[z]->nodecoord[3 * i + n] = ss[z].GCOORD_stru[ss[z].Node_glob[i] - 1][n] + i;
 						}
 					}
 				}
 			}
-			*/
+			
 			for (z = 0; z < owsfnumber; z++) {
 				for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
 					for (i = 0; i < elenode2D_gs; i++) { //loop through each point on element surface

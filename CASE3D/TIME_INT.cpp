@@ -480,12 +480,21 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	for (z = 0; z < owsfnumber; z++) { //this memory allocation scheme could have been improved
 		ol[z].WBS = new double[NNODE];
 		ol[z].DISP = new double*[NNODE];
-		//ol[z].DISP_norm = new double*[NNODE];
-		ol[z].DISP_gs = new double*[ol[z].FSNEL*elenode2D];
-		ol[z].DISP_norm = new double*[ol[z].FSNEL*elenode2D];
-		for (j = 0; j < ol[z].FSNEL*elenode2D; j++) {
-			ol[z].DISP_norm[j] = new double[2];
-			ol[z].DISP_gs[j] = new double[3];
+		if (mappingalgo == 4 || mappingalgo == 5) {
+			ol[z].DISP_gs = new double*[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
+			ol[z].DISP_norm = new double*[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
+			for (j = 0; j < ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1); j++) {
+				ol[z].DISP_norm[j] = new double[2];
+				ol[z].DISP_gs[j] = new double[3];
+			}
+		}
+		else {
+			ol[z].DISP_gs = new double*[ol[z].FSNEL*elenode2D];
+			ol[z].DISP_norm = new double*[ol[z].FSNEL*elenode2D];
+			for (j = 0; j < ol[z].FSNEL*elenode2D; j++) {
+				ol[z].DISP_norm[j] = new double[2];
+				ol[z].DISP_gs[j] = new double[3];
+			}
 		}
 		for (j = 0; j < NNODE; j++) {
 			ol[z].DISP[j] = new double[3]; //defined in 3 directions 
@@ -502,12 +511,25 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				ol[z].DISP[j][k] = 0.0;
 			}
 		}
-		for (j = 0; j < ol[z].FSNEL*elenode2D; j++) {
-			for (k = 0; k < 2; k++) {
-				ol[z].DISP_norm[j][k] = 0.0;
+
+		if (mappingalgo == 4 || mappingalgo == 5) {
+			for (j = 0; j < ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1); j++) {
+				for (k = 0; k < 2; k++) {
+					ol[z].DISP_norm[j][k] = 0.0;
+				}
+				for (k = 0; k < 3; k++) {
+					ol[z].DISP_gs[j][k] = 0.0;
+				}
 			}
-			for (k = 0; k < 3; k++) {
-				ol[z].DISP_gs[j][k] = 0.0;
+		}
+		else {
+			for (j = 0; j < ol[z].FSNEL*elenode2D; j++) {
+				for (k = 0; k < 2; k++) {
+					ol[z].DISP_norm[j][k] = 0.0;
+				}
+				for (k = 0; k < 3; k++) {
+					ol[z].DISP_gs[j][k] = 0.0;
+				}
 			}
 		}
 	}
@@ -1023,24 +1045,27 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 		}
 
+		int elenode2D_gs;
+		if (mappingalgo == 4 || mappingalgo == 5) {
+			elenode2D_gs = (hprefg_flu + 1)*(hprefg_flu + 1);
+		}
+		else {
+			elenode2D_gs = NINT*NINT;
+		}
+
 		if (tfm == 1) { //Total field model
 			for (z = 0; z < owsfnumber; z++) {
 				for (j = 0; j < ol[z].FSNEL; j++) { //for every fluid element linked to structure
 					for (h = 0; h < elenode2D; h++) {
 						WBSTEMP[h] = 0.0;
-						for (k = 0; k < elenode2D; k++) { //For mappingalgo 5, k stands for the quadrature nodes; For mappingalgo2, k stands for the interpolation nodes
+						for (k = 0; k < elenode2D_gs; k++) { //For mappingalgo 5, k stands for the quadrature nodes; For mappingalgo2, k stands for the interpolation nodes
 							if (mappingalgo == 5 || mappingalgo == 4) {
-								ol[z].DISP_norm[j*elenode2D + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[j*elenode2D + k][0] + ol[z].norm[j][1] * ol[z].DISP_gs[j*elenode2D + k][1] + ol[z].norm[j][2] * ol[z].DISP_gs[j*elenode2D + k][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[j*elenode2D_gs + k][0] + ol[z].norm[j][1] * ol[z].DISP_gs[j*elenode2D_gs + k][1] + ol[z].norm[j][2] * ol[z].DISP_gs[j*elenode2D_gs + k][2];
 							}
 							else {
-								ol[z].DISP_norm[j*elenode2D + k][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][2];
 							}
-							if (debug_algo5 == 0) {
-								WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D + k][1] + (ol[z].DISP_norm[j*elenode2D + k][1] - ol[z].DISP_norm[j*elenode2D + k][0]));
-							}
-							else {
-								WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (ol[z].DISP_norm[j*elenode2D + k][1] + (ol[z].DISP_norm[j*elenode2D + k][1] - ol[z].DISP_norm[j*elenode2D + k][0]));
-							}
+							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D_gs + k][1] + (ol[z].DISP_norm[j*elenode2D_gs + k][1] - ol[z].DISP_norm[j*elenode2D_gs + k][0]));
 						}
 					}
 					for (k = 0; k < elenode2D; k++) {
@@ -1054,14 +1079,16 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				for (j = 0; j < ol[z].FSNEL; j++) { //for every fluid element linked to structure
 					for (h = 0; h < elenode2D; h++) {
 						WBSTEMP[h] = 0.0;
-						for (k = 0; k < elenode2D; k++) {
+						for (k = 0; k < elenode2D_gs; k++) {
 							if (mappingalgo == 5 || mappingalgo == 4) {
-								ol[z].DISP_norm[j*elenode2D + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[j*elenode2D + k][0] + ol[z].norm[j][1] * ol[z].DISP_gs[j*elenode2D + k][1] + ol[z].norm[j][2] * ol[z].DISP_gs[j*elenode2D + k][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[j*elenode2D_gs + k][0] + ol[z].norm[j][1] * ol[z].DISP_gs[j*elenode2D_gs + k][1] + ol[z].norm[j][2] * ol[z].DISP_gs[j*elenode2D_gs + k][2];
 							}
 							else {
-								ol[z].DISP_norm[j*elenode2D + k][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][2];
 							}
-							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D + k][1] + (ol[z].DISP_norm[j*elenode2D + k][1] - ol[z].DISP_norm[j*elenode2D + k][0]) - ol[z].DISPI[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1]);
+							std::cout << "We need to derive the DISPI on gauss point!!! (not done yet)" << std::endl;
+							system("PAUSE ");
+							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D_gs + k][1] + (ol[z].DISP_norm[j*elenode2D_gs + k][1] - ol[z].DISP_norm[j*elenode2D_gs + k][0]) - ol[z].DISPI[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1]);
 						}
 					}
 					for (k = 0; k < elenode2D; k++) {
@@ -1071,12 +1098,14 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 		}
 
+		
 		hd = 0.0;
 		for (z = 0; z < owsfnumber; z++) {
 			for (j = 0; j < NNODE; j++) {
 				hd += ol[z].WBS[j];
 			}
 		}
+		
 
 		for (j = 0; j < NNODE; j++) {
 			BNRB[j] = 0.0;
@@ -1786,11 +1815,21 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				ol[z].DISP_norm[ol[z].GIDN[j] - 1][0] = ol[z].DISP_norm[ol[z].GIDN[j] - 1][1];
 			}
 			*/
-			for (j = 0; j < ol[z].FSNEL; j++) {
-				for (k = 0; k < elenode2D; k++) {
-					ol[z].DISP_norm[j*elenode2D + k][0] = ol[z].DISP_norm[j*elenode2D + k][1];
+			if (mappingalgo == 4 || mappingalgo == 5) {
+				for (j = 0; j < ol[z].FSNEL; j++) {
+					for (k = 0; k < elenode2D_gs; k++) {
+						ol[z].DISP_norm[j*elenode2D_gs + k][0] = ol[z].DISP_norm[j*elenode2D_gs + k][1];
+					}
 				}
 			}
+			else {
+				for (j = 0; j < ol[z].FSNEL; j++) {
+					for (k = 0; k < elenode2D; k++) {
+						ol[z].DISP_norm[j*elenode2D + k][0] = ol[z].DISP_norm[j*elenode2D + k][1];
+					}
+				}
+			}
+
 		}
 
 		/*

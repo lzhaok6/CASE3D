@@ -329,25 +329,25 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 			}
 		}
 		if (mappingalgo == 5 || mappingalgo == 4) {
-			bq = LOBATTO(N);
-			gq = GLLQUAD(bq.Z, bq.WL, N, 0);
+			bq = LOBATTO(hprefg_flu);
+			gq = GLLQUAD(bq.Z, bq.WL, hprefg_flu, 0);
 			//the quadrature point is Gauss-Legendre point for whatever element type.  
-			lg = LOCAL_GSHAPE(gq.S, LNA, N);
+			lg = LOCAL_GSHAPE(gq.S, LNA, hprefg_flu);
 			for (z = 0; z < owsfnumber; z++) {
 				//GSHL_2D is the 2D shape function and its derivative with respect to 2D local coordinate. 
 				ol[z].GSHL_2D = new double***[3];
 				for (i = 0; i < 3; i++) {
 					ol[z].GSHL_2D[i] = new double**[4]; //4 points
 					for (j = 0; j < 4; j++) {
-						ol[z].GSHL_2D[i][j] = new double*[NINT];
-						for (k = 0; k < NINT; k++) {
-							ol[z].GSHL_2D[i][j][k] = new double[NINT];
+						ol[z].GSHL_2D[i][j] = new double*[hprefg_flu + 1];
+						for (k = 0; k < hprefg_flu + 1; k++) {
+							ol[z].GSHL_2D[i][j][k] = new double[hprefg_flu + 1];
 						}
 					}
 				}
 				for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
-					for (j = 0; j < NINT; j++) { // j k l are integration point where discrete value of shape function is derived
-						for (k = 0; k < NINT; k++) {
+					for (j = 0; j < hprefg_flu + 1; j++) { // j k l are integration point where discrete value of shape function is derived
+						for (k = 0; k < hprefg_flu + 1; k++) {
 							ol[z].GSHL_2D[2][i][j][k] = (1.0 / 4.0)*(1 + lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[0]] * gq.S[j])*(1 + lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[1]] * gq.S[k]);
 							//not derivative
 							ol[z].GSHL_2D[0][i][j][k] = (1.0 / 4.0)*lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[0]] * (1 + lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[1]] * gq.S[k]);
@@ -361,7 +361,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				//Same number of quadrature point as the 3D integration Jacobian is used (Nq). 
 				ol[z].Jacob_2D = new double*[ol[z].FSNEL];
 				for (i = 0; i < ol[z].FSNEL; i++) {
-					ol[z].Jacob_2D[i] = new double[NINT*NINT];
+					ol[z].Jacob_2D[i] = new double[(hprefg_flu + 1)*(hprefg_flu + 1)];
 				}
 				ol[z].xs_2D = new double***[ol[z].FSNEL];
 				for (i = 0; i < ol[z].FSNEL; i++) {
@@ -369,14 +369,14 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 					for (j = 0; j < 3; j++) {
 						ol[z].xs_2D[i][j] = new double*[2];
 						for (k = 0; k < 2; k++) {
-							ol[z].xs_2D[i][j][k] = new double[NINT*NINT];
+							ol[z].xs_2D[i][j][k] = new double[(hprefg_flu + 1)*(hprefg_flu + 1)];
 						}
 					}
 				}
 				for (i = 0; i < ol[z].FSNEL; i++) {
 					for (j = 0; j < 3; j++) {
 						for (k = 0; k < 2; k++) {
-							for (l = 0; l < NINT*NINT; l++) {
+							for (l = 0; l < (hprefg_flu + 1)*(hprefg_flu + 1); l++) {
 								ol[z].xs_2D[i][j][k][l] = 0.0;
 							}
 						}
@@ -385,25 +385,26 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				//We can determine the 2D Jacobian determinant for boundary condition here. 
 				//Assuming linear geometric property mapping here. 
 				for (m = 0; m < ol[z].FSNEL; m++) { //loop through each element on wetted surface
-					for (i = 0; i < NINT; i++) {
-						for (j = 0; j < NINT; j++) {
+					for (i = 0; i < hprefg_flu + 1; i++) {
+						for (j = 0; j < hprefg_flu + 1; j++) {
 							for (l = 0; l < 4; l++) { //4 nodes on the linear element
 								//Is the l in ol[z].GSHL_2D[0][l][i][j] and in ol[z].LNA_norm[l] must be consistent (the same surface). 
-								ol[z].xs_2D[m][0][0][i * NINT + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dnu
-								ol[z].xs_2D[m][1][0][i * NINT + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dnu
-								ol[z].xs_2D[m][2][0][i * NINT + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dnu
-								ol[z].xs_2D[m][0][1][i * NINT + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dmu
-								ol[z].xs_2D[m][1][1][i * NINT + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dmu
-								ol[z].xs_2D[m][2][1][i * NINT + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dmu
+								ol[z].xs_2D[m][0][0][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dnu
+								ol[z].xs_2D[m][1][0][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dnu
+								ol[z].xs_2D[m][2][0][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dnu
+								ol[z].xs_2D[m][0][1][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dmu
+								ol[z].xs_2D[m][1][1][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dmu
+								ol[z].xs_2D[m][2][1][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dmu
 							}
-							ol[z].Jacob_2D[m][i * NINT + j] = pow(pow((ol[z].xs_2D[m][0][0][i * NINT + j] * ol[z].xs_2D[m][1][1][i * NINT + j] - ol[z].xs_2D[m][0][1][i * NINT + j] * ol[z].xs_2D[m][1][0][i * NINT + j]), 2) +
-								pow((ol[z].xs_2D[m][0][0][i * NINT + j] * ol[z].xs_2D[m][2][1][i * NINT + j] - ol[z].xs_2D[m][0][1][i * NINT + j] * ol[z].xs_2D[m][2][0][i * NINT + j]), 2) +
-								pow((ol[z].xs_2D[m][1][0][i * NINT + j] * ol[z].xs_2D[m][2][1][i * NINT + j] - ol[z].xs_2D[m][1][1][i * NINT + j] * ol[z].xs_2D[m][2][0][i * NINT + j]), 2), 0.5);
+							ol[z].Jacob_2D[m][i * (hprefg_flu + 1) + j] = pow(pow((ol[z].xs_2D[m][0][0][i * (hprefg_flu + 1) + j] * ol[z].xs_2D[m][1][1][i * (hprefg_flu + 1) + j] - ol[z].xs_2D[m][0][1][i * (hprefg_flu + 1) + j] * ol[z].xs_2D[m][1][0][i * (hprefg_flu + 1) + j]), 2) +
+								pow((ol[z].xs_2D[m][0][0][i * (hprefg_flu + 1) + j] * ol[z].xs_2D[m][2][1][i * (hprefg_flu + 1) + j] - ol[z].xs_2D[m][0][1][i * (hprefg_flu + 1) + j] * ol[z].xs_2D[m][2][0][i * (hprefg_flu + 1) + j]), 2) +
+								pow((ol[z].xs_2D[m][1][0][i * (hprefg_flu + 1) + j] * ol[z].xs_2D[m][2][1][i * (hprefg_flu + 1) + j] - ol[z].xs_2D[m][1][1][i * (hprefg_flu + 1) + j] * ol[z].xs_2D[m][2][0][i * (hprefg_flu + 1) + j]), 2), 0.5);
 						}
 					}
 				}
 				//check if the value is positive and check if i and j is exchanged, would the value of FPMASTER_2D be changed!!!
 			}
+			std::cout << " " << std::endl;
 		}
 
 		//For NRB boundary force integration, we still use the approach in algorithm 2 (insert one more quadrature point)

@@ -483,17 +483,17 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	}
 
 	for (z = 0; z < owsfnumber; z++) {
-		ol[z].flu_local = new double*[ol[z].FSNEL*elenode2D];
-		ol[z].flu_stru_global = new double*[ol[z].FSNEL*elenode2D];
-		ol[z].flu_stru = new int[ol[z].FSNEL*elenode2D];
-		for (i = 0; i < ol[z].FSNEL*elenode2D; i++) {
+		ol[z].flu_local = new double*[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
+		ol[z].flu_stru_global = new double*[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
+		ol[z].flu_stru = new int[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
+		for (i = 0; i < ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1); i++) {
 			ol[z].flu_local[i] = new double[2];
 			ol[z].flu_stru_global[i] = new double[3];
 		}
-		ol[z].orphan_flag_flu = new int[ol[z].FSNEL*elenode2D];
+		ol[z].orphan_flag_flu = new int[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
 	}
 
-	for (z = 0; z < owsfnumber; z++) {
+	for (z = 0; z < ssnumber; z++) {
 		ss[z].FP_flu = new int*[ss[z].ELE_stru * (hprefg + 1) * (hprefg + 1)];
 		for (i = 0; i < ss[z].ELE_stru * (hprefg + 1) * (hprefg + 1); i++) {
 			ss[z].FP_flu[i] = new int[elenode2D];
@@ -849,29 +849,33 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	//The same connectivity matrix could be used (ol[z].IEN_gb[j][i])
 	//Derive the coordinate of the gauss nodes 
 	if (element_type == 0) {
-		ct_gs = TD_LOCAL_NODE(N);
+		TD_LOCAL_NODEstruct ct_ln;
+		ct_ln = TD_LOCAL_NODE(1);
 		LOCAL_NODEstruct lna; 
 		lna = LOCAL_NODE(1);
 		LOCAL_SHAPEstruct ls_ln; //ln means linear
-		ls_ln = LOCAL_SHAPE(lna.LNA, 1, N, 1); //Get the 2D linear shape function value on Nth order Gauss-Legendre nodes
+		ls_ln = LOCAL_SHAPE(lna.LNA, 1, hprefg_flu, 1); //Get the 2D linear shape function value on Nth order Gauss-Legendre nodes
 		for (z = 0; z < owsfnumber; z++) {
-			ol[z].GCOORD_flu_gs = new double*[ol[z].FSNEL*NINT*NINT];
-			for (i = 0; i < ol[z].FSNEL*NINT*NINT; i++) {
+			ol[z].GCOORD_flu_gs = new double*[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
+			for (i = 0; i < ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1); i++) {
 				ol[z].GCOORD_flu_gs[i] = new double[3];
 			}
 			int LNA_2D[2][2];
 			LNA_2D[0][0] = ol[z].LNA_2D[0][0]; LNA_2D[1][0] = ol[z].LNA_2D[N][0]; LNA_2D[0][1] = ol[z].LNA_2D[0][N]; LNA_2D[1][1] = ol[z].LNA_2D[N][N];
 			for (i = 0; i < ol[z].FSNEL; i++) { //loop through all the elements
-				for (m = 0; m < NINT; m++) { //m, n, o stands for internal nodes in one element (all but except for corner nodes)
-					for (n = 0; n < NINT; n++) {
-						ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][0] = 0.0; //m and n equivalent to LNA[m][n]
-						ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][1] = 0.0;
-						ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][2] = 0.0;
+				for (m = 0; m < (hprefg_flu + 1); m++) { //m, n, o stands for internal nodes in one element (all but except for corner nodes)
+					for (n = 0; n < (hprefg_flu + 1); n++) {
+						ol[z].GCOORD_flu_gs[i*(hprefg_flu + 1)*(hprefg_flu + 1) + m*(hprefg_flu + 1) + n][0] = 0.0; //m and n equivalent to LNA[m][n]
+						ol[z].GCOORD_flu_gs[i*(hprefg_flu + 1)*(hprefg_flu + 1) + m*(hprefg_flu + 1) + n][1] = 0.0;
+						ol[z].GCOORD_flu_gs[i*(hprefg_flu + 1)*(hprefg_flu + 1) + m*(hprefg_flu + 1) + n][2] = 0.0;
 						for (j = 0; j < 2; j++) { //j, k stands for corner nodes
 							for (k = 0; k < 2; k++) {
-								ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][0] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][0] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*NINT + n];
-								ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][1] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][1] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*NINT + n];
-								ol[z].GCOORD_flu_gs[i*NINT*NINT + m*NINT + n][2] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][2] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*NINT + n];
+								//ol[z].GCOORD_flu_gs[i*(hprefg_flu + 1)*(hprefg_flu + 1) + m*(hprefg_flu + 1) + n][0] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][0] * ls_ln.SHL_2D[2][ct_ln.LNA[j][k] - 1][m*(hprefg_flu + 1) + n];
+								//ol[z].GCOORD_flu_gs[i*(hprefg_flu + 1)*(hprefg_flu + 1) + m*(hprefg_flu + 1) + n][1] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][1] * ls_ln.SHL_2D[2][ct_ln.LNA[j][k] - 1][m*(hprefg_flu + 1) + n];
+								//ol[z].GCOORD_flu_gs[i*(hprefg_flu + 1)*(hprefg_flu + 1) + m*(hprefg_flu + 1) + n][2] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][2] * ls_ln.SHL_2D[2][ct_ln.LNA[j][k] - 1][m*(hprefg_flu + 1) + n];
+								ol[z].GCOORD_flu_gs[i*(hprefg_flu + 1)*(hprefg_flu + 1) + m*(hprefg_flu + 1) + n][0] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][0] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*(hprefg_flu + 1) + n];
+								ol[z].GCOORD_flu_gs[i*(hprefg_flu + 1)*(hprefg_flu + 1) + m*(hprefg_flu + 1) + n][1] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][1] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*(hprefg_flu + 1) + n];
+								ol[z].GCOORD_flu_gs[i*(hprefg_flu + 1)*(hprefg_flu + 1) + m*(hprefg_flu + 1) + n][2] += GCOORD[ol[z].IEN_gb[LNA_2D[j][k] - 1][i] - 1][2] * ls_ln.SHL_2D[2][LNA_2D[j][k] - 1][m*(hprefg_flu + 1) + n];
 							}
 						}
 					}
@@ -914,7 +918,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	distance[0] = search_range;
 	int elenode2D_gs = 0; 
 	if (element_type == 0) {
-		elenode2D_gs = NINT*NINT; 
+		elenode2D_gs = (hprefg_flu + 1)*(hprefg_flu + 1);
 	}
 	if (element_type == 1) {
 		elenode2D_gs = 3;
