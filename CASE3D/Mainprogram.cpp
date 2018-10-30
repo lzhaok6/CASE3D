@@ -73,6 +73,14 @@ int main()
 		std::cout << "SEM (GLL) needs extra integration nodes" << std::endl;
 		system("PAUSE ");
 	}
+	if (nodeadj == 1) {
+		std::cout << "Do you really need to adjust the node location???" << std::endl;
+		system("PAUSE ");
+	}
+	if (fs_offset > 0) {
+		std::cout << "Do you really need free surface offset???" << std::endl;
+		system("PAUSE ");
+	}
 
 	meshgenerationstruct a;
 	a = meshgeneration();

@@ -16,7 +16,7 @@ void FSILINK(int*** LNA) {
 	int i, j, k, l, m, n, o, e, z;
 	int IC; //counter 
 	//extern int owsfnumber;
-	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
+	extern OWETSURF ol[owsfnumber]; //defined in FSILINK
 	extern NRBSURF nr[owsfnumber];
 
 	if (element_type == 0) { //hex element

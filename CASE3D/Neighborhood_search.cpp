@@ -89,7 +89,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	}
 
 	//First bring in the structural wetted surface mesh into the code
-	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp"); //The Abaqus input file
+	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.3_abaqus_MpCCI_explicit_sym_0.3048wl_tet.inp"); //The Abaqus input file
 	if (!infile_algo5) {
 		std::cout << "can not open the mesh file" << std::endl;
 		system("PAUSE ");
@@ -909,6 +909,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			}
 		}
 	}
+
+
 	//Node projection from fluid to structure (Project the fluid interpolation points to structural elements)
 	Eigen::Matrix2d fdot_f;
 	Eigen::Vector2d f_f;

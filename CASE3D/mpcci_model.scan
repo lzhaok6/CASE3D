@@ -2,8 +2,8 @@
 #@ Code: "3Dbarge_Nastran_test"
 #@ Scan: "C:\Program Files\MpCCI\4.4.2\codes\3Dbarge_Nastran_test\Scanner.pm"
 #@ File: "model.txt"
-#@ Path: "C:\Users\lzhaok6\OneDrive\UNDEX research\MpCCI\codes\CASE3D\CASE3D"
-#@ Date: "Thu Oct 18 15:27:51 2018"
+#@ Path: "C:\Users\lzhaok6\OneDrive\UNDEX research\MpCCI\codes\CASE3D_debug\CASE3D"
+#@ Date: "Tue Oct 30 13:49:32 2018"
 #@ User: "lzhaok6"
 #@ Host: "distance7"
 #

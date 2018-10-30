@@ -48,6 +48,7 @@ typedef struct owetsurf {
 	int **IEN_2D; //wet surface connectivity matrix (used to write MpCCI model file and information mapping. The wetted surface information from MpCCI is defined this way)
 	int **IEN_algo2; //
 	int **IEN_gb; //connectivity matrix on 2D surface pointing to global points.
+	int **IEN_lc; //
 	int FSNEL;
 	int *GIDF;   //Coupled fluid element array (numbering)
 	int *GIDN_MpCCI; //wet nodes on coupling surfaces
@@ -123,6 +124,7 @@ typedef struct nrbsurf {
 	//double* ADMASTERG; //the lumped boundary force integration weight for each node on NRB surface
 	//double** JACOB; //3D Jacobian determinant with one additional quadrature point (Dedicated for boundary force integration on boundaries). 
 	int** IEN_gb; //connectivity matrix on 2D surface pointing to global points. (From the physical group definition of the mesh file)
+	int **IEN_lc; 
 	int NEL_nrb; //the element number of the 2D element 
 	//int NNODE_nrb; //The total number of node on NRBC
 	int LNA_2D[NINT][NINT]; 
@@ -266,7 +268,7 @@ const double SX = 8.5344 / 2; //14ft
 const double SY = 1.2192; //4ft 
 //const double SY = 0.141;
 const double SZ = 4.8768; //16ft
-//const double SZ = 0.1;
+//const double SZ = 0.0; //for DDG case (the stand-off is at the keel)
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;
 const int Nq = N + 1; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
@@ -275,7 +277,7 @@ const int refine = 1; //The refinement rate of fluid mesh against base fluid mes
 const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
 //const int hprefg = 1;
-const int mappingalgo = 5; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
+const int mappingalgo = 2; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
 const double RHO = 1025.0; //original
 //const double RHO = 989.0; //Bleich-Sandler
 const int WAVE = 2; //1 for plane wave; 2 for spherical wave 
@@ -314,15 +316,13 @@ const int TNT = 1;
 const int output = 0;
 const int FEM = 0; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
-const int owsfnumber = 4; //For the FSP case, we defined 4 wetted surfaces. 
-const int nrbsurfnumber = 4; //The number of NRB surface. 
-const int ssnumber = 4; //The number of structural wetted surface
-//const int owsfnumber = 1; //For the FSP case, we defined 4 wetted surfaces. 
-//const int nrbsurfnumber = 1; //The number of NRB surface. 
-const int wt_pys_num[4] = { 0,1,2,3 };  //the physical group number that corresponds to the wet surface (physical group 3)
+const int owsfnumber = 4; //The number of fluid wetted surfaces. 
+const int nrbsurfnumber = 4; //The number of fluid NRB surface. 
+const int ssnumber = 4; //The number of structural wetted surface (used for algorithm 4 and 5)
+//const int wt_pys_num[1] = { 2 };  //the physical group number that corresponds to the wet surface (physical group 3)
+//const int nrb_pys_num[5] = { 0,1,3,4,5 };
+const int wt_pys_num[4] = { 0,1,2,3 };
 const int nrb_pys_num[4] = { 4,5,6,7 };
-//const int wt_pys_num[1] = { 0 };
-//const int nrb_pys_num[1] = { 1 };
 const double XHE = 0.3048;
 //const double XHE = 0.1; //Bleich_Sandler
 const double YHE = 0.3048;
@@ -334,3 +334,6 @@ const double xo = SY;
 const int Bleich = 0; 
 const int improvednrb = 0;
 const int element_type = 0; //0 for hexahedral element; 1 for tetrahedral element; 
+const int nodeadj = 0; //If the node coordinate needs to be adjusted. 
+//const double fs_offset = 6.01; //the Y coordinate of the free surface (should be 0 in theory).
+const double fs_offset = 0.0;
