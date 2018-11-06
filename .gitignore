@@ -246,3 +246,4 @@ ModelManifest.xml
 /CASE3D/output.msh
 /CASE3D/frigate_N=1.msh
 *.msh
+*.txt
