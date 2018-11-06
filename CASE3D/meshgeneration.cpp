@@ -179,7 +179,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
 
-	FILE *fp = fopen("C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh", "r");
+	FILE *fp = fopen("C:/Users/lzhaok6/OneDrive/CASE_MESH/Fluidcolumn_1fthex_test.msh", "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
 		system("PAUSE ");
@@ -236,7 +236,8 @@ struct meshgenerationstruct meshgeneration() {
 	ele_type[12] = 3 * 3 * 3; //2nd order 8-node hexahedron
 	ele_type[36] = 4 * 4; //3rd order 4-node quadrangle
 	ele_type[92] = 4 * 4 * 4; //3rd order 8-node hexahedron
-
+	ele_type[37] = 5 * 5; //4th order quadrature
+	ele_type[93] = 5 * 5 * 5; //4th order hexahedron
 	int psy_curt; //store the current physical group number
 	int ele_typ[20]; //maximum 20 physical groups
 	int physicalgroups = 1; //number of physical groups
@@ -316,7 +317,7 @@ struct meshgenerationstruct meshgeneration() {
 	if (nodeadj == 1) {
 		for (i = 0; i < t.NNODE; i++) {
 			t.GCOORD[i][0] = VX[i];
-			t.GCOORD[i][1] = VZ[i];
+			t.GCOORD[i][1] = VZ[i] + fs_offset;
 			t.GCOORD[i][2] = -VY[i];
 		}
 	}
@@ -1101,7 +1102,7 @@ struct meshgenerationstruct meshgeneration() {
 			ol[z].dimension[i] = 0.5*pow((n1*n1 + n2*n2 + n3*n3), 0.5); //https://math.stackexchange.com/questions/128991/how-to-calculate-area-of-3d-triangle
 		}
 		//check if the separated element has the same normal direction as the original mesh (N=1)
-		//std::cout << " " << std::endl; 
+		std::cout << " " << std::endl; 
 	}
 
 	//================================Write the model file for MpCCI here================================//
@@ -1237,26 +1238,27 @@ struct meshgenerationstruct meshgeneration() {
 		for (i = 0; i < nr[z].NRBNODE; i++) {
 			nr[z].NRBA[i] = dummy2[i];
 		}
-
-		if (element_type == 0) {
-			nr[z].NRBELE_ARR = new int[nr[z].NEL_nrb];
-			for (i = 0; i < nr[z].NEL_nrb; i++) {
-				flag = 0;
-				for (j = 0; j < t.NEL; j++) {
-					ct = 0;
-					for (k = 0; k < elenode2D; k++) {
-						if (t.IEN[nr[z].DP[i][k] - 1][j] == nr[z].IEN_gb[nr[z].DP_2D[k] - 1][i]) {
-							ct += 1;
+		if (improvednrb == 1) {
+			if (element_type == 0) {
+				nr[z].NRBELE_ARR = new int[nr[z].NEL_nrb];
+				for (i = 0; i < nr[z].NEL_nrb; i++) {
+					flag = 0;
+					for (j = 0; j < t.NEL; j++) {
+						ct = 0;
+						for (k = 0; k < elenode2D; k++) {
+							if (t.IEN[nr[z].DP[i][k] - 1][j] == nr[z].IEN_gb[nr[z].DP_2D[k] - 1][i]) {
+								ct += 1;
+							}
+						}
+						if (ct == elenode2D) { //find the corresponding 3D element
+							nr[z].NRBELE_ARR[i] = j + 1;
+							flag = 1;
 						}
 					}
-					if (ct == elenode2D) { //find the corresponding 3D element
-						nr[z].NRBELE_ARR[i] = j + 1;
-						flag = 1;
+					if (flag == 0) {
+						std::cout << "No corresponding 3D element is found" << std::endl;
+						system("PAUSE ");
 					}
-				}
-				if (flag == 0) {
-					std::cout << "No corresponding 3D element is found" << std::endl;
-					system("PAUSE ");
 				}
 			}
 		}

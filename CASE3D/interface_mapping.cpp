@@ -108,6 +108,27 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					ct += 1;
 				}
 			}
+			/*
+			if (debug3 == 1) {
+				for (z = 0; z < ssnumber; z++) {
+					for (j = 0; j < wsflist[z]->nnodes; j++) {
+						wsflist[z]->nodeforce[j * 3 + 0] = 0;
+						wsflist[z]->nodeforce[j * 3 + 1] = 9.16e7 / wsflist[z]->nnodes;
+						wsflist[z]->nodeforce[j * 3 + 2] = 0;
+					}
+				}
+			}
+			*/
+			/*
+			double BF_valY[ssnumber];
+			for (z = 0; z < ssnumber; z++) {
+				BF_valY[z] = 0.0;
+				for (j = 0; j < wsflist[z]->nnodes; j++) {
+					BF_valY[z] += wsflist[z]->nodeforce[j * 3 + 1];
+				}
+			}
+			std::cout << " " << std::endl;
+			*/
 		}
 
 		else if (mappingalgo == 4) {

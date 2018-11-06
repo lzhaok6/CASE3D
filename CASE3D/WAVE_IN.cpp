@@ -50,12 +50,9 @@ double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, 
 			//However, in spherical wave case, SONODE should be the point that spherical wave reach first when contacting with the free surface.  
 			for (j = 0; j < NNODE; j++) {
 				R = sqrt(pow((GCOORD[j][2] - ZC), 2) + pow((GCOORD[j][0] - XC), 2) + pow((GCOORD[j][1] - YC), 2));
-				if ((T[TIME - 1]) - (R - RO) / C >= 0) { //error prone (please refer to the comment in PWA)
-				//if (T[TIME - 1] - (R - RO) / C > 1e-6) {
+				//if ((T[TIME - 1]) - (R - RO) / C >= 0) { //error prone (please refer to the comment in PWA)
+				if (T[TIME - 1] - (R - RO) / C > -1e-6) {
 					PIN[j][0] = PPEAK*(RO / R)*exp(-((T[TIME - 1]) - (R - RO) / C) / TAU);
-					//if (R == RO) {
-						//count += 1;
-					//}
 				}
 				else {
 					PIN[j][0] = 0.0;
@@ -67,19 +64,13 @@ double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, 
 			RO = sqrt(pow((ZC - ZO), 2) + pow((YC - YO), 2) + pow((XC - XO), 2));
 			for (j = 0; j < NNODE; j++) {
 				R = sqrt(pow((GCOORD[j][2] - ZC), 2) + pow((GCOORD[j][0] - XC), 2) + pow((GCOORD[j][1] - YC), 2));
-				/*
-				if (debug == 1) {
-					PIN[j][1] = PPEAK*(RO / R)*exp(-((T[TIME - 1]) - (R - RO) / C) / TAU);
-				}
-				*/
-				//else {
-				if ((T[TIME - 1]) - (R - RO) / C >= 0) {
+				//if ((T[TIME - 1]) - (R - RO) / C >= 0) {
+				if (T[TIME - 1] - (R - RO) / C > -1e-6) {
 					PIN[j][1] = PPEAK*(RO / R)*exp(-((T[TIME - 1]) - (R - RO) / C) / TAU);
 				}
 				else {
 					PIN[j][1] = 0.0;
 				}
-				//}
 			}
 		}
 	}

@@ -30,7 +30,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	double****gamma_t, double ****gamma, double*****G);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
-const int N = 2;    //N is the element order of fluid mesh 
+const int N = 1;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;
 const int hprefg = 1; //The level of Gauss-Legendre integration on the structure mesh (for mapping algorithm 4 and 5)
 const int hprefg_flu = N; //The level of Gauss-Legendre integration on the fluid mesh (for mapping algorithm 4 and 5) 
@@ -78,6 +78,7 @@ typedef struct owetsurf {
 	double****GSHL_2D;
 	int dir;
 	double *dimension;
+	double *dimension_hex; 
 	double** flu_local;//used to store the local coordinate of the projected fluid point on structural elements
 	int* flu_stru;
 	//std::vector<int>orphan_flag_flu; 
@@ -263,12 +264,16 @@ struct TIMINTstruct {
 };
 
 //Input values
+//const double fs_offset = -6.02674; //Used to draft the free surface to y=0 position.
+//const double fs_offset = -6.0;
+const double fs_offset = 0.0;
 //const double SX = 0.1;
 const double SX = 8.5344 / 2; //14ft
-const double SY = 1.2192; //4ft 
-//const double SY = 0.141;
-const double SZ = 4.8768; //16ft
-//const double SZ = 0.0; //for DDG case (the stand-off is at the keel)
+//const double SY = 1.2192; //4ft 
+//const double SY = -fs_offset; //for DDG case
+const double SY = 3.048; //10ft
+//const double SZ = 4.8768; //16ft 
+const double SZ = 0.0; //for DDG case (the stand-off is at the keel)
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;
 const int Nq = N + 1; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
@@ -286,17 +291,19 @@ const double C = 1500.0; //original
 //const double C = 1450.0; //Bleich_Sandler
 const double CFLFRAC = 0.5;  //original 
 const int dtscale = 1;
-const double BETA = 0.25;   //original 
-const double TTERM = 0.08;    //SIMULATION END TIME 
+const double BETA = 0.0;   //original 
+const double TTERM = 0.01;    //SIMULATION END TIME 
 const int CAV = 1; //1 for cavitation, 0 for non-cavitation 
 const double PSAT = 0.0; //saturated pressure 
 const double pi = 3.141593;
 const double grav = 9.81;
 const double PATM = 101.3e3; //pa 
-const double stdoff = 10; //ft
-const double depth = 30; //ft
-//const double stdoff = 0; //ft
-//const double depth = 50; //ft
+//const double stdoff = 10; //ft
+//const double depth = 30; //ft
+const double stdoff = 0; //ft
+const double depth = 70; //ft
+//const double x_loc = 74.22;//m for DDG case
+const double x_loc = 0.0;//m for FSP case
 const double W = 60; //charge weight (lb)
 
 //standoff point in spherical wave case 
@@ -304,36 +311,39 @@ const double W = 60; //charge weight (lb)
 //const double YO = -SY;
 //const double ZO = SZ / 2;
 //the parameter to control whether a tabulated smoothed waveform is used 
-const double output_int = 5e-4; //output file time interval (0.5ms)
+const double output_int = 1e-3; //output file time interval (0.5ms)
 const int debug = 0; //is the code in debug mode?
 const int debug2 = 0; 
 const int debug3 = 0; 
+const int debug4 = 0; 
 const int debug_algo5 = 0; 
+const int debug_hydro = 0; 
 const int fsdebug = 0;
 const int tfm = 1; //is total field model used? 
 const int tensorfactorization = 0;
 const int TNT = 1;
-const int output = 0;
+const int output = 1;
 const int FEM = 0; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
-const int owsfnumber = 4; //The number of fluid wetted surfaces. 
-const int nrbsurfnumber = 4; //The number of fluid NRB surface. 
+const int owsfnumber = 1; //The number of fluid wetted surfaces. 
+const int nrbsurfnumber = 3; //The number of fluid NRB surface. 
 const int ssnumber = 4; //The number of structural wetted surface (used for algorithm 4 and 5)
-//const int wt_pys_num[1] = { 2 };  //the physical group number that corresponds to the wet surface (physical group 3)
-//const int nrb_pys_num[5] = { 0,1,3,4,5 };
-const int wt_pys_num[4] = { 0,1,2,3 };
-const int nrb_pys_num[4] = { 4,5,6,7 };
+const int wt_pys_num[1] = { 0 };  //the physical group number that corresponds to the wet surface (physical group 3)
+//const int nrb_pys_num[1] = { 1 };
+const int nrb_pys_num[3] = { 1,2,3 };
+//const int wt_pys_num[4] = { 0,1,2,3 };
+//const int nrb_pys_num[4] = { 4,5,6,7 };
 const double XHE = 0.3048;
 //const double XHE = 0.1; //Bleich_Sandler
 const double YHE = 0.3048;
 //const double YHE = 0.141 / 2; //Bleich_Sandler 
-const double DY = 2 * SY;
+const double DY = 3 * SY;
 //const double DY = 3.807; //Bleich_Sandler
-const int SYNEL = 4 * refine;
+//const int SYNEL = 4 * refine;
+const int SYNEL = 0;
 const double xo = SY;
 const int Bleich = 0; 
 const int improvednrb = 0;
 const int element_type = 0; //0 for hexahedral element; 1 for tetrahedral element; 
 const int nodeadj = 0; //If the node coordinate needs to be adjusted. 
-//const double fs_offset = 6.01; //the Y coordinate of the free surface (should be 0 in theory).
-const double fs_offset = 0.0;
+//const double fs_offset = 0.0;

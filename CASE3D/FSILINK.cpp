@@ -155,6 +155,23 @@ void FSILINK(int*** LNA) {
 				}
 			}
 		}
+		
+		if (debug3 == 1) {
+			ol[0].dimension_hex = new double[ol[0].FSNEL];
+			for (e = 0; e < ol[0].FSNEL; e++) {
+				for (m = 0; m < 2; m++) { //Interpolation points on the new linear base fluid mesh
+					for (n = 0; n < 2; n++) {
+						for (l = 0; l < NINT; l++) { //Interpolation points on the original fluid mesh
+							for (o = 0; o < NINT; o++) {
+								ol[0].dimension_hex[e] += ol[0].FPMASTER_2D[e][ol[0].LNA_algo2[m][n] - 1][ol[0].LNA_2D[l][o] - 1];
+							}
+						}
+					}
+				}
+			}
+			std::cout << " " << std::endl; 
+		}
+
 	}
 
 	if (element_type == 1) { //tetrahedral (3 nodes on the interface)

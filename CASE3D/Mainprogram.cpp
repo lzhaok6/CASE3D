@@ -81,6 +81,14 @@ int main()
 		std::cout << "Do you really need free surface offset???" << std::endl;
 		system("PAUSE ");
 	}
+	if (debug_hydro == 1) {
+		std::cout << "Do you really not want to sent hydrostatic pressure to structure?" << std::endl;
+		system("PAUSE"); 
+	}
+	if (BETA == 0) {
+		std::cout << "Are you sure you don't want to use any damping?" << std::endl;
+		system("PAUSE");
+	}
 
 	meshgenerationstruct a;
 	a = meshgeneration();
@@ -242,10 +250,10 @@ int main()
 	//determine the explosion center
 	ZC = stdoff*0.3048 + SZ / 2;
 	YC = -depth*0.3048;
-	XC = 0.0;
+	XC = x_loc;
 
 	//determine the stand-off point (nearest structural node or free surface node depending on which one is closer)
-	dists = sqrt(pow(XC - 0.0, 2) + pow(YC - (-SY), 2) + pow(ZC - SZ / 2, 2));
+	dists = sqrt(pow(XC - x_loc, 2) + pow(YC - (-SY), 2) + pow(ZC - SZ / 2, 2));
 	distf = -YC;
 	
 	if (dists > distf) {
@@ -254,7 +262,8 @@ int main()
 		ZO = ZC;
 	}
 	else {
-		XO = 0.0;
+		//XO = 0.0;
+		XO = XC;
 		YO = -SY;
 		ZO = SZ / 2;
 	}

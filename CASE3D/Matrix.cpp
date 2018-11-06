@@ -331,7 +331,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 		//std::clock_t start;
 		//start = std::clock();
 		for (e = 0; e < NEL; e++) {
-			std::cout << e << std::endl; 
+			//std::cout << e << std::endl; 
 			for (i = 0; i < NINT; i++) {
 				for (j = 0; j < NINT; j++) {
 					for (k = 0; k < NINT; k++) {
@@ -341,8 +341,8 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 								JB(l, m) = XS[e][l * 3 + m][i*NINT*NINT + j*NINT + k]; //Jacobian matrix
 							}
 						}
-						std::cout << JB << std::endl;
-						std::cout << JB.inverse() << std::endl;
+						//std::cout << JB << std::endl;
+						//std::cout << JB.inverse() << std::endl;
 						ga = (JB.inverse().transpose())*JB.inverse(); //3*3 matrix
 						//std::cout << ga << std::endl;
 						for (l = 0; l < 3; l++) {
