@@ -61,10 +61,12 @@ int main()
 		std::cout << "The other mapping algorithm is not available for hexahedral element" << std::endl;
 		system("PAUSE ");
 	}
+	/*
 	if (element_type == 1 && mappingalgo == 2) {
 		std::cout << "The mapping algorithm 2 is not available for tetrahedral element" << std::endl;
 		system("PAUSE ");
 	}
+	*/
 	if (FEM == 1 && Nq != N) {
 		std::cout << "FEM (Gauss-Legendre integration) does not need extra integration nodes" << std::endl;
 		system("PAUSE ");

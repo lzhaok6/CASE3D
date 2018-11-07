@@ -179,7 +179,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
 
-	FILE *fp = fopen("C:/Users/lzhaok6/OneDrive/CASE_MESH/Fluidcolumn_1fthex_test.msh", "r");
+	FILE *fp = fopen("C:/Users/lzhaok6/OneDrive/CASE_MESH/FluidColumn_1fthex.msh", "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
 		system("PAUSE ");

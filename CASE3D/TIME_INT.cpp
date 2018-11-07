@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <Eigen/Dense>
 #include <Eigen/LU>
+#include <algorithm> 
 
 
 //NRB determines the NRB local node numbering and the associated NRB arrays
@@ -766,100 +767,33 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 	int NDT_out = 0;
 	std::vector <int> T_out;
-	std::vector<int> sampline;
+	std::vector <int> sampline;
+	std::vector <double> sampline_gc; //coordinate of the searched nodes
+	std::vector <int> sampline_found;
 	std::ofstream *outline;
 	int* sampline2;
 	if (output == 1) {
-		std::string energyfile = "history.txt";
-		std::ofstream energyfilehd;
-		energyfilehd.open(energyfile);
+		//std::string energyfile = "history.txt";
+		//std::ofstream energyfilehd;
+		//energyfilehd.open(energyfile);
 		//Get the sample points on a line to observe the wave propagation pressure distribution
-		
 		count = 0;
 		for (i = 0; i < NNODE; i++) {
 			if (abs(GCOORD[i][0] - 0.0) < 1e-6 && abs(GCOORD[i][2] - 0.0) < 1e-6) {
 				sampline.push_back(i + 1);
+				sampline_gc.push_back(GCOORD[i][1]); 
 				count += 1;
 			}
 		}
-		/*
-		//sort the arrary sampline and store it in sampline2
-		int* hold;
-		hold = new int[sampline.size()];
-		for (i = 0; i < sampline.size(); i++) {
-			hold[i] = round(abs(GCOORD[sampline[i] - 1][1]) / YHE) - round(SY / YHE);
-		}
-		int* sampline2;
-		sampline2 = new int[sampline.size()];
-		for (i = 0; i < sampline.size(); i++) {
-			sampline2[hold[i]] = sampline[i];
-		}
-		*/
-		int** samplinec2;
-		sampline2 = new int[count];
-		samplinec2 = new int*[4];
-		for (i = 0; i < 4; i++) {
-			samplinec2[i] = new int[count];
-		}
-		for (i = 0; i < count; i++) {
-			sampline2[i] = 0;
-		}
-		for (i = 0; i < 4; i++) {
-			for (j = 0; j < count; j++) {
-				samplinec2[i][j] = 0;
-			}
-		}
-		int YNEL = round((SY + DY) / YHE);
-		double** AYIN;
-		AYIN = new double*[YNEL];
-		for (i = 0; i < YNEL; i++) {
-			AYIN[i] = new double[N + 1];
-		}
-		LOBATTOstruct b;
-		if (N > 1) {
-			b = LOBATTO(N);
-		}
-		double*YE;
-		YE = new double[YNEL + 1];
-		for (i = 0; i < YNEL + 1; i++) {
-			YE[i] = i*YHE;
-		}
-		double MY; double dY;
-		for (i = 0; i < YNEL; i++) {
-			MY = 0.5*(YE[i + 1] + YE[i]);
-			dY = 0.5*(YE[i + 1] - YE[i]);
-			AYIN[i][0] = YE[i];
-			if (N > 1) {
-				for (j = 0; j < N - 1; j++) {
-					AYIN[i][j + 1] = MY + b.Z[j] * dY;
-				}
-			}
-			AYIN[i][N] = YE[i + 1];
-		}
-		double* ypt;
-		ypt = new double[count];
-		int cnt = 0;
-		for (i = 0; i < round(DY / YHE); i++) {
-			for (j = 0; j < NINT; j++) {
-				ypt[cnt] = AYIN[SYNEL + i][j];
-				cnt += 1;
-			}
-			cnt -= 1;
-		}
-		if (cnt + 1 != count) {
-			std::cout << "ypt is wrong" << std::endl;
-			//system("PAUSE ");
-		}
-		int count2 = 0;
-		while (count2 != count) {
-			for (i = 0; i < count; i++) {
-				if (abs(GCOORD[sampline[i] - 1][1] + ypt[count2]) < 1e-5) {
-					sampline2[count2] = sampline[i];
-					count2 += 1;
-				}
-			}
-		}
+		std::sort(sampline_gc.rbegin(), sampline_gc.rend());
 
+		for (i = 0; i < sampline_gc.size(); i++) {
+			for (j = 0; j < sampline.size(); j++) {
+				if (GCOORD[sampline[j] - 1][1] == sampline_gc[i]) {
+					sampline_found.push_back(sampline[j]);
+				}
+			}
+		}
 		for (i = 0; i < NDT; i++) {
 			if (T[i] >= output_int*NDT_out) {
 				T_out.push_back(i);
@@ -1785,8 +1719,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		if (output == 1) {
 			for (k = 0; k < NDT_out; k++) {
 				if (i == T_out[k]) {
-					for (j = 0; j < sampline.size(); j++) {
-						outline[k] << GCOORD[sampline2[j] - 1][1] << " " << PT[sampline2[j] - 1][0] << " " << PT[sampline2[j] - 1][1] << std::endl;
+					for (j = 0; j < sampline_found.size(); j++) {
+						outline[k] << GCOORD[sampline_found[j] - 1][1] << " " << PT[sampline_found[j] - 1][0] << " " << PT[sampline_found[j] - 1][1] << std::endl;
 					}
 				}
 			}
