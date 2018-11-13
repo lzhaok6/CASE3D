@@ -26,7 +26,7 @@ struct meshgenerationstruct meshgeneration() {
 
 	//We are assuming there is only one wetted surface. Thus, ol[0] is used throughout the loop below. 
 	int i, j, k, l, m, n, o, e, z;
-	std::string filename;
+	//std::string filename;
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 
@@ -49,11 +49,19 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
-
-	FILE *fp = fopen("C:/Users/lzhaok6/OneDrive/CASE_MESH/FluidColumn_1fthex_gmsh.msh", "r");
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/3Dwave.inp"; 
+	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
 		system("PAUSE ");
+	}
+	std::string filenamestr(filename);
+	std::string input_type; 
+	if (filenamestr.find(".msh") != std::string::npos) { //Gmsh input file
+		input_type = "Gmsh"; 
+	}
+	else if (filenamestr.find(".inp") != std::string::npos) {
+		input_type = "Abaqus";
 	}
 
 	if (N > 9) {
@@ -61,143 +69,431 @@ struct meshgenerationstruct meshgeneration() {
 		system("PAUSE ");
 	}
 
-	//Search for "$Nodes" (the start of node coordinate definition)
-	char buf[1000];
-	do {
-		fgets(buf, 1000, fp); //read line by line
-	} while (!strstr(buf, "$Nodes"));
-	fscanf(fp, "%d", &t.NNODE);
-
-	t.GCOORD = new double*[t.NNODE];
-	for (i = 0; i < t.NNODE; i++) {
-		t.GCOORD[i] = new double[3];
-	}
-	double* VX = new double[t.NNODE]; //x coordinate
-	double* VY = new double[t.NNODE]; //y coordinate
-	double* VZ = new double[t.NNODE]; //z coordinate
-	for (int i = 0; i < t.NNODE; i++) {
-		fscanf(fp, "%*d %lf %lf %lf",
-			VX + i, VY + i, VZ + i);
-		if (i % 10000 == 0) {
-			printf("%d %g %g %g\n", i, VX[i], VY[i], VZ[i]);
-		}
-	}
-
-	//Search until the "$Elements" is found (the start of element connecvitity definition)
-	do {
-		fgets(buf, 1000, fp);
-	} while (!strstr(buf, "$Elements"));
-	int NEL_tol; //total number of element including boundary 2D elements
-	fscanf(fp, "%d", &NEL_tol);
-	std::vector<std::vector<int>>iens;
-	fgets(buf, 1000, fp); //to change to a new line (does not seem relevant)
-	int* EToV; //element connectivity matrix for all physical groups (make it an 1D array to accelerate the memory access)
-	EToV = new int[NEL_tol*elenode3D]; //more than enough
-	for (i = 0; i < NEL_tol*elenode3D; i++) {
-		EToV[i] = 0;
-	}
-	int* ele_type; //store the number of vertices for the corresponding element type
-	ele_type = new int[200]; //more than enough
-	for (i = 0; i < 200; i++) {
-		ele_type[i] = 0;
-	}
-	//define element types (number start from 1)
-	ele_type[2] = 3; //3-node triangle
-	ele_type[3] = 2 * 2; //4-node quadrangle
-	ele_type[4] = 2 * 2; //4-node tetrahedron
-	ele_type[5] = 2 * 2 * 2; //8-node hexahedron
-	ele_type[10] = 3 * 3; //2nd order 4-node quadrangle
-	ele_type[12] = 3 * 3 * 3; //2nd order 8-node hexahedron
-	ele_type[36] = 4 * 4; //3rd order 4-node quadrangle
-	ele_type[92] = 4 * 4 * 4; //3rd order 8-node hexahedron
-	ele_type[37] = 5 * 5; //4th order quadrature
-	ele_type[93] = 5 * 5 * 5; //4th order hexahedron
-	int psy_curt; //store the current physical group number
-	int ele_typ[20]; //maximum 20 physical groups
-	int physicalgroups = 1; //number of physical groups
-	int numele = 0;
 	std::vector<int>numele_py; //total number of element in each physical group
-	ct = 0;
-
-	for (int e = 0; e < NEL_tol; e++) { //loop through all elements first
-		if (e % 10000 == 0) {
-			std::cout << "element: " << e << std::endl; //output which line is being read
+	if (input_type == "Gmsh") {
+		//Search for "$Nodes" (the start of node coordinate definition)
+		char buf[1000];
+		do {
+			fgets(buf, 1000, fp); //read line by line
+		} while (!strstr(buf, "$Nodes"));
+		fscanf(fp, "%d", &t.NNODE);
+		t.GCOORD = new double*[t.NNODE];
+		for (i = 0; i < t.NNODE; i++) {
+			t.GCOORD[i] = new double[3];
 		}
-		int etype, Ntags;
-		fscanf(fp, "%*d %d %d", &etype, &Ntags);
-		//count the number of elements in the current physical group
-		fscanf(fp, "%d", &psy_curt);
-		if (psy_curt == physicalgroups) {
-			numele += 1; //cumulatively store the number of element in the current physical group
-						 //store the element type for each physical group
-			ele_typ[psy_curt - 1] = etype;
-		}
-		else { //the current physical group is done, move on to the next physical group
-			numele_py.push_back(numele);
-			numele = 1;
-			physicalgroups += 1; //add one more physical group
-		}
-		for (int t = 0; t < Ntags - 1; t++) {
-			fscanf(fp, "%*d");
-		}
-		int Nverts = ele_type[etype];  //number of vertices of the element type in the current line
-		if (Nverts == 0) {
-			std::cout << "This element type is yet to be defined" << std::endl;
-			system("PAUSE ");
-		}
-		for (int v = 0; v < Nverts; v++) { //store the element connectivity matrix for all physical groups
-			fscanf(fp, "%d", EToV + ct + v);
-		}
-		ct += Nverts;
-	}
-	numele_py.push_back(numele); //number of element in each physical group
-
-	//Populate the EToV matrix to BCIEN and IEN
-	//Firstly, store the boundary element connectivity (BCIEN)
-	int st = 0; //the starting point of the connectivity definition in EToV
-	int nvert_py; //number of vertices in element for each physical group
-	for (i = 0; i < physicalgroups - 1; i++) {
-		nvert_py = ele_type[ele_typ[i]];
-		std::vector<std::vector<int>>iens; //store the connectivity in the current physical group (2D vector)
-		for (j = 0; j < numele_py[i]; j++) { //loop through the element in the current physical group
-			std::vector<int>local;
-			for (k = 0; k < nvert_py; k++) {
-				local.push_back(EToV[st + j*nvert_py + k]);
+		double* VX = new double[t.NNODE]; //x coordinate
+		double* VY = new double[t.NNODE]; //y coordinate
+		double* VZ = new double[t.NNODE]; //z coordinate
+		for (int i = 0; i < t.NNODE; i++) {
+			fscanf(fp, "%*d %lf %lf %lf",
+				VX + i, VY + i, VZ + i);
+			if (i % 10000 == 0) {
+				printf("%d %g %g %g\n", i, VX[i], VY[i], VZ[i]);
 			}
-			iens.push_back(local);
 		}
-		t.BCIEN.push_back(iens);
-		st += numele_py[i] * nvert_py;
-	}
-	//Secondly, store the global element connectivity (IEN)
-	t.NEL = numele_py[physicalgroups - 1];
-	t.IEN = new int*[elenode3D]; //element connectivity matrix
-	for (i = 0; i < elenode3D; i++) { //Since some elements are boundary elements, they may only consume elenode2D in the first dimension. Thus, some space is wasted. 
-		t.IEN[i] = new int[t.NEL];
-	}
-	for (j = 0; j < t.NEL; j++) { //loop through the element in the current physical group
-		nvert_py = ele_type[ele_typ[physicalgroups - 1]];
-		for (k = 0; k < nvert_py; k++) {
-			t.IEN[k][j] = EToV[st + j*nvert_py + k];
+		//Search until the "$Elements" is found (the start of element connecvitity definition)
+		do {
+			fgets(buf, 1000, fp);
+		} while (!strstr(buf, "$Elements"));
+		int NEL_tol; //total number of element including boundary 2D elements
+		fscanf(fp, "%d", &NEL_tol);
+		std::vector<std::vector<int>>iens;
+		fgets(buf, 1000, fp); //to change to a new line (does not seem relevant)
+		int* EToV; //element connectivity matrix for all physical groups (make it an 1D array to accelerate the memory access)
+		EToV = new int[NEL_tol*elenode3D]; //more than enough
+		for (i = 0; i < NEL_tol*elenode3D; i++) {
+			EToV[i] = 0;
 		}
-	}
-
-
-
-	//populate GCOORD
-	for (i = 0; i < t.NNODE; i++) {
-		t.GCOORD[i][0] = VX[i];
-		t.GCOORD[i][1] = VY[i];
-		t.GCOORD[i][2] = VZ[i];
-	}
-	//Finish the mesh reading
-
-	//adjust the node location if necessary
-	if (nodeadj == 1) {
+		int* ele_type; //store the number of vertices for the corresponding element type
+		ele_type = new int[200]; //more than enough
+		for (i = 0; i < 200; i++) {
+			ele_type[i] = 0;
+		}
+		//define element types (number start from 1)
+		ele_type[2] = 3; //3-node triangle
+		ele_type[3] = 2 * 2; //4-node quadrangle
+		ele_type[4] = 2 * 2; //4-node tetrahedron
+		ele_type[5] = 2 * 2 * 2; //8-node hexahedron
+		ele_type[10] = 3 * 3; //2nd order 4-node quadrangle
+		ele_type[12] = 3 * 3 * 3; //2nd order 8-node hexahedron
+		ele_type[36] = 4 * 4; //3rd order 4-node quadrangle
+		ele_type[92] = 4 * 4 * 4; //3rd order 8-node hexahedron
+		ele_type[37] = 5 * 5; //4th order quadrature
+		ele_type[93] = 5 * 5 * 5; //4th order hexahedron
+		int psy_curt; //store the current physical group number
+		int ele_typ[20]; //maximum 20 physical groups
+		int physicalgroups = 1; //number of physical groups
+		int numele = 0;
+		ct = 0;
+		for (int e = 0; e < NEL_tol; e++) { //loop through all elements first
+			if (e % 10000 == 0) {
+				std::cout << "element: " << e << std::endl; //output which line is being read
+			}
+			int etype, Ntags;
+			fscanf(fp, "%*d %d %d", &etype, &Ntags);
+			//count the number of elements in the current physical group
+			fscanf(fp, "%d", &psy_curt);
+			if (psy_curt == physicalgroups) {
+				numele += 1; //cumulatively store the number of element in the current physical group
+							 //store the element type for each physical group
+				ele_typ[psy_curt - 1] = etype;
+			}
+			else { //the current physical group is done, move on to the next physical group
+				numele_py.push_back(numele);
+				numele = 1;
+				physicalgroups += 1; //add one more physical group
+			}
+			for (int t = 0; t < Ntags - 1; t++) {
+				fscanf(fp, "%*d");
+			}
+			int Nverts = ele_type[etype];  //number of vertices of the element type in the current line
+			if (Nverts == 0) {
+				std::cout << "This element type is yet to be defined" << std::endl;
+				system("PAUSE ");
+			}
+			for (int v = 0; v < Nverts; v++) { //store the element connectivity matrix for all physical groups
+				fscanf(fp, "%d", EToV + ct + v);
+			}
+			ct += Nverts;
+		}
+		numele_py.push_back(numele); //number of element in each physical group
+		//Populate the EToV matrix to BCIEN and IEN
+		//Firstly, store the boundary element connectivity (BCIEN)
+		int st = 0; //the starting point of the connectivity definition in EToV
+		int nvert_py; //number of vertices in element for each physical group
+		for (i = 0; i < physicalgroups - 1; i++) {
+			nvert_py = ele_type[ele_typ[i]];
+			std::vector<std::vector<int>>iens; //store the connectivity in the current physical group (2D vector)
+			for (j = 0; j < numele_py[i]; j++) { //loop through the element in the current physical group
+				std::vector<int>local;
+				for (k = 0; k < nvert_py; k++) {
+					local.push_back(EToV[st + j*nvert_py + k]);
+				}
+				iens.push_back(local);
+			}
+			t.BCIEN.push_back(iens);
+			st += numele_py[i] * nvert_py;
+		}
+		//Secondly, store the global element connectivity (IEN)
+		t.NEL = numele_py[physicalgroups - 1];
+		t.IEN = new int*[elenode3D]; //element connectivity matrix
+		for (i = 0; i < elenode3D; i++) { //Since some elements are boundary elements, they may only consume elenode2D in the first dimension. Thus, some space is wasted. 
+			t.IEN[i] = new int[t.NEL];
+		}
+		for (j = 0; j < t.NEL; j++) { //loop through the element in the current physical group
+			nvert_py = ele_type[ele_typ[physicalgroups - 1]];
+			for (k = 0; k < nvert_py; k++) {
+				t.IEN[k][j] = EToV[st + j*nvert_py + k];
+			}
+		}
+		//populate GCOORD
 		for (i = 0; i < t.NNODE; i++) {
 			t.GCOORD[i][0] = VX[i];
-			t.GCOORD[i][1] = VZ[i] + fs_offset;
-			t.GCOORD[i][2] = -VY[i];
+			t.GCOORD[i][1] = VY[i];
+			t.GCOORD[i][2] = VZ[i];
+		}
+		//Finish the mesh reading
+		//adjust the node location if necessary
+		if (nodeadj == 1) {
+			for (i = 0; i < t.NNODE; i++) {
+				t.GCOORD[i][0] = VX[i];
+				t.GCOORD[i][1] = VZ[i] + fs_offset;
+				t.GCOORD[i][2] = -VY[i];
+			}
+		}
+	}
+	else if (input_type == "Abaqus") {
+		char buf[1000];
+		do {
+			fgets(buf, 1000, fp); //read line by line
+		} while (!strstr(buf, "*Node"));
+		double a, b, c;
+		int d, e, f, g;
+		std::vector<double> VX;
+		std::vector<double> VY;
+		std::vector<double> VZ;
+		ct = 1;
+		while (fscanf(fp, "%*d, %lf, %lf, %lf", &a, &b, &c) != 0) {
+			VX.push_back(a);
+			VY.push_back(b);
+			VZ.push_back(c);
+			ct += 1;
+			if (ct % 10000 == 0) {
+				std::cout << "element: " << ct << std::endl; //output which line is being read
+			}
+		}
+		t.NNODE = VX.size(); 
+		//Find *Element to begin storing the element connectivity matrix
+		do {
+			fgets(buf, 1000, fp); //read line by line
+		} while (!(buf[0] == '*'&& buf[1] == 'E' && buf[2] == 'l'));
+		//start storing element connectivity matrix
+		std::vector<int> EToV;
+		ct = 1;
+		if (element_type == 0) {
+			std::cout << "the connectivity reader below does not support hex element yet" << std::endl;
+			system(" PAUSE");
+		}
+		while (fscanf(fp, "%*d, %d, %d, %d, %d", &d, &e, &f, &g) != 0) {
+			EToV.push_back(d);
+			EToV.push_back(e);
+			EToV.push_back(f);
+			EToV.push_back(g);
+			ct += 1;
+			if (ct % 10000 == 0) {
+				std::cout << "element: " << ct << std::endl; //output which line is being read
+			}
+		}
+		//start searching for element sets (FSI_fluid or NRB) 
+		std::vector<int> wt_py; //the physical group corresponds to wetted surface
+		std::vector<int> nrb_py; //the physical group corresponds to nrb surface
+		std::vector<std::vector<int>> ien_py; //the elements in each physical group
+		std::vector<std::string> py_surface;
+		std::string surf;
+		ct = 0;
+		//loop until the end of file
+		while (!feof(fp)) {
+			do {
+				fgets(buf, 1000, fp); //read line by line and find *Elset and *Surface definition
+				if (feof(fp)) {
+					break;
+				}
+			} while (!((buf[0] == '*' && buf[2] == 'l' && buf[3] == 's') || (buf[0] == '*' && buf[2] == 'u' && buf[3] == 'r')));
+			//search for the keyword FSI_fluid or NRB in the char arrary
+			std::string currentline(buf); //convert the char array to string to search the key words
+			std::vector<int>py_ele;
+			if (currentline.find("FSI_fluid") != std::string::npos || currentline.find("NRB") != std::string::npos) { //found the definition element set for FSI_fluid
+																													  //If this line is a surface definition, we store the surface face definition for each FSI_fluid pysical group
+				if ((buf[0] == '*' && buf[2] == 'u' && buf[3] == 'r')) {
+					int setnum;
+					if (currentline.find("FSI_fluid") != std::string::npos) {
+						setnum = wt_py.size();
+					}
+					else {
+						setnum = nrb_py.size();
+					}
+					for (int i = 0; i < setnum; i++) {
+						fgets(buf, 1000, fp);
+						std::string haha(buf);
+						py_surface.push_back(buf);
+					}
+					/*
+					//fscanf does not work well with *FILE
+					while (fscanf(fp, "%s", &surf) != 0) {
+					py_surface.push_back(surf);
+					std::cout << " " << std::endl;
+					}
+					*/
+				}
+				else {
+					//store all the elements in this element set (BCIEN) 
+					while (fscanf(fp, "%d,", &d) != 0) {
+						py_ele.push_back(d); //store all the element number in the current physical group
+					}
+					if (py_ele.size() == 3 && py_ele[0] == 1) { //the elements are defined in a concise way (e.g., 1,100,1 meaning 1 to 100 with interval 1)
+						for (int i = 0; i < py_ele[1] - 3; i++) {
+							py_ele.push_back(py_ele[0] + 3 + i);
+						}
+						py_ele[1] = py_ele[0] + py_ele[2]; py_ele[2] = py_ele[1] + (py_ele[1] - py_ele[0]);
+					}
+					if (currentline.find("FSI_fluid") != std::string::npos) {
+						wt_py.push_back(ct);
+					}
+					else {
+						nrb_py.push_back(ct);
+					}
+					numele_py.push_back(py_ele.size()); 
+					ct += 1;
+					ien_py.push_back(py_ele);
+				}
+			}
+		}
+		//extract the element surface information and store the IEN and BCIEN matrices 
+		std::vector<std::string>surface;
+		for (int i = 0; i < py_surface.size(); i++) {
+			ct = 0;
+			std::stringstream ss(py_surface[i]);
+			while (ss.good())
+			{
+				std::string substr;
+				getline(ss, substr, ',');
+				if (ct == 1) { //only store the second string
+					substr.erase(std::remove(substr.begin(), substr.end(), '\n'), substr.end());
+					substr.erase(std::remove(substr.begin(), substr.end(), ' '), substr.end());
+					surface.push_back(substr);
+				}
+				ct += 1;
+			}
+		}
+		std::cout << " " << std::endl;
+
+		//define IEN
+		t.NEL = EToV.size() / elenode3D;
+		t.IEN = new int*[elenode3D];
+		for (int i = 0; i < elenode3D; i++) {
+			t.IEN[i] = new int[t.NEL];
+		}
+		for (int i = 0; i < t.NEL; i++) {
+			for (int j = 0; j < elenode3D; j++) {
+				t.IEN[j][i] = EToV[i*elenode3D + j];
+			}
+		}
+		//define GIDF, NRBELE_ARR
+		for (int z = 0; z < owsfnumber; z++) {
+			ol[z].FSNEL = ien_py[wt_py[z]].size();
+			ol[z].GIDF = new int[ol[z].FSNEL];
+			for (int i = 0; i < ol[z].FSNEL; i++) {
+				ol[z].GIDF[i] = ien_py[wt_py[z]][i];
+			}
+		}
+		for (int z = 0; z < nrbsurfnumber; z++) {
+			nr[z].NEL_nrb = ien_py[nrb_py[z]].size();
+			nr[z].NRBELE_ARR = new int[nr[z].NEL_nrb];
+			for (int i = 0; i < nr[z].NEL_nrb; i++) {
+				nr[z].NRBELE_ARR[i] = ien_py[nrb_py[z]][i];
+			}
+		}
+
+		//define FP, FP_2D, DP, DP_2D
+		for (int z = 0; z < owsfnumber; z++) {
+			ol[z].FP = new int*[ol[z].FSNEL];
+			for (int i = 0; i < ol[z].FSNEL; i++) {
+				ol[z].FP[i] = new int[elenode2D];
+			}
+		}
+		for (int z = 0; z < nrbsurfnumber; z++) {
+			nr[z].DP = new int*[nr[z].NEL_nrb];
+			for (int i = 0; i < nr[z].NEL_nrb; i++) {
+				nr[z].DP[i] = new int[elenode2D];
+			}
+		}
+		if (element_type == 0) {
+			for (int z = 0; z < owsfnumber; z++) {
+				for (int i = 0; i < ol[z].FSNEL; i++) {
+					if (surface[wt_py[z]] == "S1") {
+						ol[z].FP[i][0] = 1; ol[z].FP[i][1] = 2; ol[z].FP[i][2] = 3; ol[z].FP[i][3] = 4;
+					}
+					else if (surface[wt_py[z]] == "S2") {
+						ol[z].FP[i][0] = 5; ol[z].FP[i][1] = 6; ol[z].FP[i][2] = 7; ol[z].FP[i][3] = 8;
+					}
+					else if (surface[wt_py[z]] == "S3") {
+						ol[z].FP[i][0] = 5; ol[z].FP[i][1] = 1; ol[z].FP[i][2] = 2; ol[z].FP[i][3] = 6;
+					}
+					else if (surface[wt_py[z]] == "S4") {
+						ol[z].FP[i][0] = 6; ol[z].FP[i][1] = 2; ol[z].FP[i][2] = 3; ol[z].FP[i][3] = 7;
+					}
+					else if (surface[wt_py[z]] == "S5") {
+						ol[z].FP[i][0] = 8; ol[z].FP[i][1] = 7; ol[z].FP[i][2] = 3; ol[z].FP[i][3] = 4;
+					}
+					else if (surface[wt_py[z]] == "S6") {
+						ol[z].FP[i][0] = 5; ol[z].FP[i][1] = 8; ol[z].FP[i][2] = 4; ol[z].FP[i][3] = 1;
+					}
+				}
+			}
+			for (int z = 0; z < nrbsurfnumber; z++) {
+				for (int i = 0; i < nr[z].NEL_nrb; i++) {
+					if (surface[nrb_py[z]] == "S1") {
+						nr[z].DP[i][0] = 1; nr[z].DP[i][1] = 2; nr[z].DP[i][2] = 3; nr[z].DP[i][3] = 4;
+					}
+					else if (surface[nrb_py[z]] == "S2") {
+						nr[z].DP[i][0] = 5; nr[z].DP[i][1] = 6; nr[z].DP[i][2] = 7; nr[z].DP[i][3] = 8;
+					}
+					else if (surface[nrb_py[z]] == "S3") {
+						nr[z].DP[i][0] = 5; nr[z].DP[i][1] = 1; nr[z].DP[i][2] = 2; nr[z].DP[i][3] = 6;
+					}
+					else if (surface[nrb_py[z]] == "S4") {
+						nr[z].DP[i][0] = 6; nr[z].DP[i][1] = 2; nr[z].DP[i][2] = 3; nr[z].DP[i][3] = 7;
+					}
+					else if (surface[nrb_py[z]] == "S5") {
+						nr[z].DP[i][0] = 8; nr[z].DP[i][1] = 7; nr[z].DP[i][2] = 3; nr[z].DP[i][3] = 4;
+					}
+					else if (surface[nrb_py[z]] == "S6") {
+						nr[z].DP[i][0] = 5; nr[z].DP[i][1] = 8; nr[z].DP[i][2] = 4; nr[z].DP[i][3] = 1;
+					}
+				}
+			}
+		}
+		else if (element_type == 1) {
+			for (int z = 0; z < owsfnumber; z++) {
+				for (int i = 0; i < ol[z].FSNEL; i++) {
+					if (surface[wt_py[z]] == "S1") {
+						ol[z].FP[i][0] = 1; ol[z].FP[i][1] = 3; ol[z].FP[i][2] = 2;
+					}
+					else if (surface[wt_py[z]] == "S2") {
+						ol[z].FP[i][0] = 4; ol[z].FP[i][1] = 1; ol[z].FP[i][2] = 2;
+					}
+					else if (surface[wt_py[z]] == "S3") {
+						ol[z].FP[i][0] = 4; ol[z].FP[i][1] = 2; ol[z].FP[i][2] = 3;
+					}
+					else if (surface[wt_py[z]] == "S4") {
+						ol[z].FP[i][0] = 1; ol[z].FP[i][1] = 4; ol[z].FP[i][2] = 3;
+					}
+				}
+				ol[z].FP_2D[0] = 1;
+				ol[z].FP_2D[1] = 2;
+				ol[z].FP_2D[2] = 3;
+			}
+			for (int z = 0; z < nrbsurfnumber; z++) {
+				for (int i = 0; i < nr[z].NEL_nrb; i++) {
+					if (surface[nrb_py[z]] == "S1") {
+						nr[z].DP[i][0] = 1; nr[z].DP[i][1] = 3; nr[z].DP[i][2] = 2;
+					}
+					else if (surface[nrb_py[z]] == "S2") {
+						nr[z].DP[i][0] = 4; nr[z].DP[i][1] = 1; nr[z].DP[i][2] = 2;
+					}
+					else if (surface[nrb_py[z]] == "S3") {
+						nr[z].DP[i][0] = 4; nr[z].DP[i][1] = 2; nr[z].DP[i][2] = 3;
+					}
+					else if (surface[nrb_py[z]] == "S4") {
+						nr[z].DP[i][0] = 1; nr[z].DP[i][1] = 4; nr[z].DP[i][2] = 3;
+					}
+				}
+				nr[z].DP_2D[0] = 1;
+				nr[z].DP_2D[1] = 2;
+				nr[z].DP_2D[2] = 3;
+			}
+		}
+
+		//define BCIEN
+		for (int z = 0; z < owsfnumber; z++) {
+			std::vector<std::vector<int>>iens; //store the connectivity in the current physical group (2D vector)
+			for (j = 0; j < numele_py[wt_py[z]]; j++) { //loop through the element in the current physical group
+				std::vector<int>local;
+				for (k = 0; k < elenode2D; k++) {
+					local.push_back(t.IEN[ol[z].FP[j][k] - 1][ien_py[wt_py[z]][j] - 1]);
+				}
+				iens.push_back(local);
+			}
+			t.BCIEN.push_back(iens);
+		}
+		for (int z = 0; z < nrbsurfnumber; z++) {
+			std::vector<std::vector<int>>iens; //store the connectivity in the current physical group (2D vector)
+			for (j = 0; j < numele_py[nrb_py[z]]; j++) { //loop through the element in the current physical group
+				std::vector<int>local;
+				for (k = 0; k < elenode2D; k++) {
+					local.push_back(t.IEN[nr[z].DP[j][k] - 1][ien_py[nrb_py[z]][j] - 1]);
+				}
+				iens.push_back(local);
+			}
+			t.BCIEN.push_back(iens);
+		}
+		t.GCOORD = new double*[t.NNODE];
+		for (i = 0; i < t.NNODE; i++) {
+			t.GCOORD[i] = new double[3];
+		}
+		for (int i = 0; i < t.NNODE; i++) {
+			t.GCOORD[i][0] = VX[i];
+			t.GCOORD[i][1] = VY[i];
+			t.GCOORD[i][2] = VZ[i];
+		}
+		//Finish the mesh reading
+		//adjust the node location if necessary
+		if (nodeadj == 1) {
+			for (int i = 0; i < t.NNODE; i++) {
+				t.GCOORD[i][0] = VX[i];
+				t.GCOORD[i][1] = VZ[i] + fs_offset;
+				t.GCOORD[i][2] = -VY[i];
+			}
 		}
 	}
 
@@ -252,17 +548,16 @@ struct meshgenerationstruct meshgeneration() {
 		}
 	}
 
-
 	//Need to be modified, localnode needs to corresponds each physical group! we cannot make the assumption anymore
 	//int localnode[elenode2D]; 
 	int **localnode;
-	localnode = new int*[physicalgroups - 1];
-	for (i = 0; i < physicalgroups - 1; i++) {
+	localnode = new int*[owsfnumber + nrbsurfnumber];
+	for (i = 0; i < owsfnumber + nrbsurfnumber; i++) {
 		localnode[i] = new int[elenode2D];
 	}
 	//The following loop only attempts to extract the pattern of localnode[] from one corresponding global element since the assumption here is that all the elements in all physical groups
 	//follow the same pattern. However, that is not rigorous enough since the corresponding local node for all 2D element in physical group do not necessary be the same. 
-	for (i = 0; i < physicalgroups - 1; i++) {
+	for (i = 0; i < owsfnumber + nrbsurfnumber; i++) {
 		for (j = 0; j < numele_py[i]; j++) { //phygrp_start[i + 1] - phygrp_start[i] is the element number in the ith physical group
 			for (k = 0; k < t.NEL; k++) {
 				ct = 0;
@@ -302,6 +597,7 @@ struct meshgenerationstruct meshgeneration() {
 	for (z = 0; z < nrbsurfnumber; z++) {
 		nr[z].LNA_norm = new int[elenode2D];
 	}
+
 	if (element_type == 1) {
 		for (z = 0; z < owsfnumber; z++) {
 			ol[z].LNA_norm[0] = 1;
@@ -317,7 +613,7 @@ struct meshgenerationstruct meshgeneration() {
 
 	if (element_type == 0) {
 		int element_number = 0;
-		for (z = 0; z < physicalgroups - 1; z++) { //all physical groups except for connectivity
+		for (z = 0; z < owsfnumber + nrbsurfnumber; z++) { //all physical groups except for connectivity
 			//First determine if this is a wetted surface physical group or nrb physical group
 			wet = 0; nrb = 0;
 			for (i = 0; i < wt_pys_size; i++) {
@@ -678,9 +974,7 @@ struct meshgenerationstruct meshgeneration() {
 	//int wt_pys_num = 2; //the physical group number that corresponds to the wet surface (physical group 3)
 	//if (mappingalgo == 2) {
 	for (z = 0; z < wt_pys_size; z++) { //loop through each wetted surface
-
 		int elenum = numele_py[wt_pys_num[z]]; //number of high-order on the wet surface s
-
 		if (element_type == 0) { //hex element
 			ol[z].IEN_py = new int*[4];
 			for (i = 0; i < 4; i++) {
@@ -747,22 +1041,24 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 
-		ol[z].FP = new int*[ol[z].FSNEL];
-		for (i = 0; i < ol[z].FSNEL; i++) {
-			ol[z].FP[i] = new int[elenode2D];
-		}
-		//Define FP for hexahedral element
-		if (element_type == 0) {
+		if (input_type == "Gmsh") {
+			ol[z].FP = new int*[ol[z].FSNEL];
 			for (i = 0; i < ol[z].FSNEL; i++) {
-				for (j = 0; j < elenode2D; j++) {
-					ol[z].FP[i][j] = ol[z].FP_temp[j];
+				ol[z].FP[i] = new int[elenode2D];
+			}
+			//Define FP for hexahedral element
+			if (element_type == 0) {
+				for (i = 0; i < ol[z].FSNEL; i++) {
+					for (j = 0; j < elenode2D; j++) {
+						ol[z].FP[i][j] = ol[z].FP_temp[j];
+					}
 				}
 			}
 		}
 
 		//Define FP for tetrahedral element
 		//Extract the local node pattern for tetrahedral element
-		if (element_type == 1) {
+		if (element_type == 1 && input_type == "Gmsh") {
 			int node[3];
 			ol[z].GIDF = new int[ol[z].FSNEL];
 			//#pragma omp parallel for num_threads(6)
@@ -1020,18 +1316,21 @@ struct meshgenerationstruct meshgeneration() {
 			nr[z].IEN_lc[i] = new int[nr[z].NEL_nrb];
 		}
 		//Extract the local node pattern for hexahedral and tetrahedral element
-		nr[z].DP = new int*[nr[z].NEL_nrb];
-		for (i = 0; i < nr[z].NEL_nrb; i++) {
-			nr[z].DP[i] = new int[elenode2D];
-		}
-		if (element_type == 0) {
+		if (input_type == "Gmsh") {
+			nr[z].DP = new int*[nr[z].NEL_nrb];
 			for (i = 0; i < nr[z].NEL_nrb; i++) {
-				for (j = 0; j < elenode2D; j++) {
-					nr[z].DP[i][j] = nr[z].DP_temp[j];
+				nr[z].DP[i] = new int[elenode2D];
+			}
+			if (element_type == 0) {
+				for (i = 0; i < nr[z].NEL_nrb; i++) {
+					for (j = 0; j < elenode2D; j++) {
+						nr[z].DP[i][j] = nr[z].DP_temp[j];
+					}
 				}
 			}
 		}
-		if (element_type == 1) {
+
+		if (element_type == 1 && input_type == "Gmsh") {
 			int node[3];
 			nr[z].NRBELE_ARR = new int[nr[z].NEL_nrb];
 			for (l = 0; l < nr[z].NEL_nrb; l++) {
