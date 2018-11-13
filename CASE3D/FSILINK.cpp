@@ -90,7 +90,6 @@ void FSILINK(int*** LNA) {
 				}
 			}
 			if (mappingalgo == 5 || mappingalgo == 4) {
-
 				//Take a look at "The integration matrix in mapping algorithm 5.pdf" in post-processing folder
 				bq = LOBATTO(hprefg_flu);
 				gq = GLLQUAD(bq.Z, bq.WL, hprefg_flu, FEM);
@@ -201,7 +200,7 @@ void FSILINK(int*** LNA) {
 				}
 			}
 		}
-		else if (mappingalgo == 5) {
+		else if (mappingalgo == 5 || mappingalgo == 2) {
 			//Take a look at "Boundary force integration for tetrahedral element.pdf" in post-processing folder
 			double xi[3]; double eta[3]; double phi[3][3];
 			xi[0] = 1.0 / 6.0; xi[1] = 2.0 / 3.0; xi[2] = 1.0 / 6.0;

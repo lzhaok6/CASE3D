@@ -83,7 +83,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA) {
 		}
 	}
 	if (element_type == 1) {
-
+		//Need to change: average mapping only applies to the FSI interface. The NRB should still use the most accurate integration method!
 		if (mappingalgo == 4) {
 			for (z = 0; z < nrbsurfnumber; z++) {
 				nr[z].ADMASTER = new double**[nr[z].NEL_nrb];
@@ -118,13 +118,13 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA) {
 			}
 		}
 
-		if (mappingalgo == 5) {
+		if (mappingalgo == 5 || mappingalgo == 2) {
 			double xi[3]; double eta[3]; double phi[3][3];
 			xi[0] = 1.0 / 6.0; xi[1] = 2.0 / 3.0; xi[2] = 1.0 / 6.0;
 			eta[0] = 1.0 / 6.0; eta[1] = 1.0 / 6.0; eta[2] = 2.0 / 3.0;
 			double w[3]; //integration weight
 			w[0] = 1.0 / 3.0; w[1] = 1.0 / 3.0; w[2] = 1.0 / 3.0;
-			for (z = 0; z < owsfnumber; z++) {
+			for (z = 0; z < nrbsurfnumber; z++) {
 				nr[z].ADMASTER = new double**[nr[z].NEL_nrb];
 				for (i = 0; i < nr[z].NEL_nrb; i++) {
 					nr[z].ADMASTER[i] = new double*[3];

@@ -772,43 +772,44 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	std::vector <int> sampline_found;
 	std::ofstream *outline;
 	int* sampline2;
-	if (output == 1) {
-		//std::string energyfile = "history.txt";
-		//std::ofstream energyfilehd;
-		//energyfilehd.open(energyfile);
-		//Get the sample points on a line to observe the wave propagation pressure distribution
-		count = 0;
-		for (i = 0; i < NNODE; i++) {
-			if (abs(GCOORD[i][0] - 0.0) < 1e-6 && abs(GCOORD[i][2] - 0.0) < 1e-6) {
-				sampline.push_back(i + 1);
-				sampline_gc.push_back(GCOORD[i][1]); 
-				count += 1;
-			}
+	std::string tecplotfile = "tecplot.dat";
+	std::ofstream tecplotfilehd;
+	tecplotfilehd.open(tecplotfile);
+	//std::string energyfile = "history.txt";
+	//std::ofstream energyfilehd;
+	//energyfilehd.open(energyfile);
+	//Get the sample points on a line to observe the wave propagation pressure distribution
+	count = 0;
+	for (i = 0; i < NNODE; i++) {
+		if (abs(GCOORD[i][0] - 0.0) < 1e-6 && abs(GCOORD[i][2] - 0.0) < 1e-6) {
+			sampline.push_back(i + 1);
+			sampline_gc.push_back(GCOORD[i][1]); 
+			count += 1;
 		}
-		std::sort(sampline_gc.rbegin(), sampline_gc.rend());
+	}
+	std::sort(sampline_gc.rbegin(), sampline_gc.rend()); //arrange the coordinate in decending order
 
-		for (i = 0; i < sampline_gc.size(); i++) {
-			for (j = 0; j < sampline.size(); j++) {
-				if (GCOORD[sampline[j] - 1][1] == sampline_gc[i]) {
-					sampline_found.push_back(sampline[j]);
-				}
+	for (i = 0; i < sampline_gc.size(); i++) {
+		for (j = 0; j < sampline.size(); j++) {
+			if (GCOORD[sampline[j] - 1][1] == sampline_gc[i]) {
+				sampline_found.push_back(sampline[j]);
 			}
 		}
-		for (i = 0; i < NDT; i++) {
-			if (T[i] >= output_int*NDT_out) {
-				T_out.push_back(i);
-				NDT_out += 1;
-			}
+	}
+	for (i = 0; i < NDT; i++) {
+		if (T[i] >= output_int*NDT_out) {
+			T_out.push_back(i);
+			NDT_out += 1;
 		}
-		std::string name2 = "PT_line_result_";
+	}
+	std::string name2 = "PT_line_result_";
 		
-		outline = new std::ofstream[NDT_out];
-		std::string filename2;
-		if (output == 1) {
-			for (i = 0; i < NDT_out; i++) {
-				filename2 = name2 + std::to_string(T_out[i] * DT * 1000) + "ms " + timestr + ".txt";
-				outline[i].open(filename2);
-			}
+	outline = new std::ofstream[NDT_out];
+	std::string filename2;
+	if (output == 1) {
+		for (i = 0; i < NDT_out; i++) {
+			filename2 = name2 + std::to_string(T_out[i] * DT * 1000) + "ms " + timestr + ".txt";
+			outline[i].open(filename2);
 		}
 	}
 
@@ -1494,6 +1495,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 		for (j = 0; j < nrb.NNODE_nrb; j++) {
 			FFORCE[nrb.NRBA_t[j] - 1] += BNRB[nrb.NRBA_t[j] - 1];
+			std::cout << "" << std::endl; 
 		}
 		//The combination of FFORCE passes the test
 
@@ -1522,7 +1524,10 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			//PRESSURE CORRECTION FACTOR
 			ds[nrb.NRBA_t[j] - 1][2] = ds[nrb.NRBA_t[j] - 1][1] + ((ds[nrb.NRBA_t[j] - 1][2] - ds[nrb.NRBA_t[j] - 1][1]) / (1 + KAPPA));
 		} //after ds is updated, P can be updated.
-
+		double hd3 = 0.0; 
+		for (j = 0; j < nrb.NNODE_nrb; j++) {
+			hd3 += FFORCE[nrb.NRBA_t[j] - 1]; 
+		}
 
 		//======================NODE-BY-NODE CAVITATION CHECK=========================//
 		if (tfm == 1) {
@@ -1724,6 +1729,17 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					}
 				}
 			}
+			//output the tecplot data file
+			for (j = 0; j < NNODE; j++) {
+				tecplotfilehd << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << PIN[j][0] << " " << PIN[j][1] << " " << PT[j][1] << " " << ds[j][2] << " " << BNRB[j] << " " << FEE[j][1] << " " << HF[j] << " " << FFORCE[j] << std::endl;
+			}
+			tecplotfilehd << std::endl;
+			for (j = 0; j < NEL; j++) {
+				for (k = 0; k < 8; k++) {
+					tecplotfilehd << IEN[k][j] << " ";
+				}
+				tecplotfilehd << std::endl;
+			}
 		}
 	
 		for (j = 0; j < NNODE; j++) {
@@ -1750,6 +1766,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					}
 				}
 			}
+		}
+
+		double hd2 = 0.0; 
+		for (j = 0; j < nrb.NNODE_nrb; j++) {
+			hd2 += ds[nrb.NRBA_t[j] - 1][2];
 		}
 
 		for (z = 0; z < owsfnumber; z++) {

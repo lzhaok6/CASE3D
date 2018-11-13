@@ -13,11 +13,13 @@ struct TIMINTstruct TIMINT(double LMAX) {
 	TIMINTstruct t;
 	t.DT = (CFLFRAC * 2) / (C*sqrt(LMAX*(1 + 2 * BETA)));
 	t.DT = t.DT / dtscale;
+	/*
 	if (debug4 == 1) {
 		t.DT = 3.25062e-06;
 		std::cout << "Do you really want to prescribe the time step size?" << std::endl;
 		system("PAUSE "); 
 	}
+	*/
 	/*
 	if (FEM == 1) {
 		t.DT = XHE / C / sqrt(1 + 2 * BETA); //this would actually make the FEM solution unstable

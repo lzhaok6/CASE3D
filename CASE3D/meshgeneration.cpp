@@ -10,6 +10,7 @@
 #include <ctime>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 /*
 mesh generation explanation:
@@ -29,136 +30,6 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 
-
-	/*
-	std::ifstream infile("C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=1.msh");
-	if (!infile) {
-	std::cout << "can not open the mesh file" << std::endl;
-	system("PAUSE ");
-	}
-	//read the file
-	int nodestart = 0;
-	int nodeend = 0;
-	int ele_line = 0;
-	std::vector<std::vector<std::string>> output;
-	int ct = -1;
-	int physicalgroups = 1; //starting from the first physical group
-	int endfile = 0;
-	std::vector<int> phygrp_start; //the starting line number of the physical group
-	int elestart = 0; //the flag denote the start of element connectivity definition
-
-	std::clock_t start;
-	start = std::clock();
-	std::string csvElement;
-	std::vector<std::string> csvColumn;
-	std::string csvLine;
-
-	while (getline(infile, csvLine))
-	{
-	ct = ct + 1; //the current line number (starting from 0)
-	std::istringstream csvStream(csvLine); //csvStream is a stream (turn the string csvLine to stream csvStream)
-	csvColumn.clear();
-	while (getline(csvStream, csvElement, ' ')) //Get line from stream (csvStream) into string (csvElement)
-	{
-	csvColumn.push_back(csvElement);
-	}
-	output.push_back(csvColumn);
-	if (csvColumn[0] == "$EndElements") {
-	endfile = ct;
-	break;
-	}
-	if (csvColumn[0] == "$Nodes") {
-	nodestart = ct + 2; //the node starts from the next line
-	}
-	if (csvColumn[0] == "$EndNodes") {
-	nodeend = ct - 1; //the node starts from the next line
-	}
-	if (csvColumn[0] == "$Elements") {
-	ele_line = ct + 2; //the line corresponding to the start of element connectivity definition
-	phygrp_start.push_back(ele_line);
-	elestart = 1;
-	}
-	//Get the information of physical groups (Here, we assume the physical group number is sequential from 1, 2, 3...)
-	if (elestart == 1 && ct >= ele_line) {
-	if (csvColumn[3] == std::to_string(physicalgroups)) {
-	//do nothing
-	}
-	else {
-	physicalgroups += 1;
-	//push the line number of the starting of the current physical group
-	phygrp_start.push_back(ct);
-	}
-	}
-	if (ct % 20000 == 0) {
-	std::cout << ct << std::endl; //output which line is being read
-	}
-	}
-	//double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
-	double duration = (std::clock() - start);
-
-	int elenode3D = 0;
-	int elenode2D = 0;
-	if (element_type == 0) { //hex element
-	elenode3D = NINT*NINT*NINT;
-	elenode2D = NINT*NINT;
-	}
-	if (element_type == 1) { //tet element
-	if (N == 1) {
-	elenode3D = 4;
-	elenode2D = 3;
-	}
-	else {
-	std::cout << "High-order tet element is not supported yet" << std::endl;
-	system("PAUSE ");
-	}
-	}
-
-	//The physical groups except for the last one are the surface mesh (elenode2D).
-	//The last physical group is the volumn mesh (elenode3D) connectivity matrix
-	t.NNODE = stoi(output[nodestart - 1][0]);
-	t.NEL = endfile - phygrp_start[physicalgroups - 1];
-	//Define connectivity matrix in the volumn mesh
-	t.IEN = new int*[elenode3D];
-	for (i = 0; i < elenode3D; i++) {
-	t.IEN[i] = new int[t.NEL];
-	}
-	int nelstart = 0;
-	int tagnumber = stoi(output[phygrp_start[0]][2]);
-	nelstart = 2 + tagnumber + 1;
-	//tagnumber is the number of tags (placed third in the line). After those tags the element connectivity starts
-	//Refer to Evernote: Gmsh mesh file format for more information.
-	ct = 0;
-	for (i = phygrp_start[physicalgroups - 1]; i < endfile; i++) {
-	for (j = nelstart; j < nelstart + elenode3D; j++) {
-	t.IEN[j - nelstart][ct] = stoi(output[i][j]);
-	}
-	ct += 1;
-	}
-	//Define the rest of surface boundaries (for boundary condition definition)
-	//std::vector<std::vector<std::vector<int>>> BCIEN;
-	for (i = 0; i < physicalgroups - 1; i++) {
-	std::vector<std::vector<int>>iens;
-	for (j = phygrp_start[i]; j < phygrp_start[i + 1]; j++) {
-	std::vector<int>local;
-	for (k = 0; k < elenode2D; k++) {
-	local.push_back(stoi(output[j][nelstart + k]));
-	//BCIEN[i][j - phygrp_start[i]].push_back(stoi(output[j][5 + k]));
-	}
-	iens.push_back(local);
-	}
-	t.BCIEN.push_back(iens);
-	}
-	//Define node coordinates
-	t.GCOORD = new double*[t.NNODE];
-	for (i = 0; i < t.NNODE; i++) {
-	t.GCOORD[i] = new double[3];
-	}
-	for (i = nodestart; i < nodestart + t.NNODE; i++) {
-	for (j = 0; j < 3; j++) {
-	t.GCOORD[i - nodestart][j] = stod(output[i][1 + j]);
-	}
-	}
-	*/
 	int elenode3D = 0;
 	int elenode2D = 0;
 	if (element_type == 0) { //hex element
@@ -179,7 +50,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
 
-	FILE *fp = fopen("C:/Users/lzhaok6/OneDrive/CASE_MESH/FluidColumn_1fthex.msh", "r");
+	FILE *fp = fopen("C:/Users/lzhaok6/OneDrive/CASE_MESH/FluidColumn_1fthex_gmsh.msh", "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
 		system("PAUSE ");
@@ -190,11 +61,13 @@ struct meshgenerationstruct meshgeneration() {
 		system("PAUSE ");
 	}
 
+	//Search for "$Nodes" (the start of node coordinate definition)
 	char buf[1000];
 	do {
-		fgets(buf, 1000, fp);
+		fgets(buf, 1000, fp); //read line by line
 	} while (!strstr(buf, "$Nodes"));
 	fscanf(fp, "%d", &t.NNODE);
+
 	t.GCOORD = new double*[t.NNODE];
 	for (i = 0; i < t.NNODE; i++) {
 		t.GCOORD[i] = new double[3];
@@ -209,14 +82,15 @@ struct meshgenerationstruct meshgeneration() {
 			printf("%d %g %g %g\n", i, VX[i], VY[i], VZ[i]);
 		}
 	}
-	//search until the $Elements is found (the start of element connecvitity definition)
+
+	//Search until the "$Elements" is found (the start of element connecvitity definition)
 	do {
 		fgets(buf, 1000, fp);
 	} while (!strstr(buf, "$Elements"));
 	int NEL_tol; //total number of element including boundary 2D elements
 	fscanf(fp, "%d", &NEL_tol);
 	std::vector<std::vector<int>>iens;
-	fgets(buf, 1000, fp);
+	fgets(buf, 1000, fp); //to change to a new line (does not seem relevant)
 	int* EToV; //element connectivity matrix for all physical groups (make it an 1D array to accelerate the memory access)
 	EToV = new int[NEL_tol*elenode3D]; //more than enough
 	for (i = 0; i < NEL_tol*elenode3D; i++) {
@@ -278,8 +152,8 @@ struct meshgenerationstruct meshgeneration() {
 	}
 	numele_py.push_back(numele); //number of element in each physical group
 
-								 //Populate the EToV matrix to BCIEN and IEN
-								 //Firstly, store the boundary element connectivity (BCIEN)
+	//Populate the EToV matrix to BCIEN and IEN
+	//Firstly, store the boundary element connectivity (BCIEN)
 	int st = 0; //the starting point of the connectivity definition in EToV
 	int nvert_py; //number of vertices in element for each physical group
 	for (i = 0; i < physicalgroups - 1; i++) {
@@ -307,12 +181,17 @@ struct meshgenerationstruct meshgeneration() {
 			t.IEN[k][j] = EToV[st + j*nvert_py + k];
 		}
 	}
+
+
+
 	//populate GCOORD
 	for (i = 0; i < t.NNODE; i++) {
 		t.GCOORD[i][0] = VX[i];
 		t.GCOORD[i][1] = VY[i];
 		t.GCOORD[i][2] = VZ[i];
 	}
+	//Finish the mesh reading
+
 	//adjust the node location if necessary
 	if (nodeadj == 1) {
 		for (i = 0; i < t.NNODE; i++) {
@@ -403,19 +282,6 @@ struct meshgenerationstruct meshgeneration() {
 	endloop:;
 	}
 
-	//=================extract the 2D local distribution of the local nodes LNA2D===================//
-	//The section below trys to associate the relationship between localnode and wet surface local node distribution called nr[0].LNA_2D which is later used to separate high-order element to linear element
-	//The local surface (left/right/front/behind/top/bottom) could be identified.
-	//The assumption here is that all the wet surface corresponds to the same face in its corresponding local element (Check out Evernote: How to determine the wet elements on the fluid side). 
-	//int flag;
-	//int LNA_norm[4];
-
-	//The physical group number of wetted surface and NRB surfaces (Needs to be set up by the user)
-	//int wt_pys_num[4] = { 0,1,2,3 };  //the physical group number that corresponds to the wet surface (physical group 3)
-	//int nrb_pys_num[4] = { 4,5,6,7 };
-	//int wt_pys_num[1] = { 0 };
-	//int nrb_pys_num[1] = { 1 };
-
 	//If the wet surface is the left face of the local element (i.e., i=0). 
 	std::cout << "Have you configured the wetted surface and NRB surface physical group number for this mesh? If so, hit Enter to proceed." << std::endl;
 	//system("PAUSE ");
@@ -427,27 +293,32 @@ struct meshgenerationstruct meshgeneration() {
 	int wt_pys_size = sizeof(wt_pys_num) / sizeof(*wt_pys_num); //the number of wetted surfaces 
 	int nrb_pys_size = sizeof(nrb_pys_num) / sizeof(*nrb_pys_num); //the number of nrb surfaces
 
-																   //The four nodes (hex element) and three nodes (tet element) arranged by LNA_norm trace the normal direction out of the fluid domain.
-																   //For linear tet element, this should just be the original sequency of the surface 2D triangular elements. 
-	for (z = 0; z < physicalgroups - 1; z++) {
-		nr[z].LNA_norm = new int[elenode2D];
+	//The four nodes (hex element) and three nodes (tet element) arranged by LNA_norm trace the normal direction out of the fluid domain.
+	//For linear tet element, this should just be the original sequency of the surface 2D triangular elements. 
+
+	for (z = 0; z < owsfnumber; z++) {
 		ol[z].LNA_norm = new int[elenode2D];
 	}
-
+	for (z = 0; z < nrbsurfnumber; z++) {
+		nr[z].LNA_norm = new int[elenode2D];
+	}
 	if (element_type == 1) {
-		for (z = 0; z < physicalgroups - 1; z++) {
-			nr[z].LNA_norm[0] = 1;
+		for (z = 0; z < owsfnumber; z++) {
 			ol[z].LNA_norm[0] = 1;
-			nr[z].LNA_norm[1] = 2;
 			ol[z].LNA_norm[1] = 2;
-			nr[z].LNA_norm[2] = 3;
 			ol[z].LNA_norm[2] = 3;
 		}
+		for (z = 0; z < nrbsurfnumber; z++) {
+			nr[z].LNA_norm[0] = 1;
+			nr[z].LNA_norm[1] = 2;
+			nr[z].LNA_norm[2] = 3;
+		}
 	}
+
 	if (element_type == 0) {
 		int element_number = 0;
 		for (z = 0; z < physicalgroups - 1; z++) { //all physical groups except for connectivity
-												   //First determine if this is a wetted surface physical group or nrb physical group
+			//First determine if this is a wetted surface physical group or nrb physical group
 			wet = 0; nrb = 0;
 			for (i = 0; i < wt_pys_size; i++) {
 				if (z == wt_pys_num[i]) {
