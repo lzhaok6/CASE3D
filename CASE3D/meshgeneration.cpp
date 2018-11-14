@@ -49,7 +49,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/3Dwave.inp"; 
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_tet_1ft.inp";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
@@ -219,7 +219,7 @@ struct meshgenerationstruct meshgeneration() {
 			VZ.push_back(c);
 			ct += 1;
 			if (ct % 10000 == 0) {
-				std::cout << "element: " << ct << std::endl; //output which line is being read
+				std::cout << "node: " << ct << std::endl; //output which line is being read
 			}
 		}
 		t.NNODE = VX.size(); 
@@ -339,19 +339,11 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 		//define GIDF, NRBELE_ARR
-		for (int z = 0; z < owsfnumber; z++) {
-			ol[z].FSNEL = ien_py[wt_py[z]].size();
-			ol[z].GIDF = new int[ol[z].FSNEL];
-			for (int i = 0; i < ol[z].FSNEL; i++) {
-				ol[z].GIDF[i] = ien_py[wt_py[z]][i];
-			}
+		for (int z = 0; z < wt_py.size(); z++) {
+			ol[0].FSNEL += ien_py[wt_py[z]].size();
 		}
-		for (int z = 0; z < nrbsurfnumber; z++) {
-			nr[z].NEL_nrb = ien_py[nrb_py[z]].size();
-			nr[z].NRBELE_ARR = new int[nr[z].NEL_nrb];
-			for (int i = 0; i < nr[z].NEL_nrb; i++) {
-				nr[z].NRBELE_ARR[i] = ien_py[nrb_py[z]][i];
-			}
+		for (int z = 0; z < nrb_py.size(); z++) {
+			nr[0].NEL_nrb += ien_py[nrb_py[z]].size();
 		}
 
 		//define FP, FP_2D, DP, DP_2D
@@ -368,115 +360,127 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 		if (element_type == 0) {
-			for (int z = 0; z < owsfnumber; z++) {
-				for (int i = 0; i < ol[z].FSNEL; i++) {
+			ct = 0;
+			for (int z = 0; z < wt_py.size(); z++) {
+				for (int i = 0; i < ien_py[wt_py[z]].size(); i++) {
 					if (surface[wt_py[z]] == "S1") {
-						ol[z].FP[i][0] = 1; ol[z].FP[i][1] = 2; ol[z].FP[i][2] = 3; ol[z].FP[i][3] = 4;
+						ol[0].FP[ct][0] = 1; ol[0].FP[ct][1] = 2; ol[0].FP[ct][2] = 3; ol[0].FP[ct][3] = 4;
 					}
 					else if (surface[wt_py[z]] == "S2") {
-						ol[z].FP[i][0] = 5; ol[z].FP[i][1] = 6; ol[z].FP[i][2] = 7; ol[z].FP[i][3] = 8;
+						ol[0].FP[ct][0] = 5; ol[0].FP[ct][1] = 6; ol[0].FP[ct][2] = 7; ol[0].FP[ct][3] = 8;
 					}
 					else if (surface[wt_py[z]] == "S3") {
-						ol[z].FP[i][0] = 5; ol[z].FP[i][1] = 1; ol[z].FP[i][2] = 2; ol[z].FP[i][3] = 6;
+						ol[0].FP[ct][0] = 5; ol[0].FP[ct][1] = 1; ol[0].FP[ct][2] = 2; ol[0].FP[ct][3] = 6;
 					}
 					else if (surface[wt_py[z]] == "S4") {
-						ol[z].FP[i][0] = 6; ol[z].FP[i][1] = 2; ol[z].FP[i][2] = 3; ol[z].FP[i][3] = 7;
+						ol[0].FP[ct][0] = 6; ol[0].FP[ct][1] = 2; ol[0].FP[ct][2] = 3; ol[0].FP[ct][3] = 7;
 					}
 					else if (surface[wt_py[z]] == "S5") {
-						ol[z].FP[i][0] = 8; ol[z].FP[i][1] = 7; ol[z].FP[i][2] = 3; ol[z].FP[i][3] = 4;
+						ol[0].FP[ct][0] = 8; ol[0].FP[ct][1] = 7; ol[0].FP[ct][2] = 3; ol[0].FP[ct][3] = 4;
 					}
 					else if (surface[wt_py[z]] == "S6") {
-						ol[z].FP[i][0] = 5; ol[z].FP[i][1] = 8; ol[z].FP[i][2] = 4; ol[z].FP[i][3] = 1;
+						ol[0].FP[ct][0] = 5; ol[0].FP[ct][1] = 8; ol[0].FP[ct][2] = 4; ol[0].FP[ct][3] = 1;
 					}
+					ct += 1;
 				}
 			}
-			for (int z = 0; z < nrbsurfnumber; z++) {
-				for (int i = 0; i < nr[z].NEL_nrb; i++) {
+			ct = 0;
+			for (int z = 0; z < nrb_py.size(); z++) {
+				for (int i = 0; i < ien_py[nrb_py[z]].size(); i++) {
 					if (surface[nrb_py[z]] == "S1") {
-						nr[z].DP[i][0] = 1; nr[z].DP[i][1] = 2; nr[z].DP[i][2] = 3; nr[z].DP[i][3] = 4;
+						nr[0].DP[ct][0] = 1; nr[0].DP[ct][1] = 2; nr[0].DP[ct][2] = 3; nr[0].DP[ct][3] = 4;
 					}
 					else if (surface[nrb_py[z]] == "S2") {
-						nr[z].DP[i][0] = 5; nr[z].DP[i][1] = 6; nr[z].DP[i][2] = 7; nr[z].DP[i][3] = 8;
+						nr[0].DP[ct][0] = 5; nr[0].DP[ct][1] = 6; nr[0].DP[ct][2] = 7; nr[0].DP[ct][3] = 8;
 					}
 					else if (surface[nrb_py[z]] == "S3") {
-						nr[z].DP[i][0] = 5; nr[z].DP[i][1] = 1; nr[z].DP[i][2] = 2; nr[z].DP[i][3] = 6;
+						nr[0].DP[ct][0] = 5; nr[0].DP[ct][1] = 1; nr[0].DP[ct][2] = 2; nr[0].DP[ct][3] = 6;
 					}
 					else if (surface[nrb_py[z]] == "S4") {
-						nr[z].DP[i][0] = 6; nr[z].DP[i][1] = 2; nr[z].DP[i][2] = 3; nr[z].DP[i][3] = 7;
+						nr[0].DP[ct][0] = 6; nr[0].DP[ct][1] = 2; nr[0].DP[ct][2] = 3; nr[0].DP[ct][3] = 7;
 					}
 					else if (surface[nrb_py[z]] == "S5") {
-						nr[z].DP[i][0] = 8; nr[z].DP[i][1] = 7; nr[z].DP[i][2] = 3; nr[z].DP[i][3] = 4;
+						nr[0].DP[ct][0] = 8; nr[0].DP[ct][1] = 7; nr[0].DP[ct][2] = 3; nr[0].DP[ct][3] = 4;
 					}
 					else if (surface[nrb_py[z]] == "S6") {
-						nr[z].DP[i][0] = 5; nr[z].DP[i][1] = 8; nr[z].DP[i][2] = 4; nr[z].DP[i][3] = 1;
+						nr[0].DP[ct][0] = 5; nr[0].DP[ct][1] = 8; nr[0].DP[ct][2] = 4; nr[0].DP[ct][3] = 1;
 					}
+					ct += 1;
 				}
 			}
 		}
 		else if (element_type == 1) {
-			for (int z = 0; z < owsfnumber; z++) {
-				for (int i = 0; i < ol[z].FSNEL; i++) {
+			ct = 0; 
+			for (int z = 0; z < wt_py.size(); z++) {
+				for (int i = 0; i < ien_py[wt_py[z]].size(); i++) {
 					if (surface[wt_py[z]] == "S1") {
-						ol[z].FP[i][0] = 1; ol[z].FP[i][1] = 3; ol[z].FP[i][2] = 2;
+						ol[0].FP[ct][0] = 1; ol[0].FP[ct][1] = 3; ol[0].FP[ct][2] = 2;
 					}
 					else if (surface[wt_py[z]] == "S2") {
-						ol[z].FP[i][0] = 4; ol[z].FP[i][1] = 1; ol[z].FP[i][2] = 2;
+						ol[0].FP[ct][0] = 4; ol[0].FP[ct][1] = 1; ol[0].FP[ct][2] = 2;
 					}
 					else if (surface[wt_py[z]] == "S3") {
-						ol[z].FP[i][0] = 4; ol[z].FP[i][1] = 2; ol[z].FP[i][2] = 3;
+						ol[0].FP[ct][0] = 4; ol[0].FP[ct][1] = 2; ol[0].FP[ct][2] = 3;
 					}
 					else if (surface[wt_py[z]] == "S4") {
-						ol[z].FP[i][0] = 1; ol[z].FP[i][1] = 4; ol[z].FP[i][2] = 3;
+						ol[0].FP[ct][0] = 1; ol[0].FP[ct][1] = 4; ol[0].FP[ct][2] = 3;
 					}
+					ct += 1; 
 				}
-				ol[z].FP_2D[0] = 1;
-				ol[z].FP_2D[1] = 2;
-				ol[z].FP_2D[2] = 3;
+				ol[0].FP_2D[0] = 1;
+				ol[0].FP_2D[1] = 2;
+				ol[0].FP_2D[2] = 3;
 			}
-			for (int z = 0; z < nrbsurfnumber; z++) {
-				for (int i = 0; i < nr[z].NEL_nrb; i++) {
-					if (surface[nrb_py[z]] == "S1") {
-						nr[z].DP[i][0] = 1; nr[z].DP[i][1] = 3; nr[z].DP[i][2] = 2;
+			ct = 0; 
+			for (int z = 0; z < nrb_py.size(); z++) {
+				for (int i = 0; i < ien_py[nrb_py[z]].size(); i++) {
+					if (surface[nrb_py[z]]== "S1") {
+						nr[0].DP[ct][0] = 1; nr[0].DP[ct][1] = 3; nr[0].DP[ct][2] = 2;
 					}
 					else if (surface[nrb_py[z]] == "S2") {
-						nr[z].DP[i][0] = 4; nr[z].DP[i][1] = 1; nr[z].DP[i][2] = 2;
+						nr[0].DP[ct][0] = 4; nr[0].DP[ct][1] = 1; nr[0].DP[ct][2] = 2;
 					}
 					else if (surface[nrb_py[z]] == "S3") {
-						nr[z].DP[i][0] = 4; nr[z].DP[i][1] = 2; nr[z].DP[i][2] = 3;
+						nr[0].DP[ct][0] = 4; nr[0].DP[ct][1] = 2; nr[0].DP[ct][2] = 3;
 					}
 					else if (surface[nrb_py[z]] == "S4") {
-						nr[z].DP[i][0] = 1; nr[z].DP[i][1] = 4; nr[z].DP[i][2] = 3;
+						nr[0].DP[ct][0] = 1; nr[0].DP[ct][1] = 4; nr[0].DP[ct][2] = 3;
 					}
+					ct += 1;
 				}
-				nr[z].DP_2D[0] = 1;
-				nr[z].DP_2D[1] = 2;
-				nr[z].DP_2D[2] = 3;
+				nr[0].DP_2D[0] = 1;
+				nr[0].DP_2D[1] = 2;
+				nr[0].DP_2D[2] = 3;
 			}
 		}
 
 		//define BCIEN
-		for (int z = 0; z < owsfnumber; z++) {
-			std::vector<std::vector<int>>iens; //store the connectivity in the current physical group (2D vector)
+		std::vector<std::vector<int>>iens_wt; //store the connectivity in the current physical group (2D vector)
+		ct = 0; 
+		for (int z = 0; z < wt_py.size(); z++) {
 			for (j = 0; j < numele_py[wt_py[z]]; j++) { //loop through the element in the current physical group
 				std::vector<int>local;
 				for (k = 0; k < elenode2D; k++) {
-					local.push_back(t.IEN[ol[z].FP[j][k] - 1][ien_py[wt_py[z]][j] - 1]);
+					local.push_back(t.IEN[ol[0].FP[ct][k] - 1][ien_py[wt_py[z]][j] - 1]);
 				}
-				iens.push_back(local);
+				iens_wt.push_back(local);
+				ct += 1; 
 			}
-			t.BCIEN.push_back(iens);
 		}
-		for (int z = 0; z < nrbsurfnumber; z++) {
-			std::vector<std::vector<int>>iens; //store the connectivity in the current physical group (2D vector)
+		t.BCIEN.push_back(iens_wt);
+		std::vector<std::vector<int>>iens_nr; //store the connectivity in the current physical group (2D vector)
+		ct = 0; 
+		for (int z = 0; z < nrb_py.size(); z++) {
 			for (j = 0; j < numele_py[nrb_py[z]]; j++) { //loop through the element in the current physical group
 				std::vector<int>local;
 				for (k = 0; k < elenode2D; k++) {
-					local.push_back(t.IEN[nr[z].DP[j][k] - 1][ien_py[nrb_py[z]][j] - 1]);
+					local.push_back(t.IEN[nr[0].DP[ct][k] - 1][ien_py[nrb_py[z]][j] - 1]);
 				}
-				iens.push_back(local);
+				iens_nr.push_back(local);
+				ct += 1; 
 			}
-			t.BCIEN.push_back(iens);
 		}
+		t.BCIEN.push_back(iens_nr);
 		t.GCOORD = new double*[t.NNODE];
 		for (i = 0; i < t.NNODE; i++) {
 			t.GCOORD[i] = new double[3];
@@ -551,30 +555,32 @@ struct meshgenerationstruct meshgeneration() {
 	//Need to be modified, localnode needs to corresponds each physical group! we cannot make the assumption anymore
 	//int localnode[elenode2D]; 
 	int **localnode;
-	localnode = new int*[owsfnumber + nrbsurfnumber];
-	for (i = 0; i < owsfnumber + nrbsurfnumber; i++) {
-		localnode[i] = new int[elenode2D];
-	}
-	//The following loop only attempts to extract the pattern of localnode[] from one corresponding global element since the assumption here is that all the elements in all physical groups
-	//follow the same pattern. However, that is not rigorous enough since the corresponding local node for all 2D element in physical group do not necessary be the same. 
-	for (i = 0; i < owsfnumber + nrbsurfnumber; i++) {
-		for (j = 0; j < numele_py[i]; j++) { //phygrp_start[i + 1] - phygrp_start[i] is the element number in the ith physical group
-			for (k = 0; k < t.NEL; k++) {
-				ct = 0;
-				for (l = 0; l < elenode2D; l++) {
-					for (m = 0; m < elenode3D; m++) {
-						if (t.BCIEN[i][j][l] == t.IEN[m][k]) {
-							localnode[i][l] = m + 1; //store the corresponding local node in BCIEN in global element connectivity matrix
-							ct += 1;
+	if (element_type == 0) {
+		localnode = new int*[owsfnumber + nrbsurfnumber];
+		for (i = 0; i < owsfnumber + nrbsurfnumber; i++) {
+			localnode[i] = new int[elenode2D];
+		}
+		//The following loop only attempts to extract the pattern of localnode[] from one corresponding global element since the assumption here is that all the elements in all physical groups
+		//follow the same pattern. However, that is not rigorous enough since the corresponding local node for all 2D element in physical group do not necessary be the same. 
+		for (i = 0; i < owsfnumber + nrbsurfnumber; i++) {
+			for (j = 0; j < numele_py[i]; j++) { //phygrp_start[i + 1] - phygrp_start[i] is the element number in the ith physical group
+				for (k = 0; k < t.NEL; k++) {
+					ct = 0;
+					for (l = 0; l < elenode2D; l++) {
+						for (m = 0; m < elenode3D; m++) {
+							if (t.BCIEN[i][j][l] == t.IEN[m][k]) {
+								localnode[i][l] = m + 1; //store the corresponding local node in BCIEN in global element connectivity matrix
+								ct += 1;
+							}
 						}
 					}
-				}
-				if (ct == elenode2D) { //found the corresponding 3D element! (only one element per physical group is sampled)
-					goto endloop;
+					if (ct == elenode2D) { //found the corresponding 3D element! (only one element per physical group is sampled)
+						goto endloop;
+					}
 				}
 			}
+		endloop:;
 		}
-	endloop:;
 	}
 
 	//If the wet surface is the left face of the local element (i.e., i=0). 
@@ -971,10 +977,21 @@ struct meshgenerationstruct meshgeneration() {
 	//================================end extraction===================================//
 
 	//=============separate the high-order element into linear elements and obtain the normal direction================//
-	//int wt_pys_num = 2; //the physical group number that corresponds to the wet surface (physical group 3)
-	//if (mappingalgo == 2) {
 	for (z = 0; z < wt_pys_size; z++) { //loop through each wetted surface
-		int elenum = numele_py[wt_pys_num[z]]; //number of high-order on the wet surface s
+		int elenum; 
+		if (input_type == "Gmsh") {
+			elenum = numele_py[wt_pys_num[z]]; //number of high-order on the wet surface s
+		}
+		else if (input_type == "Abaqus") {
+			elenum = ol[0].FSNEL; 
+			if (element_type == 0) {
+				std::cout << "The Abaqus hex mesh is currently buggy, don't use it now. See the comment below for details" << std::endl;
+				system("PAUSE "); 
+				//IEN_py is not fully assigned. 
+				//localnode is wrong as well. 
+			}
+		}
+
 		if (element_type == 0) { //hex element
 			ol[z].IEN_py = new int*[4];
 			for (i = 0; i < 4; i++) {
@@ -1151,20 +1168,35 @@ struct meshgenerationstruct meshgeneration() {
 			}
 			ct = 0; //count the node number assigned
 			std::vector<int>dummy;
+			int half; 
 			for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
+				if (i % 10000 == 0) {
+					std::cout << i << std::endl;
+				}
 				for (j = 0; j < 3; j++) { //the nodes in current element
 					flag = 1; //Initiate the flag to 1 
-					for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
+					half = round(i / 2.0); //search the second half first
+					//search the second half first 
+					for (k = half; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
 						for (l = 0; l < 3; l++) {
 							if (ol[z].IEN_gb[l][k] == ol[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
 								ol[z].IEN_2D[j][i] = ol[z].IEN_2D[l][k];
-								flag = 0; //turn off the flag to assgin new number
-							}
-							else {
-								//If the number has not assigned yet the flag is still 1, thus a new number could be assigned. 
+								flag = 0; //turn off the flag used to assgin new number
+								goto endloop2;
 							}
 						}
 					}
+					//search the second half
+					for (k = 0; k < half; k++) {
+						for (l = 0; l < 3; l++) {
+							if (ol[z].IEN_gb[l][k] == ol[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
+								ol[z].IEN_2D[j][i] = ol[z].IEN_2D[l][k];
+								flag = 0; //turn off the flag used to assgin new number
+								goto endloop2;
+							}
+						}
+					}
+				endloop2:;
 					if (flag == 1) {
 						ct += 1;
 						dummy.push_back(ol[z].IEN_gb[j][i]); //associate the local 2D node with the global node numbering 
@@ -1214,20 +1246,30 @@ struct meshgenerationstruct meshgeneration() {
 
 		std::vector<int>dummy3;
 		ct = 0;
+		int half; 
 		for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
 			for (j = 0; j < elenode2D; j++) { //the nodes in current element
 				flag = 1; //Initiate the flag to 1 
-				for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
+				half = round(i / 2.0); //search the second half first
+				for (k = half; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
 					for (l = 0; l < elenode2D; l++) {
 						if (ol[z].IEN_gb[l][k] == ol[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
 							flag = 0; //turn off the flag used to assgin new number
 							ol[z].IEN_lc[j][i] = ol[z].IEN_lc[l][k];
-						}
-						else {
-							//If the number has not assigned yet the flag is still 1, thus a new number could be assigned. 
+							goto endloop3;
 						}
 					}
 				}
+				for (k = 0; k < half; k++) { //see if the number has already been assigned by the nodes in previous elements
+					for (l = 0; l < elenode2D; l++) {
+						if (ol[z].IEN_gb[l][k] == ol[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
+							flag = 0; //turn off the flag used to assgin new number
+							ol[z].IEN_lc[j][i] = ol[z].IEN_lc[l][k];
+							goto endloop3;
+						}
+					}
+				}
+				endloop3:;
 				if (flag == 1) { //a new number could be assgined. 
 					dummy3.push_back(ol[z].IEN_gb[j][i]); //associate the local 2D node with the global node numbering 
 					ct += 1;
@@ -1306,7 +1348,9 @@ struct meshgenerationstruct meshgeneration() {
 	//==============Extract the connectivity matrix on NRB surface (glue all physical groups corresponding to the NRB together)==============//
 	//All physical groups except for 3
 	for (z = 0; z < nrb_pys_size; z++) {
-		nr[z].NEL_nrb = numele_py[nrb_pys_num[z]];
+		if (input_type == "Gmsh") {
+			nr[z].NEL_nrb = numele_py[nrb_pys_num[z]];
+		}
 		nr[z].IEN_gb = new int*[elenode2D]; //NRBELE_ARR
 		for (i = 0; i < elenode2D; i++) {
 			nr[z].IEN_gb[i] = new int[nr[z].NEL_nrb];
@@ -1376,20 +1420,30 @@ struct meshgenerationstruct meshgeneration() {
 		ct = 0; //count the node number assigned
 		std::vector<int>dummy2;
 		int flag;
+		int half; 
 		for (i = 0; i < nr[z].NEL_nrb; i++) { //loop through each element
 			for (j = 0; j < elenode2D; j++) { //the nodes in current element
-				flag = 1; //Initiate the flag to 1 
-				for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
+				flag = 1; //Initiate the flag to 1
+				half = round(i / 2.0); //search the second half first
+				for (k = half; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
 					for (l = 0; l < elenode2D; l++) {
 						if (nr[z].IEN_gb[l][k] == nr[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
 							flag = 0; //turn off the flag to assgin new number
 							nr[z].IEN_lc[j][i] = nr[z].IEN_lc[l][k];
-						}
-						else {
-							//If the number has not assigned yet the flag is still 1, thus a new number could be assigned. 
+							goto endloop4;
 						}
 					}
 				}
+				for (k = 0; k < half; k++) { //see if the number has already been assigned by the nodes in previous elements
+					for (l = 0; l < elenode2D; l++) {
+						if (nr[z].IEN_gb[l][k] == nr[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
+							flag = 0; //turn off the flag to assgin new number
+							nr[z].IEN_lc[j][i] = nr[z].IEN_lc[l][k];
+							goto endloop4;
+						}
+					}
+				}
+			endloop4:;
 				if (flag == 1) {
 					ct += 1;
 					dummy2.push_back(nr[z].IEN_gb[j][i]); //associate the local 2D node with the global node numbering 
@@ -1454,7 +1508,7 @@ struct meshgenerationstruct meshgeneration() {
 			nr[z].norm[i][0] = n1 / absn; nr[z].norm[i][1] = n2 / absn; nr[z].norm[i][2] = n3 / absn;
 			nr[z].dimension[i] = 0.5*pow((n1*n1 + n2*n2 + n3*n3), 0.5); //https://math.stackexchange.com/questions/128991/how-to-calculate-area-of-3d-triangle
 		}
-		//std::cout << " " << std::endl; 
+		std::cout << " " << std::endl; 
 	}
 
 	//For some reason, the normal side is flipped after using NekMesh to process the Gmsh generated all-tet mesh. 
@@ -1494,6 +1548,23 @@ struct meshgenerationstruct meshgeneration() {
 		if (ol[0].norm[0][1] != 1 || nr[0].norm[0][1] != -1) {
 			std::cout << "The normal direction of the wetted surface and NRB is wrong" << std::endl;
 			system("PAUSE ");
+		}
+	}
+
+	std::string name3 = "normal side check.txt";
+	std::ofstream myfile2;
+	myfile2.open(name3);
+
+	for (z = 0; z < owsfnumber; z++) {
+		myfile2 << "wetted surface " << z << std::endl;
+		for (i = 0; i < ol[z].FSNEL; i++) {
+			myfile2 << ol[z].norm[i][0] << " " << ol[z].norm[i][1] << " " << ol[z].norm[i][2] << std::endl;
+		}
+	} 
+	for (z = 0; z < nrbsurfnumber; z++) {
+		myfile2 << "NRB surface " << z << std::endl;
+		for (i = 0; i < nr[z].NEL_nrb; i++) {
+			myfile2 << nr[z].norm[i][0] << " " << nr[z].norm[i][1] << " " << nr[z].norm[i][2] << std::endl;
 		}
 	}
 

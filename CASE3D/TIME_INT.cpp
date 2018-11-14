@@ -1227,7 +1227,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRBORG2[nr[z].DP_2D[k] - 1][j]);
 								}
 								else {
-									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (1);
+									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (0);
 								}
 							}
 						}
@@ -1476,12 +1476,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
 		//std::cout << "total CPU time (ms): " << duration << std::endl;
 		//std::cout << " " << std::endl;
-		/*
+		
 		double hd = 0.0; 
 		for (j = 0; j < NNODE; j++) {
-			hd += HF[j];
+			hd += BNRB[j];
 		}
-		*/
+		
 		for (j = 0; j < NNODE; j++) {
 			FFORCE[j] = -HF[j];
 		}
@@ -1729,17 +1729,19 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					}
 				}
 			}
+			
 			//output the tecplot data file
 			for (j = 0; j < NNODE; j++) {
 				tecplotfilehd << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << PIN[j][0] << " " << PIN[j][1] << " " << PT[j][1] << " " << ds[j][2] << " " << BNRB[j] << " " << FEE[j][1] << " " << HF[j] << " " << FFORCE[j] << std::endl;
 			}
 			tecplotfilehd << std::endl;
 			for (j = 0; j < NEL; j++) {
-				for (k = 0; k < 8; k++) {
+				for (k = 0; k < elenode3D; k++) {
 					tecplotfilehd << IEN[k][j] << " ";
 				}
 				tecplotfilehd << std::endl;
 			}
+			
 		}
 	
 		for (j = 0; j < NNODE; j++) {
