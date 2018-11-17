@@ -49,7 +49,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_tet_1ft.inp";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_0.5ftftbasemesh_fs_150m_10m_24m.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
@@ -201,6 +201,12 @@ struct meshgenerationstruct meshgeneration() {
 				t.GCOORD[i][2] = -VY[i];
 			}
 		}
+		//clean the dynamic allocated memory
+		delete[] VX;
+		delete[] VY;
+		delete[] VZ;
+		delete[] EToV; 
+		delete[] ele_type; 
 	}
 	else if (input_type == "Abaqus") {
 		char buf[1000];
@@ -263,8 +269,11 @@ struct meshgenerationstruct meshgeneration() {
 			std::string currentline(buf); //convert the char array to string to search the key words
 			std::vector<int>py_ele;
 			if (currentline.find("FSI_fluid") != std::string::npos || currentline.find("NRB") != std::string::npos) { //found the definition element set for FSI_fluid
-																													  //If this line is a surface definition, we store the surface face definition for each FSI_fluid pysical group
+				//If this line is a surface definition, we store the surface face definition for each FSI_fluid pysical group
 				if ((buf[0] == '*' && buf[2] == 'u' && buf[3] == 'r')) {
+					std::cout << "Have you make the element set sequence in surface definition consistent with the element set definition?" << std::endl; 
+					system(" PAUSE"); 
+					//put surface definition
 					int setnum;
 					if (currentline.find("FSI_fluid") != std::string::npos) {
 						setnum = wt_py.size();
@@ -1048,10 +1057,12 @@ struct meshgenerationstruct meshgeneration() {
 		for (i = 0; i < elenode2D; i++) {
 			ol[z].IEN_gb[i] = new int[ol[z].FSNEL];
 		}
+		/*
 		ol[z].IEN_lc = new int*[elenode2D]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
 		for (i = 0; i < elenode2D; i++) {
 			ol[z].IEN_lc[i] = new int[ol[z].FSNEL];
 		}
+		*/
 		for (i = 0; i < ol[z].FSNEL; i++) {
 			for (j = 0; j < elenode2D; j++) {
 				ol[z].IEN_gb[j][i] = t.BCIEN[wt_pys_num[z]][ele_num[i]][j];
@@ -1063,7 +1074,7 @@ struct meshgenerationstruct meshgeneration() {
 			for (i = 0; i < ol[z].FSNEL; i++) {
 				ol[z].FP[i] = new int[elenode2D];
 			}
-			//Define FP for hexahedral element
+			//Define FP for hexahedral element (assume all the hexahedral element in the same wetted surface has the same FP definition)
 			if (element_type == 0) {
 				for (i = 0; i < ol[z].FSNEL; i++) {
 					for (j = 0; j < elenode2D; j++) {
@@ -1244,6 +1255,7 @@ struct meshgenerationstruct meshgeneration() {
 
 		//Get the high-order global nodes on wetted surface (GIDN), for tet and hex element
 
+		/*
 		std::vector<int>dummy3;
 		ct = 0;
 		int half; 
@@ -1283,11 +1295,12 @@ struct meshgenerationstruct meshgeneration() {
 			std::cout << "There is a problem with GIDNct" << std::endl;
 			system("PAUSE ");
 		}
-
 		ol[z].GIDN = new int[ol[z].GIDNct];
 		for (i = 0; i < ol[z].GIDNct; i++) {
 			ol[z].GIDN[i] = dummy3[i];
 		}
+		*/
+
 
 		ol[z].norm = new double*[ol[z].FSNEL]; //store the normal direction of linear elements on the wetted surface
 		for (i = 0; i < ol[z].FSNEL; i++) {
@@ -1355,10 +1368,13 @@ struct meshgenerationstruct meshgeneration() {
 		for (i = 0; i < elenode2D; i++) {
 			nr[z].IEN_gb[i] = new int[nr[z].NEL_nrb];
 		}
+		/*
 		nr[z].IEN_lc = new int*[elenode2D]; //NRBELE_ARR
 		for (i = 0; i < elenode2D; i++) {
 			nr[z].IEN_lc[i] = new int[nr[z].NEL_nrb];
 		}
+		*/
+
 		//Extract the local node pattern for hexahedral and tetrahedral element
 		if (input_type == "Gmsh") {
 			nr[z].DP = new int*[nr[z].NEL_nrb];
@@ -1416,10 +1432,11 @@ struct meshgenerationstruct meshgeneration() {
 			system("PAUSE ");
 		}
 
+		int flag;
+		/*
 		//Obtain NRBA to store all the nodes on NRB surfaces by looping through all the NRB elements and filter out the points
 		ct = 0; //count the node number assigned
 		std::vector<int>dummy2;
-		int flag;
 		int half; 
 		for (i = 0; i < nr[z].NEL_nrb; i++) { //loop through each element
 			for (j = 0; j < elenode2D; j++) { //the nodes in current element
@@ -1457,11 +1474,12 @@ struct meshgenerationstruct meshgeneration() {
 			std::cout << "There is a problem with nr[z].NRBNODE" << std::endl;
 			system("PAUSE ");
 		}
-
 		nr[z].NRBA = new int[nr[z].NRBNODE];
 		for (i = 0; i < nr[z].NRBNODE; i++) {
 			nr[z].NRBA[i] = dummy2[i];
 		}
+		*/
+
 		if (improvednrb == 1) {
 			if (element_type == 0) {
 				nr[z].NRBELE_ARR = new int[nr[z].NEL_nrb];
@@ -1551,6 +1569,7 @@ struct meshgenerationstruct meshgeneration() {
 		}
 	}
 
+	/*
 	std::string name3 = "normal side check.txt";
 	std::ofstream myfile2;
 	myfile2.open(name3);
@@ -1566,6 +1585,12 @@ struct meshgenerationstruct meshgeneration() {
 		for (i = 0; i < nr[z].NEL_nrb; i++) {
 			myfile2 << nr[z].norm[i][0] << " " << nr[z].norm[i][1] << " " << nr[z].norm[i][2] << std::endl;
 		}
+	}
+	*/
+
+	//Clean the dynamic allocated arrary
+	if (element_type == 1) {
+		delete[] IEN_1D; 
 	}
 
 	std::cout << " " << std::endl;

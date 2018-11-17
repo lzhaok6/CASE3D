@@ -165,13 +165,16 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	//double HFTEMPn[(N + 1)*(N + 1)*(N + 1)];
 
 	double **HFTEMPn;
-	HFTEMPn = new double*[NEL];
-	for (i = 0; i < NEL; i++) {
-		HFTEMPn[i] = new double[elenode3D];
-	}
-	for (i = 0; i < NEL; i++) {
-		for (j = 0; j < elenode3D; j++) {
-			HFTEMPn[i][j] = 0.0;
+
+	if (tensorfactorization == 1) {
+		HFTEMPn = new double*[NEL];
+		for (i = 0; i < NEL; i++) {
+			HFTEMPn[i] = new double[elenode3D];
+		}
+		for (i = 0; i < NEL; i++) {
+			for (j = 0; j < elenode3D; j++) {
+				HFTEMPn[i][j] = 0.0;
+			}
 		}
 	}
 
@@ -476,11 +479,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 	}
 
+	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
+	WBS = new double[NNODE]; 
 	for (z = 0; z < owsfnumber; z++) { //this memory allocation scheme could have been improved
-		//ol[z].WBS = new double[NNODE];
-		ol[z].WBS = new double[ol[z].GIDNct];
-		//ol[z].DISP = new double*[NNODE];
-		ol[z].DISP = new double*[ol[z].GIDNct];
+		//ol[z].WBS = new double[ol[z].GIDNct];
+		//ol[z].DISP = new double*[ol[z].GIDNct];
+		ol[z].DISP = new double*[ol[z].FSNEL*NINT*NINT];
 		if (mappingalgo == 4 || mappingalgo == 5) {
 			ol[z].DISP_gs = new double*[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
 			ol[z].DISP_norm = new double*[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
@@ -497,20 +501,31 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				ol[z].DISP_gs[j] = new double[3];
 			}
 		}
-		for (j = 0; j < ol[z].GIDNct; j++) {
+		//for (j = 0; j < ol[z].GIDNct; j++) {
+		for (j = 0; j < ol[z].FSNEL*NINT*NINT; j++) {
 			ol[z].DISP[j] = new double[3]; //defined in 3 directions 
-			//ol[z].DISP_norm[j] = new double[2]; //norm displacement for two concecutive time steps
 		}
 	}
 
 
 	for (z = 0; z < owsfnumber; z++) {
+		/*
 		for (j = 0; j < ol[z].GIDNct; j++) {
 			ol[z].WBS[j] = 0.0;
 			for (k = 0; k < 3; k++) {
 				ol[z].DISP[j][k] = 0.0;
 			}
 		}
+		*/
+		for (j = 0; j < NNODE; j++) {
+			WBS[j] = 0.0;
+		}
+		for (j = 0; j < ol[z].FSNEL*NINT*NINT; j++) {
+			for (k = 0; k < 3; k++) {
+				ol[z].DISP[j][k] = 0.0;
+			}
+		}
+		
 		if (mappingalgo == 4 || mappingalgo == 5) {
 			for (j = 0; j < ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1); j++) {
 				for (k = 0; k < 2; k++) {
@@ -661,7 +676,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	}
 	//=========================Get free surface points=========================//
 	int fspt_num = 0;
-	double searchrange = 1e-1;
+	double searchrange = 1e-2;
 	for (j = 0; j < NNODE; j++) {
 		if (fsdebug == 0) {
 			if (abs(GCOORD[j][1]) <= searchrange) {
@@ -879,10 +894,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 		PIN = WAVE_IN(NNODE, GCOORD, T, TIME, PIN, DT, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO); //USED TO UPDATE PIN IN THIS SUBROUTINE
 
-		for (z = 0; z < owsfnumber; z++) {
-			for (k = 0; k < ol[z].GIDNct; k++) {
-				ol[z].WBS[k] = 0.0;
-			}
+		for (k = 0; k < NNODE; k++) {
+			WBS[k] = 0.0;
 		}
 
 		if (tfm == 1) {
@@ -988,7 +1001,9 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			for (z = 0; z < owsfnumber; z++) {
 				for (j = 0; j < ol[z].GIDNct; j++) {
 					ol[z].DISPI[j][0] = ol[z].DISPI[j][1];
-					PSI_inc[ol[z].IEN_gb[k][j] - 1][0] = PSI_inc[ol[z].IEN_gb[k][j] - 1][1];
+					for (k = 0; k < elenode2D; k++) {
+						PSI_inc[ol[z].IEN_gb[k][j] - 1][0] = PSI_inc[ol[z].IEN_gb[k][j] - 1][1];
+					}
 				}
 			}
 		}
@@ -1003,14 +1018,15 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[j*elenode2D_gs + k][0] + ol[z].norm[j][1] * ol[z].DISP_gs[j*elenode2D_gs + k][1] + ol[z].norm[j][2] * ol[z].DISP_gs[j*elenode2D_gs + k][2];
 							}
 							else {
-								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][2];
+								//ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[j*elenode2D_gs + k][0] + ol[z].norm[j][1] * ol[z].DISP[j*elenode2D_gs + k][1] + ol[z].norm[j][2] * ol[z].DISP[j*elenode2D_gs + k][2];
 							}
 							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D_gs + k][1] + (ol[z].DISP_norm[j*elenode2D_gs + k][1] - ol[z].DISP_norm[j*elenode2D_gs + k][0]));
 						}
 					}
 					for (k = 0; k < elenode2D; k++) {
-						//ol[z].WBS[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1] += WBSTEMP[k];
-						ol[z].WBS[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1] += WBSTEMP[k];
+						//ol[z].WBS[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1] += WBSTEMP[k];
+						WBS[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1] += WBSTEMP[k];
 					}
 				}
 			}
@@ -1025,8 +1041,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[j*elenode2D_gs + k][0] + ol[z].norm[j][1] * ol[z].DISP_gs[j*elenode2D_gs + k][1] + ol[z].norm[j][2] * ol[z].DISP_gs[j*elenode2D_gs + k][2];
 							}
 							else {
-								//ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1][2];
-								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][2];
+								//ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[j*elenode2D_gs + k][0] + ol[z].norm[j][1] * ol[z].DISP[j*elenode2D_gs + k][1] + ol[z].norm[j][2] * ol[z].DISP[j*elenode2D_gs + k][2];
 							}
 							std::cout << "We need to derive the DISPI on gauss point!!! (not done yet)" << std::endl;
 							system("PAUSE ");
@@ -1034,8 +1050,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						}
 					}
 					for (k = 0; k < elenode2D; k++) {
-						//ol[z].WBS[IEN[ol[z].FP[j][k] - 1][ol[z].GIDF[j] - 1] - 1] += WBSTEMP[k];
-						ol[z].WBS[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1] += WBSTEMP[k];
+						//ol[z].WBS[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1] += WBSTEMP[k];
+						WBS[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1] += WBSTEMP[k];
 					}
 				}
 			}
@@ -1486,11 +1502,15 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			FFORCE[j] = -HF[j];
 		}
 
+		/*
 		for (z = 0; z < owsfnumber; z++) {
 			for (j = 0; j < ol[z].GIDNct; j++) { //for every fluid element linked to structure
 				FFORCE[ol[z].GIDN[j] - 1] += ol[z].WBS[j];
-				//count += 1;
 			}
+		}
+		*/
+		for (j = 0; j < NNODE; j++) { //for every fluid element linked to structure
+			FFORCE[j] += WBS[j];
 		}
 
 		for (j = 0; j < nrb.NNODE_nrb; j++) {
@@ -1729,19 +1749,19 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					}
 				}
 			}
-			
-			//output the tecplot data file
-			for (j = 0; j < NNODE; j++) {
-				tecplotfilehd << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << PIN[j][0] << " " << PIN[j][1] << " " << PT[j][1] << " " << ds[j][2] << " " << BNRB[j] << " " << FEE[j][1] << " " << HF[j] << " " << FFORCE[j] << std::endl;
-			}
-			tecplotfilehd << std::endl;
-			for (j = 0; j < NEL; j++) {
-				for (k = 0; k < elenode3D; k++) {
-					tecplotfilehd << IEN[k][j] << " ";
+			if (i == 0) {
+				//output the tecplot data file
+				for (j = 0; j < NNODE; j++) {
+					tecplotfilehd << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << PIN[j][0] << " " << PIN[j][1] << " " << PT[j][1] << " " << ds[j][2] << " " << BNRB[j] << " " << FEE[j][1] << " " << HF[j] << " " << FFORCE[j] << std::endl;
 				}
 				tecplotfilehd << std::endl;
+				for (j = 0; j < NEL; j++) {
+					for (k = 0; k < elenode3D; k++) {
+						tecplotfilehd << IEN[k][j] << " ";
+					}
+					tecplotfilehd << std::endl;
+				}
 			}
-			
 		}
 	
 		for (j = 0; j < NNODE; j++) {
