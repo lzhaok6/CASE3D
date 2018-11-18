@@ -897,6 +897,51 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 
 		if (tfm == 1) {
+			for (z = 0; z < owsfnumber; z++) {
+				for (j = 0; j < ol[z].GIDNct; j++) {
+					if (nodeforcemap2 == 1) {
+						if (debug_hydro == 0) {
+							WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM; //correct version with structural gravity
+						}
+						else {
+							//WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM;
+							WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1];
+						}
+						//ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
+					//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
+					}
+					else { //absolute pressure
+						WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM;
+						//ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
+						//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
+					}
+					//ol[z].WP[ol[z].GIDN[j] - 1]
+					//= PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]; //correct version if structural gravity is not specified in Abaqus
+					if (Bleich == 1) {
+						if (nodeforcemap2 == 1) {
+							WP[ol[z].GIDN[j] - 1] = (PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]) / SX / SZ;
+						}
+						else {
+							WP[ol[z].GIDN[j] - 1] = (PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]) / SX / SZ;
+						}
+					}
+				}
+			}
+		}
+		else {
+			for (z = 0; z < owsfnumber; z++) {
+				for (j = 0; j < ol[z].GIDNct; j++) {
+					WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM; // //correct version with structural gravity
+					if (Bleich == 1) {
+						WP[ol[z].GIDN[j] - 1] = (PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]) / SX / SZ;
+					}
+					WPIN[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][1] + PIN[ol[z].GIDN[j] - 1][0];
+				}
+			}
+		}
+
+		/*
+		if (tfm == 1) {
 			for (j = 0; j < NNODE; j++) {
 				if (nodeforcemap2 == 1) {
 					if (debug_hydro == 0) {
@@ -907,7 +952,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						WP[j] = PT[j][0] - PH[j];
 					}
 					//ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
-				//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
+					//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
 				}
 				else { //absolute pressure
 					WP[j] = PT[j][0] - PATM;
@@ -927,13 +972,20 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 		}
 		else {
-			for (j = 0; j < NNODE; j++) {
-				WP[j] = PT[j][0] - PATM; // //correct version with structural gravity
-				if (Bleich == 1) {
-					WP[j] = (PT[j][0] - PH[j]) / SX / SZ;
+			for (z = 0; z < owsfnumber; z++) {
+				for (j = 0; j < ol[z].GIDNct; j++) {
+					WP[j] = PT[j][0] - PATM; // //correct version with structural gravity
+					if (Bleich == 1) {
+						WP[j] = (PT[j][0] - PH[j]) / SX / SZ;
+					}
+					WPIN[j] = PIN[j][1] + PIN[j][0];
 				}
-				WPIN[j] = PIN[j][1] + PIN[j][0];
 			}
+		}
+		*/
+		hd = 0.0; 
+		for (j = 0; j < NNODE; j++) {
+			hd += WP[j]; 
 		}
 
 		//start = std::clock();
@@ -1776,11 +1828,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 
 		for (z = 0; z < owsfnumber; z++) {
-			/*
-			for (j = 0; j < ol[z].GIDNct; j++) {
-				ol[z].DISP_norm[ol[z].GIDN[j] - 1][0] = ol[z].DISP_norm[ol[z].GIDN[j] - 1][1];
-			}
-			*/
 			if (mappingalgo == 4 || mappingalgo == 5) {
 				for (j = 0; j < ol[z].FSNEL; j++) {
 					for (k = 0; k < elenode2D_gs; k++) {
@@ -1795,7 +1842,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					}
 				}
 			}
-
 		}
 		
 

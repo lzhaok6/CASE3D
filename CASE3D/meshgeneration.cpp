@@ -1081,7 +1081,7 @@ struct meshgenerationstruct meshgeneration() {
 
 		//Define FP for tetrahedral element
 		//Extract the local node pattern for tetrahedral element
-		if (element_type == 1 && input_type == "Gmsh") {
+		if (element_type == 1 && input_type == "Gmsh" && (mappingalgo == 4 || mappingalgo == 5)) {
 			int node[3];
 			ol[z].GIDF = new int[ol[z].FSNEL];
 			//#pragma omp parallel for num_threads(6)
@@ -1222,9 +1222,42 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 
-		
+
+		//define GIDN (the counterpart of NRBA on non-reflecting boundary)
+		std::vector<int>GIDN_total;
+		for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
+			for (j = 0; j < elenode2D; j++) { //the nodes in current element
+				GIDN_total.push_back(ol[z].IEN_gb[j][i]);
+			}
+		}
+		std::sort(GIDN_total.begin(), GIDN_total.end());
+		//add the non repeated number into a new arrary
+		std::vector<int>GIDN_unrepeat;
+		GIDN_unrepeat.push_back(GIDN_total[0]);
+		for (i = 1; i < GIDN_total.size(); i++) {
+			flag = 1; //the flag used to store a new number
+					  //search back if this number is alreay defined
+			for (k = i - 1; k >= 0; k--) {
+				if (GIDN_total[k] == GIDN_total[i]) { //this number is already defined
+					flag = 0;
+				}
+				else {
+					break;
+				}
+			}
+			if (flag == 1) {
+				GIDN_unrepeat.push_back(GIDN_total[i]);
+			}
+		}
+		//store GIDN_total into GIDN
+		ol[z].GIDNct = GIDN_unrepeat.size();
+		ol[z].GIDN = new int[ol[z].GIDNct];
+		for (i = 0; i < ol[z].GIDNct; i++) {
+			ol[z].GIDN[i] = GIDN_unrepeat[i];
+		}
+
 		//Obtain GIDF (the global element numbering of each local wetted surface)
-		if (element_type == 0) {
+		if (element_type == 0 && (mappingalgo == 4 || mappingalgo == 5)) {
 			ol[z].GIDF = new int[ol[z].FSNEL];
 			for (i = 0; i < ol[z].FSNEL; i++) {
 				flag = 0;
@@ -1313,11 +1346,6 @@ struct meshgenerationstruct meshgeneration() {
 		for (i = 0; i < elenode2D; i++) {
 			nr[z].IEN_gb[i] = new int[nr[z].NEL_nrb];
 		}
-		
-		nr[z].IEN_lc = new int*[elenode2D]; //NRBELE_ARR
-		for (i = 0; i < elenode2D; i++) {
-			nr[z].IEN_lc[i] = new int[nr[z].NEL_nrb];
-		}
 
 		//Extract the local node pattern for hexahedral and tetrahedral element
 		if (input_type == "Gmsh") {
@@ -1377,50 +1405,37 @@ struct meshgenerationstruct meshgeneration() {
 		}
 
 		int flag;
-		
-		//Obtain NRBA to store all the nodes on NRB surfaces by looping through all the NRB elements and filter out the points
-		ct = 0; //count the node number assigned
-		std::vector<int>dummy2;
-		int half; 
+
+		std::vector<int>NRBA_total;
 		for (i = 0; i < nr[z].NEL_nrb; i++) { //loop through each element
 			for (j = 0; j < elenode2D; j++) { //the nodes in current element
-				flag = 1; //Initiate the flag to 1
-				half = round(i / 2.0); //search the second half first
-				for (k = half; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
-					for (l = 0; l < elenode2D; l++) {
-						if (nr[z].IEN_gb[l][k] == nr[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
-							flag = 0; //turn off the flag to assgin new number
-							nr[z].IEN_lc[j][i] = nr[z].IEN_lc[l][k];
-							goto endloop4;
-						}
-					}
-				}
-				for (k = 0; k < half; k++) { //see if the number has already been assigned by the nodes in previous elements
-					for (l = 0; l < elenode2D; l++) {
-						if (nr[z].IEN_gb[l][k] == nr[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
-							flag = 0; //turn off the flag to assgin new number
-							nr[z].IEN_lc[j][i] = nr[z].IEN_lc[l][k];
-							goto endloop4;
-						}
-					}
-				}
-			endloop4:;
-				if (flag == 1) {
-					ct += 1;
-					dummy2.push_back(nr[z].IEN_gb[j][i]); //associate the local 2D node with the global node numbering 
-					nr[z].IEN_lc[j][i] = ct;
-				}
+				NRBA_total.push_back(nr[z].IEN_gb[j][i]);
 			}
 		}
-		//nr[z].NRBNODE = dummy2.size();
-		nr[z].NRBNODE = ct;
-		if (ct != dummy2.size()) {
-			std::cout << "There is a problem with nr[z].NRBNODE" << std::endl;
-			system("PAUSE ");
+		std::sort(NRBA_total.begin(), NRBA_total.end());
+		//add the non repeated number into a new arrary
+		std::vector<int>NRBA_unrepeat;
+		NRBA_unrepeat.push_back(NRBA_total[0]);
+		for (i = 1; i < NRBA_total.size(); i++) {
+			flag = 1; //the flag used to store a new number
+			//search back if this number is alreay defined
+			for (k = i - 1; k >= 0; k--) {
+				if (NRBA_total[k] == NRBA_total[i]) { //this number is already defined
+					flag = 0;
+				}
+				else {
+					break;
+				}
+			}
+			if (flag == 1) {
+				NRBA_unrepeat.push_back(NRBA_total[i]);
+			}
 		}
+		//store NRBA_total into NRBA
+		nr[z].NRBNODE = NRBA_unrepeat.size();
 		nr[z].NRBA = new int[nr[z].NRBNODE];
 		for (i = 0; i < nr[z].NRBNODE; i++) {
-			nr[z].NRBA[i] = dummy2[i];
+			nr[z].NRBA[i] = NRBA_unrepeat[i];
 		}
 
 		if (improvednrb == 1) {
