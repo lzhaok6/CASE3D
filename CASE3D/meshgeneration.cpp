@@ -49,7 +49,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_0.5ftftbasemesh_fs_150m_10m_24m.msh";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
@@ -1057,12 +1057,7 @@ struct meshgenerationstruct meshgeneration() {
 		for (i = 0; i < elenode2D; i++) {
 			ol[z].IEN_gb[i] = new int[ol[z].FSNEL];
 		}
-		/*
-		ol[z].IEN_lc = new int*[elenode2D]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
-		for (i = 0; i < elenode2D; i++) {
-			ol[z].IEN_lc[i] = new int[ol[z].FSNEL];
-		}
-		*/
+		
 		for (i = 0; i < ol[z].FSNEL; i++) {
 			for (j = 0; j < elenode2D; j++) {
 				ol[z].IEN_gb[j][i] = t.BCIEN[wt_pys_num[z]][ele_num[i]][j];
@@ -1227,7 +1222,7 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 
-		/*
+		
 		//Obtain GIDF (the global element numbering of each local wetted surface)
 		if (element_type == 0) {
 			ol[z].GIDF = new int[ol[z].FSNEL];
@@ -1251,57 +1246,7 @@ struct meshgenerationstruct meshgeneration() {
 				}
 			}
 		}
-		*/
-
-		//Get the high-order global nodes on wetted surface (GIDN), for tet and hex element
-
-		/*
-		std::vector<int>dummy3;
-		ct = 0;
-		int half; 
-		for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
-			for (j = 0; j < elenode2D; j++) { //the nodes in current element
-				flag = 1; //Initiate the flag to 1 
-				half = round(i / 2.0); //search the second half first
-				for (k = half; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
-					for (l = 0; l < elenode2D; l++) {
-						if (ol[z].IEN_gb[l][k] == ol[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
-							flag = 0; //turn off the flag used to assgin new number
-							ol[z].IEN_lc[j][i] = ol[z].IEN_lc[l][k];
-							goto endloop3;
-						}
-					}
-				}
-				for (k = 0; k < half; k++) { //see if the number has already been assigned by the nodes in previous elements
-					for (l = 0; l < elenode2D; l++) {
-						if (ol[z].IEN_gb[l][k] == ol[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
-							flag = 0; //turn off the flag used to assgin new number
-							ol[z].IEN_lc[j][i] = ol[z].IEN_lc[l][k];
-							goto endloop3;
-						}
-					}
-				}
-				endloop3:;
-				if (flag == 1) { //a new number could be assgined. 
-					dummy3.push_back(ol[z].IEN_gb[j][i]); //associate the local 2D node with the global node numbering 
-					ct += 1;
-					ol[z].IEN_lc[j][i] = ct; 
-				}
-			}
-		}
-		//ol[z].GIDNct = dummy3.size();
-		ol[z].GIDNct = ct;
-		if (ct != dummy3.size()) {
-			std::cout << "There is a problem with GIDNct" << std::endl;
-			system("PAUSE ");
-		}
-		ol[z].GIDN = new int[ol[z].GIDNct];
-		for (i = 0; i < ol[z].GIDNct; i++) {
-			ol[z].GIDN[i] = dummy3[i];
-		}
-		*/
-
-
+		
 		ol[z].norm = new double*[ol[z].FSNEL]; //store the normal direction of linear elements on the wetted surface
 		for (i = 0; i < ol[z].FSNEL; i++) {
 			ol[z].norm[i] = new double[3];
@@ -1368,12 +1313,11 @@ struct meshgenerationstruct meshgeneration() {
 		for (i = 0; i < elenode2D; i++) {
 			nr[z].IEN_gb[i] = new int[nr[z].NEL_nrb];
 		}
-		/*
+		
 		nr[z].IEN_lc = new int*[elenode2D]; //NRBELE_ARR
 		for (i = 0; i < elenode2D; i++) {
 			nr[z].IEN_lc[i] = new int[nr[z].NEL_nrb];
 		}
-		*/
 
 		//Extract the local node pattern for hexahedral and tetrahedral element
 		if (input_type == "Gmsh") {
@@ -1433,7 +1377,7 @@ struct meshgenerationstruct meshgeneration() {
 		}
 
 		int flag;
-		/*
+		
 		//Obtain NRBA to store all the nodes on NRB surfaces by looping through all the NRB elements and filter out the points
 		ct = 0; //count the node number assigned
 		std::vector<int>dummy2;
@@ -1478,7 +1422,6 @@ struct meshgenerationstruct meshgeneration() {
 		for (i = 0; i < nr[z].NRBNODE; i++) {
 			nr[z].NRBA[i] = dummy2[i];
 		}
-		*/
 
 		if (improvednrb == 1) {
 			if (element_type == 0) {

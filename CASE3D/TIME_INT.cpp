@@ -480,10 +480,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	}
 
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
-	WBS = new double[NNODE]; 
+	WBS = new double[NNODE];
 	for (z = 0; z < owsfnumber; z++) { //this memory allocation scheme could have been improved
-		//ol[z].WBS = new double[ol[z].GIDNct];
-		//ol[z].DISP = new double*[ol[z].GIDNct];
 		ol[z].DISP = new double*[ol[z].FSNEL*NINT*NINT];
 		if (mappingalgo == 4 || mappingalgo == 5) {
 			ol[z].DISP_gs = new double*[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
@@ -501,7 +499,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				ol[z].DISP_gs[j] = new double[3];
 			}
 		}
-		//for (j = 0; j < ol[z].GIDNct; j++) {
 		for (j = 0; j < ol[z].FSNEL*NINT*NINT; j++) {
 			ol[z].DISP[j] = new double[3]; //defined in 3 directions 
 		}
@@ -520,12 +517,13 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		for (j = 0; j < NNODE; j++) {
 			WBS[j] = 0.0;
 		}
+
 		for (j = 0; j < ol[z].FSNEL*NINT*NINT; j++) {
 			for (k = 0; k < 3; k++) {
 				ol[z].DISP[j][k] = 0.0;
 			}
 		}
-		
+
 		if (mappingalgo == 4 || mappingalgo == 5) {
 			for (j = 0; j < ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1); j++) {
 				for (k = 0; k < 2; k++) {
@@ -899,51 +897,42 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 
 		if (tfm == 1) {
-			for (z = 0; z < owsfnumber; z++) {
-				for (j = 0; j < ol[z].GIDNct; j++) {
-					if (nodeforcemap2 == 1) {
-						if (debug_hydro == 0) {
-							WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM; //correct version with structural gravity
-						}
-						else {
-							//WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM;
-							WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1];
-						}
-						//ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
+			for (j = 0; j < NNODE; j++) {
+				if (nodeforcemap2 == 1) {
+					if (debug_hydro == 0) {
+						WP[j] = PT[j][0] - PATM; //correct version with structural gravity
+					}
+					else {
+						//WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM;
+						WP[j] = PT[j][0] - PH[j];
+					}
+					//ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
+				//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
+				}
+				else { //absolute pressure
+					WP[j] = PT[j][0] - PATM;
+					//ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
 					//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
+				}
+				//ol[z].WP[ol[z].GIDN[j] - 1]
+				//= PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]; //correct version if structural gravity is not specified in Abaqus
+				if (Bleich == 1) {
+					if (nodeforcemap2 == 1) {
+						WP[j] = (PT[j][0] - PH[j]) / SX / SZ;
 					}
-					else { //absolute pressure
-						WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM;
-						//ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
-						//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
-					}
-					//ol[z].WP[ol[z].GIDN[j] - 1]
-					//= PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]; //correct version if structural gravity is not specified in Abaqus
-					if (Bleich == 1) {
-						if (nodeforcemap2 == 1) {
-							WP[ol[z].GIDN[j] - 1] = (PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]) / SX / SZ;
-						}
-						else {
-							WP[ol[z].GIDN[j] - 1] = (PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]) / SX / SZ;
-						}
+					else {
+						WP[j] = (PT[j][0] - PH[j]) / SX / SZ;
 					}
 				}
 			}
 		}
 		else {
-			for (z = 0; z < owsfnumber; z++) {
-				for (j = 0; j < ol[z].GIDNct; j++) {
-					WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM; // //correct version with structural gravity
-					if (Bleich == 1) {
-						//if (debug2 == 0) {
-							WP[ol[z].GIDN[j] - 1] = (PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]) / SX / SZ;
-						//}
-						//else {
-							//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
-						//}
-					}
-					WPIN[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][1] + PIN[ol[z].GIDN[j] - 1][0];
+			for (j = 0; j < NNODE; j++) {
+				WP[j] = PT[j][0] - PATM; // //correct version with structural gravity
+				if (Bleich == 1) {
+					WP[j] = (PT[j][0] - PH[j]) / SX / SZ;
 				}
+				WPIN[j] = PIN[j][1] + PIN[j][0];
 			}
 		}
 
@@ -1018,14 +1007,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[j*elenode2D_gs + k][0] + ol[z].norm[j][1] * ol[z].DISP_gs[j*elenode2D_gs + k][1] + ol[z].norm[j][2] * ol[z].DISP_gs[j*elenode2D_gs + k][2];
 							}
 							else {
-								//ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][2];
-								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[j*elenode2D_gs + k][0] + ol[z].norm[j][1] * ol[z].DISP[j*elenode2D_gs + k][1] + ol[z].norm[j][2] * ol[z].DISP[j*elenode2D_gs + k][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[k] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[k] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[k] - 1][2];
 							}
 							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D_gs + k][1] + (ol[z].DISP_norm[j*elenode2D_gs + k][1] - ol[z].DISP_norm[j*elenode2D_gs + k][0]));
 						}
 					}
 					for (k = 0; k < elenode2D; k++) {
-						//ol[z].WBS[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1] += WBSTEMP[k];
 						WBS[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1] += WBSTEMP[k];
 					}
 				}
@@ -1493,7 +1480,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//std::cout << "total CPU time (ms): " << duration << std::endl;
 		//std::cout << " " << std::endl;
 		
-		double hd = 0.0; 
+		hd = 0.0; 
 		for (j = 0; j < NNODE; j++) {
 			hd += BNRB[j];
 		}
@@ -1502,20 +1489,13 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			FFORCE[j] = -HF[j];
 		}
 
-		/*
-		for (z = 0; z < owsfnumber; z++) {
-			for (j = 0; j < ol[z].GIDNct; j++) { //for every fluid element linked to structure
-				FFORCE[ol[z].GIDN[j] - 1] += ol[z].WBS[j];
-			}
-		}
-		*/
 		for (j = 0; j < NNODE; j++) { //for every fluid element linked to structure
 			FFORCE[j] += WBS[j];
 		}
 
 		for (j = 0; j < nrb.NNODE_nrb; j++) {
 			FFORCE[nrb.NRBA_t[j] - 1] += BNRB[nrb.NRBA_t[j] - 1];
-			std::cout << "" << std::endl; 
+			//std::cout << "" << std::endl; 
 		}
 		//The combination of FFORCE passes the test
 
