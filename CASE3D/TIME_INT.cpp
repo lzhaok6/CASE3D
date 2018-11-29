@@ -163,16 +163,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		HFTEMP[i] = new double[elenode3D];
 	}
 	*/
-	double **HFTEMPn;
+	double *HFTEMPn;
 	if (tensorfactorization == 1) {
-		HFTEMPn = new double*[NEL];
-		for (i = 0; i < NEL; i++) {
-			HFTEMPn[i] = new double[elenode3D];
-		}
-		for (i = 0; i < NEL; i++) {
-			for (j = 0; j < elenode3D; j++) {
-				HFTEMPn[i][j] = 0.0;
-			}
+		HFTEMPn = new double[elenode3D];
+		for (j = 0; j < elenode3D; j++) {
+			HFTEMPn[j] = 0.0;
 		}
 	}
 
@@ -1430,26 +1425,23 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					gamma_tn[3 * ii + 2] = Gn[j][2][2][ii] * gamman[3 * ii + 2] + Gn[j][0][2][ii] * gamman[3 * ii + 0] + Gn[j][1][2][ii] * gamman[3 * ii + 1];
 					//oc += 15;
 				}
-
 				//takes 6*NINT^4*NEL FLOP
 				//ctt2 = 0;
 				for (int h = 0; h < NINT; h++) {  //i //takes NEL*NINT*(2*NINT+2) operations
 					for (int k = 0; k < NINT; k++) { //j  //takes NEL*NINT^2*(2*NINT+2) operations
 						for (int z = 0; z < NINT; z++) { //k //takes NEL*NINT^3*(2*NINT+2) operations
-							HFTEMPn[j][LNAct3[h*NINT*NINT + k*NINT + z]] = 0.0;
+							HFTEMPn[LNAct3[h*NINT*NINT + k*NINT + z]] = 0.0;
 							for (int ii = 0; ii < NINT; ii++) { //p (recurrent addition) //p NEL*(2*NINT+2) operations
-								HFTEMPn[j][LNAct3[h*NINT*NINT + k*NINT + z]] += SHOD1[h*NINT + ii] * gamma_tn[3 * (ii*NINT*NINT + k*NINT + z) + 0] + SHOD1[k*NINT + ii] * gamma_tn[3 * (h*NINT*NINT + ii*NINT + z) + 1] + SHOD1[z*NINT + ii] * gamma_tn[3 * (h*NINT*NINT + k*NINT + ii) + 2];
+								HFTEMPn[LNAct3[h*NINT*NINT + k*NINT + z]] += SHOD1[h*NINT + ii] * gamma_tn[3 * (ii*NINT*NINT + k*NINT + z) + 0] + SHOD1[k*NINT + ii] * gamma_tn[3 * (h*NINT*NINT + ii*NINT + z) + 1] + SHOD1[z*NINT + ii] * gamma_tn[3 * (h*NINT*NINT + k*NINT + ii) + 2];
 							}
 							//ctt2 += 1;
 						}
 					}
 				}
-			}
-			for (j = 0; j < NEL; j++) {
 				//takes 1*NINT^3*NEL FLOP
 				for (h = 0; h < NINT*NINT*NINT; h++) { //takes NEL*(2 * NINT + 2) operations
-					HF[IENct3[j*NINT*NINT*NINT + h]] += HFTEMPn[j][LNAct3[h]]; //takes NEL*2*NINT^3 operations
-					//ctt3 += 1;
+					HF[IENct3[j*NINT*NINT*NINT + h]] += HFTEMPn[LNAct3[h]]; //takes NEL*2*NINT^3 operations
+																			   //ctt3 += 1;
 				}
 			}
 			/*

@@ -314,6 +314,13 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 	*/
 
 	if (tensorfactorization == 1) {
+
+		//If tensor product factorization is used, HMASTER is not used after the maximum eigenvalue is determined
+		for (i = 0; i < NEL; i++) {
+			delete[] t.HMASTER[i];
+		}
+		delete[] t.HMASTER;
+
 		//tensors for the evaluation of stiffness terms
 		t.gamma = new double***[NINT];
 		for (i = 0; i < NINT; i++) {
@@ -510,7 +517,6 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 				ct += 1;
 			}
 		}
-
 		for (i = 0; i < 9; i++) {
 			delete[] XS[i];
 		}
@@ -521,6 +527,8 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 	delete[] FUNC;
 	delete[] JACOB; 
 	delete[] W_new; 
+
+	std::cout << " " << std::endl; 
 
 	return t;
 }
