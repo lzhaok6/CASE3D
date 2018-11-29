@@ -49,7 +49,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_0.5ftftbasemesh_fs_150m_10m_24m.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
@@ -1133,26 +1133,28 @@ struct meshgenerationstruct meshgeneration() {
 			}
 			ct = 0; //count the node number assigned
 			std::vector<int>dummy;
-			for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
-				for (j = 0; j < 4; j++) { //the nodes in current element
-					flag = 1; //Initiate the flag to 1 
-					for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
-						for (l = 0; l < 4; l++) {
-							if (ol[z].IEN_algo2[l][k] == ol[z].IEN_algo2[j][i]) { //If this node has already been assigned, use the same numbering
-								ol[z].IEN_2D[j][i] = ol[z].IEN_2D[l][k];
-								flag = 0; //turn off the flag to assgin new number
-							}
-							else {
-								//If the number has not assigned yet the flag is still 1, thus a new number could be assigned. 
+			if (debug_IEN == 0) {
+				for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
+					for (j = 0; j < 4; j++) { //the nodes in current element
+						flag = 1; //Initiate the flag to 1 
+						for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
+							for (l = 0; l < 4; l++) {
+								if (ol[z].IEN_algo2[l][k] == ol[z].IEN_algo2[j][i]) { //If this node has already been assigned, use the same numbering
+									ol[z].IEN_2D[j][i] = ol[z].IEN_2D[l][k];
+									flag = 0; //turn off the flag to assgin new number
+								}
+								else {
+									//If the number has not assigned yet the flag is still 1, thus a new number could be assigned. 
+								}
 							}
 						}
-					}
-					if (flag == 1) {
-						ct += 1;
-						dummy.push_back(ol[z].IEN_algo2[j][i]); //associate the local 2D node with the global node numbering 
-						ol[z].IEN_2D[j][i] = ct; //assign a new number to MpCCI element connectivity
-					}
+						if (flag == 1) {
+							ct += 1;
+							dummy.push_back(ol[z].IEN_algo2[j][i]); //associate the local 2D node with the global node numbering 
+							ol[z].IEN_2D[j][i] = ct; //assign a new number to MpCCI element connectivity
+						}
 
+					}
 				}
 			}
 			//ol[z].GIDNct_MpCCI = dummy.size();

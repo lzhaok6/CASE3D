@@ -199,6 +199,8 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA) {
 	std::cout << " " << std::endl;
 	//The node counting routine is verified by FSP code
 
+	delete[] holder; 
+
 	std::cout << " " << std::endl;
 	return t;
 }

@@ -25,7 +25,7 @@ NRBSURF nr[nrbsurfnumber];
 STRU_WET_SURF ss[ssnumber];
 int main()
 {	
-	double LMAX;
+	//double LMAX;
 	int h, q, z, e, i, j, k, ii, jj; //error prone: cannot be the same with data structure type (z is the same as Z)
 	int TIME = 0;     //CONTROL TIME
 	if (FEM == 1 && N != 1) {
@@ -122,46 +122,42 @@ int main()
 	l = LOCAL_GSHAPE(f.S, c.LNA, NINT);
 	//std::cout << "LOCAL_GSHAPE done" << std::endl;
 	//DETERMINE JACOBIAN MATRIX 
+	
 	JACOBIANstruct m;
-	//m = JACOBIAN(a.NEL, a.GCOORD, a.IEN, c.LNA, NINT, f.S);
 	m = JACOBIAN(a.NEL, a.GCOORD, a.IEN, c.LNA);
-	/*
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < 8; j++) {
-			for (k = 0; k < NINT; k++) {
-				for (h = 0; h < NINT; h++) {
-					delete[] l.GSHL[i][j][k][h];
-				}
-				delete[] l.GSHL[i][j][k];
-			}
-			delete[] l.GSHL[i][j];
-		}
-		delete[] l.GSHL[i];
-	}
-	delete[] l.GSHL;
-	*/
-	//std::cout << "JACOBIAN done" << std::endl;
+	
 	GLOBAL_SHAPEstruct n;
-	n = GLOBAL_SHAPE(a.NEL, g.SHL, m.XS, m.JACOB, a.GCOORD, a.IEN, m.JACOB_tet);
+	n = GLOBAL_SHAPE(a.NEL, g.SHL, a.GCOORD, a.IEN, m.JACOB_tet, c.LNA);
 	//std::cout << "GLOBAL_SHAPE done" << std::endl;
 	MATRIXstruct o;
-	o = MATRIX(a.NEL, a.NNODE, g.SHL, f.W, a.IEN, c.LNA, m.XS, n.SHG, m.JACOB, m.JACOB_tet, n.SHG_tet);
-	//duration_int = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-	//std::cout << "time lapse for until this point: " << duration_int << std::endl;
+	o = MATRIX(a.NEL, a.NNODE, g.SHL, f.W, a.IEN, c.LNA, m.JACOB_tet, n.SHG_tet, a.GCOORD);
 
-	//std::cout << "MATRIX done" << std::endl;
-	//DETERMINE MAXIMUM MESH EIGENVALUE TO FIND CFL TIMESTEP
-	LMAX = EIGENMAX(o.QMASTER, o.HMASTER, a.NEL);
+	//the minimal eigen value is now derived in MATRIX.cpp
+	//LMAX = EIGENMAX(o.QMASTER, o.HMASTER, a.NEL); 
 
 	//Derive the integration weight of the wetted surface elements
 	FSILINK(c.LNA);
+
+	//clean ol[z].Jacob_2D
+	if (mappingalgo == 2 || mappingalgo == 4 || mappingalgo == 5) {
+		for (z = 0; z < owsfnumber; z++) {
+			for (i = 0; i < ol[z].FSNEL; i++) {
+				delete[] ol[z].Jacob_2D[i];
+			}
+			delete[] ol[z].Jacob_2D;
+		}
+	}
+	else {
+		std::cout << "are you sure you don't want to delete the ol[z].Jacob_2D?";
+		system("PAUSE ");
+	}
 
 	//read the model file to MpCCI adapter
 	char* modelfile = "model.txt";
 	readfile(modelfile);
 
 	TIMINTstruct t;
-	t = TIMINT(LMAX);
+	t = TIMINT(o.LMAX);
 
 	time_step_size = t.DT;
 
@@ -301,8 +297,8 @@ int main()
 		TAU = 0.999e-3;
 	}
 
-	TIME_INT(a.NNODE, a.GCOORD, c.LNA, a.IEN, a.NEL, TIME, T, t.DT, t.NDT, o.HMASTER, o.Q, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamman, o.gamma_tn, o.Gn, n.SHG,
-		o.gamma_t, o.gamma, o.G);
+	TIME_INT(a.NNODE, a.GCOORD, c.LNA, a.IEN, a.NEL, TIME, T, t.DT, t.NDT, o.Q, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamman, o.gamma_tn, o.Gn,
+		o.gamma_t, o.gamma, o.G, f.W, g.SHL, n.SHG_tet, m.JACOB_tet, o.HMASTER);
 
 	printf("Cleaning up...\n");
 	/* clean up */

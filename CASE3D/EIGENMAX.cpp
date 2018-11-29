@@ -61,6 +61,8 @@ double EIGENMAX(double*** QMASTER, double*** HMASTER, int NEL) {
 		}
 	}
 
+	delete[] LMAXi; 
+
 	//std::cout << " " << std::endl;
 	//check point: where the LMAX is a relatively valid value (compare to 2D problem)
 	return(LMAX);

@@ -16,10 +16,8 @@
 
 
 //NRB determines the NRB local node numbering and the associated NRB arrays
-void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT,
-	double*** HMASTER, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC,
-	double ZC, double XO, double YO, double ZO, double ***SHOD, /*double** gamman, double** gamma_tn*/ double gamman[], double gamma_tn[],
-	double****Gn, double****SHG, double****gamma_t, double ****gamma, double*****G) {
+void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC,
+	double ZC, double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double****Gn, double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double** HMASTER) {
 	int h, i, j, k, q, z, ii, jj, kk, m;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[nrbsurfnumber];
@@ -106,7 +104,13 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 	NRBstruct nrb;
 	nrb = NRB(NNODE, GCOORD, LNA_3D);
-	//NRB(NNODE, GCOORD, LNA_3D);
+	//clean nr[z].Jacob_2D
+	for (z = 0; z < nrbsurfnumber; z++) {
+		for (i = 0; i < nr[z].NEL_nrb; i++) {
+			delete[] nr[z].Jacob_2D[i];
+		}
+		delete[] nr[z].Jacob_2D;
+	}
 
 	//time history record
 	std::clock_t start;
@@ -140,32 +144,26 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	}
 
 	//dynamic variables initiation
-	double *DSDOT; //SOLUTION ARRAY FOR FIRST TIME DERIVATIVE OF CONDENSATION
+	//double *DSDOT; //SOLUTION ARRAY FOR FIRST TIME DERIVATIVE OF CONDENSATION
 	double **ds;   //SOLUTION ARRAY FOR CONDENSATION
 	double **FEEDOT; //SOLUTION ARRAY FOR FIRST TIME DERIVATIVE OF DISP. POTENTIAL
-	double **FEEDOT_inc;
-	double **FEEDOT_INC;
+	//double **FEEDOT_inc;
 	double **FEE;  //SOLUTION ARRAY FOR DISP. POTENTIAL
-	double **FEE_inc;
 	double **P; //SOLUTION ARRAY FOR DYNAMIC/SCATTERED PRESSURE
 	double **PT; //SOLUTION ARRAY FOR TOTAL PRESSURE
 	double *PH;
 	double** PIN;
-	double *BS; //STRUCTURE FORCE TO FLUID 
 	double *FFORCE; //ARRAY OF INTERNAL + EXTERNAL FORCE ON FLUID
 	double *BNRB; //SOLUTION ARRAY FOR FORCE OF NRBC ON FLUID
 	double *HF; //GLOBAL REACTANCE MATIRX
-	double *HFn;
-	//double HFTEMP[(N + 1)*(N + 1)*(N + 1)];  //REACTANCE MATIRX PRODUCT VARAIBLE
+	/*
 	double **HFTEMP;
 	HFTEMP = new double*[NEL];
 	for (i = 0; i < NEL; i++) {
 		HFTEMP[i] = new double[elenode3D];
 	}
-	//double HFTEMPn[(N + 1)*(N + 1)*(N + 1)];
-
+	*/
 	double **HFTEMPn;
-
 	if (tensorfactorization == 1) {
 		HFTEMPn = new double*[NEL];
 		for (i = 0; i < NEL; i++) {
@@ -181,16 +179,15 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	//double FEETEMP[elenode3D]; //LOCAL DISP. POTENTIAL
 	double* FEETEMP;
 	FEETEMP = new double[elenode3D];
-
-	double *DPS_ukn;
-	double *XNRBORG; //SOLUTION ARRAY FOR NRBC DISPLACEMENT AT T=0 (ORG MEANS ORIGIN)
+	//double *DPS_ukn;
+	//double *XNRBORG; //SOLUTION ARRAY FOR NRBC DISPLACEMENT AT T=0 (ORG MEANS ORIGIN)
 	//double *XCOR; //SOLUTION ARRAY FOR NRB
-	double *XCOR_kn;
+	//double *XCOR_kn;
 	//double *XCOR_ukn;
 	double** PSI_inc;
-	double *DPS;
+	//double *DPS;
 	//==============================================================================//
-	DSDOT = new double[NNODE];
+	//DSDOT = new double[NNODE];
 	ds = new double*[NNODE];
 	for (i = 0; i < NNODE; i++) {
 		ds[i] = new double[3];
@@ -199,21 +196,15 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	for (i = 0; i < NNODE; i++) {
 		FEEDOT[i] = new double[2];
 	}
-	FEEDOT_INC = new double*[NNODE];
-	for (i = 0; i < NNODE; i++) {
-		FEEDOT_INC[i] = new double[2];
-	}
-	FEEDOT_inc = new double*[NNODE];
+	//FEEDOT_inc = new double*[NNODE];
+	/*
 	for (i = 0; i < NNODE; i++) {
 		FEEDOT_inc[i] = new double[2];
 	}
+	*/
 	FEE = new double*[NNODE];
 	for (i = 0; i < NNODE; i++) {
 		FEE[i] = new double[2];
-	}
-	FEE_inc = new double*[NNODE];
-	for (i = 0; i < NNODE; i++) {
-		FEE_inc[i] = new double[2];
 	}
 	P = new double*[NNODE];
 	for (i = 0; i < NNODE; i++) {
@@ -228,20 +219,27 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	for (i = 0; i < NNODE; i++) {
 		PIN[i] = new double[2];
 	}
-	BS = new double[NNODE];
 	FFORCE = new double[NNODE];
 	BNRB = new double[NNODE];
-	//BNRB = new double[u.NRBNODE];
 	HF = new double[NNODE];
-	HFn = new double[NNODE];
-	//DPS_ukn = new double[u.NRBNODE];
-	DPS_ukn = new double[NNODE];
+	//DPS_ukn = new double[NNODE];
 
 	//XEST_kn = new double[NNODE];
 	for (z = 0; z < nrbsurfnumber; z++) {
 		nr[z].XEST_kn = new double*[elenode2D];
 		for (i = 0; i < elenode2D; i++) {
 			nr[z].XEST_kn[i] = new double[nr[z].NEL_nrb];
+		}
+		nr[z].XNRBORG = new double*[elenode2D];
+		for (i = 0; i < elenode2D; i++) {
+			nr[z].XNRBORG[i] = new double[nr[z].NEL_nrb];
+		}
+		nr[z].FEEDOT_inc = new double**[elenode2D]; 
+		for (i = 0; i < elenode2D; i++) {
+			nr[z].FEEDOT_inc[i] = new double*[nr[z].NEL_nrb];
+			for (j = 0; j < nr[z].NEL_nrb; j++) {
+				nr[z].FEEDOT_inc[i][j] = new double[2]; 
+			}
 		}
 		nr[z].XEST = new double*[elenode2D];
 		for (i = 0; i < elenode2D; i++) {
@@ -290,15 +288,17 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 	}
 
-	XNRBORG = new double[NNODE];
+	//XNRBORG = new double[NNODE];
 	//XCOR = new double[NNODE];
-	XCOR_kn = new double[NNODE];
+	//XCOR_kn = new double[NNODE];
 	//XCOR_ukn = new double[NNODE];
 
 	//=======================================================================//
+	/*
 	for (i = 0; i < NNODE; i++) {
 		DSDOT[i] = 0.0;
 	}
+	*/
 	for (i = 0; i < NNODE; i++) {
 		for (j = 0; j < 3; j++) {
 			ds[i][j] = 0.0;
@@ -309,24 +309,16 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			FEEDOT[i][j] = 0.0;
 		}
 	}
-	for (i = 0; i < NNODE; i++) {
-		for (j = 0; j < 2; j++) {
-			FEEDOT_INC[i][j] = 0.0;
-		}
-	}
+	/*
 	for (i = 0; i < NNODE; i++) {
 		for (j = 0; j < 2; j++) {
 			FEEDOT_inc[i][j] = 0.0;
 		}
 	}
+	*/
 	for (i = 0; i < NNODE; i++) {
 		for (j = 0; j < 2; j++) {
 			FEE[i][j] = 0.0;
-		}
-	}
-	for (i = 0; i < NNODE; i++) {
-		for (j = 0; j < 2; j++) {
-			FEE_inc[i][j] = 0.0;
 		}
 	}
 	for (i = 0; i < NNODE; i++) {
@@ -348,9 +340,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 	}
 	for (i = 0; i < NNODE; i++) {
-		BS[i] = 0.0;
-	}
-	for (i = 0; i < NNODE; i++) {
 		FFORCE[i] = 0.0;
 	}
 
@@ -360,21 +349,17 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 	for (i = 0; i < NNODE; i++) {
 		HF[i] = 0.0;
-		HFn[i] = 0.0;
 	}
 
 	for (i = 0; i < elenode3D; i++) {
-		//HFTEMP[i] = 0.0;
-		//HFTEMPn[i] = 0.0;
 		FEETEMP[i] = 0.0;
 	}
+	
 
 	for (i = 0; i < NNODE; i++) {
-		DPS_ukn[i] = 0.0;
-		XNRBORG[i] = 0.0;
-		//XCOR[i] = 0.0;
-		XCOR_kn[i] = 0.0;
-		//XCOR_ukn[i] = 0.0;
+		//DPS_ukn[i] = 0.0;
+		//XNRBORG[i] = 0.0;
+		//XCOR_kn[i] = 0.0;
 	}
 
 	for (z = 0; z < nrbsurfnumber; z++) {
@@ -385,9 +370,13 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				nr[z].XEST_ukn[i][j] = 0.0;
 				nr[z].angle_disp1[i][j] = 1.0;
 				nr[z].angle_disp2[i][j] = 1.0;
+				nr[z].XNRBORG[i][j] = 0.0; 
 				nr[z].XNRBORG2[i][j] = 0.0;
 				for (k = 0; k < 2; k++) {
 					nr[z].disp_mag[i][j][k] = 0.0;
+				}
+				for (k = 0; k < 2; k++) {
+					nr[z].FEEDOT_inc[i][j][k] = 0.0;
 				}
 			}
 		}
@@ -457,7 +446,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 		}
 
-		DPS = new double[NNODE];
+		//DPS = new double[NNODE];
 		//initialization
 		for (i = 0; i < NNODE; i++) {
 			for (j = 0; j < 2; j++) {
@@ -473,16 +462,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 			}
 		}
-
-		for (i = 0; i < NNODE; i++) {
-			DPS[i] = 0.0;
-		}
 	}
 
 	double *WBS; //wet surface structure force derived from displacement sent back from Nastran 
 	WBS = new double[NNODE];
 	for (z = 0; z < owsfnumber; z++) { //this memory allocation scheme could have been improved
-		ol[z].DISP = new double*[ol[z].FSNEL*NINT*NINT];
 		if (mappingalgo == 4 || mappingalgo == 5) {
 			ol[z].DISP_gs = new double*[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
 			ol[z].DISP_norm = new double*[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
@@ -491,39 +475,22 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				ol[z].DISP_gs[j] = new double[3];
 			}
 		}
-		else {
-			ol[z].DISP_gs = new double*[ol[z].FSNEL*elenode2D];
+		else if (mappingalgo == 2) {
+			ol[z].DISP = new double*[ol[z].FSNEL*NINT*NINT];
+			for (j = 0; j < ol[z].FSNEL*NINT*NINT; j++) {
+				ol[z].DISP[j] = new double[3]; //defined in 3 directions 
+			}
 			ol[z].DISP_norm = new double*[ol[z].FSNEL*elenode2D];
 			for (j = 0; j < ol[z].FSNEL*elenode2D; j++) {
 				ol[z].DISP_norm[j] = new double[2];
-				ol[z].DISP_gs[j] = new double[3];
 			}
-		}
-		for (j = 0; j < ol[z].FSNEL*NINT*NINT; j++) {
-			ol[z].DISP[j] = new double[3]; //defined in 3 directions 
 		}
 	}
 
-
 	for (z = 0; z < owsfnumber; z++) {
-		/*
-		for (j = 0; j < ol[z].GIDNct; j++) {
-			ol[z].WBS[j] = 0.0;
-			for (k = 0; k < 3; k++) {
-				ol[z].DISP[j][k] = 0.0;
-			}
-		}
-		*/
 		for (j = 0; j < NNODE; j++) {
 			WBS[j] = 0.0;
 		}
-
-		for (j = 0; j < ol[z].FSNEL*NINT*NINT; j++) {
-			for (k = 0; k < 3; k++) {
-				ol[z].DISP[j][k] = 0.0;
-			}
-		}
-
 		if (mappingalgo == 4 || mappingalgo == 5) {
 			for (j = 0; j < ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1); j++) {
 				for (k = 0; k < 2; k++) {
@@ -534,27 +501,30 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 			}
 		}
-		else {
+		else if (mappingalgo == 2) {
+			for (j = 0; j < ol[z].FSNEL*NINT*NINT; j++) {
+				for (k = 0; k < 3; k++) {
+					ol[z].DISP[j][k] = 0.0;
+				}
+			}
 			for (j = 0; j < ol[z].FSNEL*elenode2D; j++) {
 				for (k = 0; k < 2; k++) {
 					ol[z].DISP_norm[j][k] = 0.0;
 				}
-				for (k = 0; k < 3; k++) {
-					ol[z].DISP_gs[j][k] = 0.0;
-				}
 			}
 		}
 	}
-
 	double* WP;
 	WP = new double[NNODE];
 	for (i = 0; i < NNODE; i++) {
 		WP[i] = 0.0;
 	}
 	double* WPIN;
-	WPIN = new double[NNODE];
-	for (i = 0; i < NNODE; i++) {
-		WPIN[i] = 0.0;
+	if (tfm == 0) {
+		WPIN = new double[NNODE];
+		for (i = 0; i < NNODE; i++) {
+			WPIN[i] = 0.0;
+		}
 	}
 
 	//Initialize the incident pressure and total pressure along with hydrostatic pressure for the first time step
@@ -612,16 +582,15 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 			//initialize XNBORG (initialize to 0)
 			for (z = 0; z < nrbsurfnumber; z++) {
-				for (j = 0; j < nr[z].NRBNODE; j++) {
-					if (-(2 * xo - 2 * abs(GCOORD[nr[z].NRBA[j] - 1][1]) + C*DT) / (2 * C) >= 0.0) {
-						XNRBORG[nr[z].NRBA[j] - 1] = -(PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].NRBA[j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
-						//XNRBORG[j] = -(PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].NRBA[j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
+				for (j = 0; j < nr[z].NEL_nrb; j++) {
+					for (k = 0; k < elenode2D; k++) {
+						if (-(2 * xo - 2 * abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) + C*DT) / (2 * C) >= 0.0) {
+							nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j] = -(PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
+						}
+						else {
+							nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j] = -(PPEAK*TAU*0.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
+						}
 					}
-					else {
-						XNRBORG[nr[z].NRBA[j] - 1] = -(PPEAK*TAU*0.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].NRBA[j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
-						//XNRBORG[j] = -(PPEAK*TAU*0.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].NRBA[j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
-					}
-
 				}
 			}
 			//prototype: -(PPEAK*TAU*heaviside(-(2*XO - 2*x + C*dt)/(2*C))*(exp((dt/2 + (XO - x)/C)/TAU) - 1))/(C*RHO)
@@ -632,11 +601,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				ro = pow((pow((XC - XO), 2) + pow((YC - YO), 2) + pow((ZC - ZO), 2)), 0.5);
 				if (-(2 * rd - 2 * ro + C*DT) / (2 * C) >= 0) {
 					FEEDOT[i][0] = -(PPEAK*TAU*ro*1.0*(exp((DT / 2 + (rd - ro) / C) / TAU) - 1)) / rd;
-					FEEDOT_inc[i][0] = FEEDOT[i][0];
+					//FEEDOT_inc[i][0] = FEEDOT[i][0];
 				}
 				else {
 					FEEDOT[i][0] = -(PPEAK*TAU*ro*0.0*(exp((DT / 2 + (rd - ro) / C) / TAU) - 1)) / rd;
-					FEEDOT_inc[i][0] = FEEDOT[i][0];
+					//FEEDOT_inc[i][0] = FEEDOT[i][0];
 				}
 				//-(PPEAK*TAU*ro*heaviside(-(2 * rd - 2 * ro + C*dt) / (2 * C))*(exp((dt / 2 + (rd - ro) / C) / TAU) - 1)) / rd
 				if (-(rd - ro) / C >= 0) {
@@ -648,30 +617,31 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				//-(PPEAK*TAU*ro*heaviside(-(rd - ro) / C)*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*rd)
 			}
 			for (z = 0; z < nrbsurfnumber; z++) {
-				for (j = 0; j < nr[z].NRBNODE; j++) {
-					rd = pow((pow((GCOORD[nr[z].NRBA[j] - 1][0] - XC), 2) + pow((GCOORD[nr[z].NRBA[j] - 1][1] - YC), 2) + pow((GCOORD[nr[z].NRBA[j] - 1][2] - ZC), 2)), 0.5);
-					ro = pow((pow((XC - XO), 2) + pow((YC - YO), 2) + pow((ZC - ZO), 2)), 0.5);
-					//initialize to 0 
-					if (-(rd - ro) / C >= 0) {
-						//XNRBORG[j] = -(PPEAK*TAU*ro*1.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*1.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
-						XNRBORG[nr[z].NRBA[j] - 1] = -(PPEAK*TAU*ro*1.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*1.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
+				for (j = 0; j < nr[z].NEL_nrb; j++) {
+					for (k = 0; k < elenode2D; k++) {
+						nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][0] = FEEDOT[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
 					}
-					else {
-						//XNRBORG[j] = -(PPEAK*TAU*ro*0.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*0.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
-						XNRBORG[nr[z].NRBA[j] - 1] = -(PPEAK*TAU*ro*0.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*0.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
+				}
+			}
+			for (z = 0; z < nrbsurfnumber; z++) {
+				for (j = 0; j < nr[z].NEL_nrb; j++) {
+					for (k = 0; k < elenode2D; k++) {
+						rd = pow((pow((GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] - XC), 2) + pow((GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1] - YC), 2) + pow((GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][2] - ZC), 2)), 0.5);
+						ro = pow((pow((XC - XO), 2) + pow((YC - YO), 2) + pow((ZC - ZO), 2)), 0.5);
+						//initialize to 0 
+						if (-(rd - ro) / C >= 0) {
+							nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j] = -(PPEAK*TAU*ro*1.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*1.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
+						}
+						else {
+							nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j] = -(PPEAK*TAU*ro*0.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*0.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
+						}
+						// - (PPEAK*TAU*ro*heaviside(-(rd - ro)/C)*(rd - ro + C*TAU - C*TAU*exp(rd/(C*TAU) - ro/(C*TAU))))/(C*RHO*rd^2) - (PPEAK*TAU*ro*heaviside(-(rd - ro)/C)*(exp((rd - ro)/(C*TAU)) - 1))/(C*RHO*rd)
 					}
-					// - (PPEAK*TAU*ro*heaviside(-(rd - ro)/C)*(rd - ro + C*TAU - C*TAU*exp(rd/(C*TAU) - ro/(C*TAU))))/(C*RHO*rd^2) - (PPEAK*TAU*ro*heaviside(-(rd - ro)/C)*(exp((rd - ro)/(C*TAU)) - 1))/(C*RHO*rd)
 				}
 			}
 		}
 	}
 
-	for (i = 0; i < NNODE; i++) {
-		FEE_inc[i][0] = FEE[i][0];
-	}
-	for (i = 0; i < NNODE; i++) {
-		FEEDOT_INC[i][0] = FEEDOT[i][0];
-	}
 	//=========================Get free surface points=========================//
 	int fspt_num = 0;
 	double searchrange = 1e-2;
@@ -829,21 +799,23 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	double hd = 0;
 	//for (i = 0; i < NDT - 1; i++) { //error prone: i other than time should not present in this loop
 
-	//Initialize the pressure gradient vector
-	for (z = 0; z < nrbsurfnumber; z++) {
-		nr[z].P_dev = new double**[nr[z].NEL_nrb];
-		for (i = 0; i < nr[z].NEL_nrb; i++) {
-			nr[z].P_dev[i] = new double*[elenode2D];
-			for (j = 0; j < elenode2D; j++) {
-				nr[z].P_dev[i][j] = new double[3];
+	if (improvednrb == 1) {
+		//Initialize the pressure gradient vector
+		for (z = 0; z < nrbsurfnumber; z++) {
+			nr[z].P_dev = new double**[nr[z].NEL_nrb];
+			for (i = 0; i < nr[z].NEL_nrb; i++) {
+				nr[z].P_dev[i] = new double*[elenode2D];
+				for (j = 0; j < elenode2D; j++) {
+					nr[z].P_dev[i][j] = new double[3];
+				}
 			}
 		}
-	}
-	for (z = 0; z < nrbsurfnumber; z++) {
-		for (i = 0; i < nr[z].NEL_nrb; i++) {
-			for (j = 0; j < elenode2D; j++) {
-				for (k = 0; k < 3; k++) {
-					nr[z].P_dev[i][j][k] = 0.0;
+		for (z = 0; z < nrbsurfnumber; z++) {
+			for (i = 0; i < nr[z].NEL_nrb; i++) {
+				for (j = 0; j < elenode2D; j++) {
+					for (k = 0; k < 3; k++) {
+						nr[z].P_dev[i][j][k] = 0.0;
+					}
 				}
 			}
 		}
@@ -870,6 +842,65 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			elenode2D_gs = 3;
 		}
 	}
+
+
+	double*** SHG;
+	int*cn;
+	double** XS; //define XS to be a local variable which will be cleaned at the end of function
+	LOBATTOstruct bq;
+	GLLQUADstruct gq;
+	LOCAL_GSHAPEstruct lg;
+	if (element_type == 0) {
+		cn = new int[8];
+		cn[0] = LNA_3D[0][0][0]; cn[1] = LNA_3D[N][0][0];
+		cn[2] = LNA_3D[N][N][0]; cn[3] = LNA_3D[0][N][0];
+		cn[4] = LNA_3D[0][0][N]; cn[5] = LNA_3D[N][0][N];
+		cn[6] = LNA_3D[N][N][N]; cn[7] = LNA_3D[0][N][N];
+		SHG = new double**[4];
+		for (i = 0; i < 4; i++) {
+			SHG[i] = new double*[NINT*NINT*NINT];
+			for (j = 0; j < NINT*NINT*NINT; j++) {
+				SHG[i][j] = new double[NINT*NINT*NINT];
+			}
+		}
+		for (i = 0; i < 4; i++) {
+			for (j = 0; j < NINT*NINT*NINT; j++) {
+				for (k = 0; k < NINT*NINT*NINT; k++) {
+					SHG[i][j][k] = 0.0;
+				}
+			}
+		}
+		XS = new double*[9];
+		for (i = 0; i < 9; i++) {
+			XS[i] = new double[NINT*NINT*NINT];
+		}
+		for (i = 0; i < 9; i++) {
+			for (j = 0; j < NINT*NINT*NINT; j++) {
+				XS[i][j] = 0.0;
+			}
+		}
+		bq = LOBATTO(N);
+		gq = GLLQUAD(bq.Z, bq.WL, N, !FEM);
+		lg = LOCAL_GSHAPE(gq.S, LNA_3D, NINT);
+	}
+
+	double* W_new;
+	W_new = new double[NINT*NINT*NINT];
+	for (int k = 0; k < NINT; k++) {       //k l m are for four points
+		for (int l = 0; l < NINT; l++) {
+			for (int m = 0; m < NINT; m++) {
+				W_new[k*NINT*NINT + l*NINT + m] = W[k] * W[l] * W[m];
+			}
+		}
+	}
+	double* JACOB;
+	if (element_type == 0) {
+		JACOB = new double[NINT*NINT*NINT];
+		for (i = 0; i < NINT*NINT*NINT; i++) {
+			JACOB[i] = 0.0;
+		}
+	}
+	
 	for (i = 0; i < NDT; i++) {
 		TIME = i + 2;
 		std::cout << "time is:   " << TIME << std::endl;
@@ -938,54 +969,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					WPIN[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][1] + PIN[ol[z].GIDN[j] - 1][0];
 				}
 			}
-		}
-
-		/*
-		if (tfm == 1) {
-			for (j = 0; j < NNODE; j++) {
-				if (nodeforcemap2 == 1) {
-					if (debug_hydro == 0) {
-						WP[j] = PT[j][0] - PATM; //correct version with structural gravity
-					}
-					else {
-						//WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM;
-						WP[j] = PT[j][0] - PH[j];
-					}
-					//ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
-					//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
-				}
-				else { //absolute pressure
-					WP[j] = PT[j][0] - PATM;
-					//ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
-					//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
-				}
-				//ol[z].WP[ol[z].GIDN[j] - 1]
-				//= PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]; //correct version if structural gravity is not specified in Abaqus
-				if (Bleich == 1) {
-					if (nodeforcemap2 == 1) {
-						WP[j] = (PT[j][0] - PH[j]) / SX / SZ;
-					}
-					else {
-						WP[j] = (PT[j][0] - PH[j]) / SX / SZ;
-					}
-				}
-			}
-		}
-		else {
-			for (z = 0; z < owsfnumber; z++) {
-				for (j = 0; j < ol[z].GIDNct; j++) {
-					WP[j] = PT[j][0] - PATM; // //correct version with structural gravity
-					if (Bleich == 1) {
-						WP[j] = (PT[j][0] - PH[j]) / SX / SZ;
-					}
-					WPIN[j] = PIN[j][1] + PIN[j][0];
-				}
-			}
-		}
-		*/
-		hd = 0.0; 
-		for (j = 0; j < NNODE; j++) {
-			hd += WP[j]; 
 		}
 
 		//start = std::clock();
@@ -1081,7 +1064,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 							}
 							else {
 								//ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][2];
-								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[j*elenode2D_gs + k][0] + ol[z].norm[j][1] * ol[z].DISP[j*elenode2D_gs + k][1] + ol[z].norm[j][2] * ol[z].DISP[j*elenode2D_gs + k][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[k] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[k] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[k] - 1][2];
 							}
 							std::cout << "We need to derive the DISPI on gauss point!!! (not done yet)" << std::endl;
 							system("PAUSE ");
@@ -1106,6 +1089,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//IEN_gb is a 2D connectivity matrix
 		//Derive the angle between pressure gradient (the same direction with displacement/velocity gradient) and the normal direction of the NRB surface elements
 		if (improvednrb == 1) {
+			//The content below is temporarily commented because we changed the way SHG is defined
+			/*
 			for (z = 0; z < nrbsurfnumber; z++) {
 				for (ii = 0; ii < nr[z].NEL_nrb; ii++) {
 					for (jj = 0; jj < elenode2D; jj++) {
@@ -1115,7 +1100,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					}
 				}
 			}
-
 			for (z = 0; z < nrbsurfnumber; z++) {
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
 					for (k = 0; k < elenode2D; k++) {
@@ -1143,6 +1127,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					}
 				}
 			}
+			*/
 		}
 
 		//NRB predictor
@@ -1198,13 +1183,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					}
 					for (j = 0; j < nr[z].NEL_nrb; j++) {
 						for (k = 0; k < elenode2D; k++) {
-							//if (debug == 0) {
-							NRBDISPTEMP[k] = -RHO* (nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] - XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1]);
-							//}
-							//else {
-								//NRBDISPTEMP[k] = -RHO* (nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1]);
-							//}
-							//std::cout << " " << std::endl;
+							NRBDISPTEMP[k] = -RHO* (nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j]);
 						}
 						for (h = 0; h < elenode2D; h++) {
 							BNRBTEMP[h] = 0.0;
@@ -1220,9 +1199,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 			else { //Spherical wave
 				for (z = 0; z < nrbsurfnumber; z++) { //from bottom to front surface (k=0 means all node case) 
-					for (j = 0; j < nr[z].NRBNODE; j++) {
-						FEEDOT_inc[nr[z].NRBA[j] - 1][1] = FEEDOT_inc[nr[z].NRBA[j] - 1][0] + (0.5 * DT)*(PIN[nr[z].NRBA[j] - 1][0] + PIN[nr[z].NRBA[j] - 1][1]);
-						//prototype: FEEDOT_inc[nr[z].NRBA[j][0] - 1][1] = (PPEAK*TAU - PPEAK*TAU*exp(pow((pow(XC, 2) - 2 * XC*d.GCOORD[nr[z].NRBA[j][0] - 1][0] + pow(YC, 2) - 2 * YC*d.GCOORD[nr[z].NRBA[j][0] - 1][1] + pow(ZC, 2) - 2 * ZC*d.GCOORD[nr[z].NRBA[j][0] - 1][2] + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][0], 2) + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][1], 2) + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][2], 2)), 0.5) / (C*TAU))*exp(-(DT*i) / TAU)*exp(-pow((pow(XC, 2) - 2 * XC*XO + pow(XO, 2) + pow(YC, 2) - 2 * YC*YO + pow(YO, 2) + pow(ZC, 2) - 2 * ZC*ZO + pow(ZO, 2)), 0.5) / (C*TAU))*exp(-DT / TAU))*(sign((C*DT - pow((pow(XC, 2) - 2 * XC*d.GCOORD[nr[z].NRBA[j][0] - 1][0] + pow(YC, 2) - 2 * YC*d.GCOORD[nr[z].NRBA[j][0] - 1][1] + pow(ZC, 2) - 2 * ZC*d.GCOORD[nr[z].NRBA[j][0] - 1][2] + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][0], 2) + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][1], 2) + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][2], 2)), 0.5) + pow((pow(XC, 2) - 2 * XC*XO + pow(XO, 2) + pow(YC, 2) - 2 * YC*YO + pow(YO, 2) + pow(ZC, 2) - 2 * ZC*ZO + pow(ZO, 2)), 0.5) + C*DT*i) / C) / 2.0 + 0.5);
+					for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
+						for (k = 0; k < elenode2D; k++) {
+							nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][1] = nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][0] + (0.5 * DT)*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
+							//prototype: FEEDOT_inc[nr[z].NRBA[j][0] - 1][1] = (PPEAK*TAU - PPEAK*TAU*exp(pow((pow(XC, 2) - 2 * XC*d.GCOORD[nr[z].NRBA[j][0] - 1][0] + pow(YC, 2) - 2 * YC*d.GCOORD[nr[z].NRBA[j][0] - 1][1] + pow(ZC, 2) - 2 * ZC*d.GCOORD[nr[z].NRBA[j][0] - 1][2] + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][0], 2) + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][1], 2) + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][2], 2)), 0.5) / (C*TAU))*exp(-(DT*i) / TAU)*exp(-pow((pow(XC, 2) - 2 * XC*XO + pow(XO, 2) + pow(YC, 2) - 2 * YC*YO + pow(YO, 2) + pow(ZC, 2) - 2 * ZC*ZO + pow(ZO, 2)), 0.5) / (C*TAU))*exp(-DT / TAU))*(sign((C*DT - pow((pow(XC, 2) - 2 * XC*d.GCOORD[nr[z].NRBA[j][0] - 1][0] + pow(YC, 2) - 2 * YC*d.GCOORD[nr[z].NRBA[j][0] - 1][1] + pow(ZC, 2) - 2 * ZC*d.GCOORD[nr[z].NRBA[j][0] - 1][2] + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][0], 2) + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][1], 2) + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][2], 2)), 0.5) + pow((pow(XC, 2) - 2 * XC*XO + pow(XO, 2) + pow(YC, 2) - 2 * YC*YO + pow(YO, 2) + pow(ZC, 2) - 2 * ZC*ZO + pow(ZO, 2)), 0.5) + C*DT*i) / C) / 2.0 + 0.5);
+						}
 					}
 					for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 						for (k = 0; k < elenode2D; k++) {
@@ -1245,7 +1226,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 							angle = (nr[z].norm[j][0] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] - XC) + nr[z].norm[j][1] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1] - YC) + nr[z].norm[j][2] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][2] - ZC)) / R;
 							if (debug == 0) {
 								nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*((0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) +
-									(0.5 * DT / (RHO*R))*(FEEDOT_inc[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + FEEDOT_inc[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1])) -
+									(0.5 * DT / (RHO*R))*(nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][0] + nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][1])) -
 									(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
 							}
 							else {
@@ -1253,7 +1234,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 									//(0.5 * DT / (RHO*R))*(FEEDOT_inc[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + FEEDOT_inc[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]))
 									//- (angle) * (0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
 								nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*((0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) +
-									(0.5 * DT / (RHO*R))*(FEEDOT_inc[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + FEEDOT_inc[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]));
+									(0.5 * DT / (RHO*R))*(nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][0] + nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][1]));
 							}
 							if (debug == 0) {
 								nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0]; //plane wave approximation (PWA)
@@ -1265,7 +1246,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 								//nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][0] = pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
 								//nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][0]; //plane wave approximation (PWA)
 							}
-							nr[z].XNRBORG2[nr[z].DP_2D[k] - 1][j] = angle*XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
+							nr[z].XNRBORG2[nr[z].DP_2D[k] - 1][j] = angle*nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j];
 						}
 					}
 					for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
@@ -1340,10 +1321,10 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					for (j = 0; j < nr[z].NEL_nrb; j++) {
 						for (k = 0; k < elenode2D; k++) {
 							if (debug == 0) {
-								NRBDISPTEMP[k] = -RHO* (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1]);
+								NRBDISPTEMP[k] = -RHO* (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j]);
 							}
 							else {
-								NRBDISPTEMP[k] = -RHO* (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1]);
+								NRBDISPTEMP[k] = -RHO* (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j]);
 							}
 						}
 						for (h = 0; h < elenode2D; h++) {
@@ -1366,7 +1347,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 							BNRBTEMP[h] = 0.0;
 							for (k = 0; k < elenode2D; k++) {
 								if (debug_algo5 == 0) {
-									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - XNRBORG[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1]);
+									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j]);
 								}
 								else {
 									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (1);
@@ -1380,26 +1361,16 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 			}
 		}
-		hd = 0.0;
-		for (j = 0; j < NNODE; j++) {
-			hd += BNRB[j];
-		}
 
 		//time integration
 		//start = std::clock();
 		#pragma omp parallel for num_threads(6)
 		for (int j = 0; j < NNODE; j++) {
-			DSDOT[j] = (ds[j][1] - ds[j][0]) / DT; //SOLUTION ARRAY FOR FIRST TIME DERIVATIVE OF CONDENSATION
-			FEEDOT[j][1] = FEEDOT[j][0] + DT*(P[j][0] + (BETA*DT*(pow(C, 2))*DSDOT[j]));
+			//DSDOT[j] = (ds[j][1] - ds[j][0]) / DT; //SOLUTION ARRAY FOR FIRST TIME DERIVATIVE OF CONDENSATION
+			FEEDOT[j][1] = FEEDOT[j][0] + DT*(P[j][0] + (BETA*DT*(pow(C, 2))*(ds[j][1] - ds[j][0]) / DT));
 			FEE[j][1] = FEE[j][0] + DT*FEEDOT[j][1];
 			FEEDOT[j][0] = FEEDOT[j][1];  //USE TWO VALUE TO STORE THE N TIME STEP AND N+1 TIME STEP
-			if (debug == 1) {
-				FEEDOT_INC[j][1] = FEEDOT_INC[j][0] + 0.5*DT*(PIN[j][0] + PIN[j][1]);
-				FEE_inc[j][1] = FEE_inc[j][0] + DT*FEEDOT_INC[j][1];
-				FEEDOT_INC[j][0] = FEEDOT_INC[j][1];  //USE TWO VALUE TO STORE THE N TIME STEP AND N+1 TIME STEP
-			}
 			HF[j] = 0.0;
-			HFn[j] = 0.0;
 		} //1 MEANS N+1 TIME STEP; 0 MEANS N TIME STEP
 		//duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
 		//std::cout << "total CPU time (ms): " << duration << std::endl;
@@ -1408,25 +1379,27 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//start = std::clock();
 		//ctt3 = 0;
 		if (tensorfactorization == 0) {
-			//start = std::clock();
 			#pragma omp parallel for num_threads(6)
 			for (int j = 0; j < NEL; j++) { //the loop takes 1+NEL+1+NEL=2*NEL+2 operations
+				double HFTEMP[NINT*NINT*NINT]; //We did not distinguish hex and tet here since the size of HFTEMP would be sufficient for tet element
+				for (int z = 0; z < NINT*NINT*NINT; z++) {
+					HFTEMP[z] = 0.0;
+				}
 				//-------------------------matrix multiplication-------------------------//
 				for (int z = 0; z < elenode3D; z++) { //takes NEL*(2*NINT^3+2) operations
-					HFTEMP[j][z] = 0.0; //takes NEL*NINT^3 operations
 					for (int k = 0; k < elenode3D; k++) { //takes NEL*NINT^3*(2*NINT^3+2) operaitons
-						HFTEMP[j][z] = HFTEMP[j][z] + HMASTER[j][z][k] * FEE[IEN[k][j] - 1][1];
-					} //The premise is that HMASTER is the same for every element (only true for equally shaped element!!)
+						if (z <= k) { //see the matrix storing algorithm in: https://stackoverflow.com/questions/9039189/make-efficient-the-copy-of-symmetric-matrix-in-c-sharp/9040526#9040526
+							HFTEMP[z] += HMASTER[j][z*elenode3D - z*(z + 1) / 2 + k] * FEE[IEN[k][j] - 1][1];
+						}
+						else {
+							HFTEMP[z] += HMASTER[j][k*elenode3D - k*(k + 1) / 2 + z] * FEE[IEN[k][j] - 1][1];
+						}
+					}
 				}
-			}
-			for (int j = 0; j < NEL; j++) {
 				for (int k = 0; k < elenode3D; k++) { //takes NEL*(2*NINT^3+2) operations
-					HF[IEN[k][j] - 1] = HF[IEN[k][j] - 1] + HFTEMP[j][k];   //global level reactance matrix //takes 2*NINT^3*NEL operations
+					HF[IEN[k][j] - 1] = HF[IEN[k][j] - 1] + HFTEMP[k];   //global level reactance matrix //takes 2*NINT^3*NEL operations
 				} //HF is like global stiffness matrix (include variable in it)
 			}
-			//duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
-			//std::cout << "total CPU time (ms): " << duration << std::endl;
-			//std::cout << " " << std::endl;
 		}
 		else {
 			//#pragma omp parallel for num_threads(6) /*private(gamman, gamma_tn)*/
@@ -1532,11 +1505,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//std::cout << "total CPU time (ms): " << duration << std::endl;
 		//std::cout << " " << std::endl;
 		
-		hd = 0.0; 
-		for (j = 0; j < NNODE; j++) {
-			hd += BNRB[j];
-		}
-		
 		for (j = 0; j < NNODE; j++) {
 			FFORCE[j] = -HF[j];
 		}
@@ -1547,7 +1515,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 		for (j = 0; j < nrb.NNODE_nrb; j++) {
 			FFORCE[nrb.NRBA_t[j] - 1] += BNRB[nrb.NRBA_t[j] - 1];
-			//std::cout << "" << std::endl; 
 		}
 		//The combination of FFORCE passes the test
 
@@ -1576,10 +1543,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			//PRESSURE CORRECTION FACTOR
 			ds[nrb.NRBA_t[j] - 1][2] = ds[nrb.NRBA_t[j] - 1][1] + ((ds[nrb.NRBA_t[j] - 1][2] - ds[nrb.NRBA_t[j] - 1][1]) / (1 + KAPPA));
 		} //after ds is updated, P can be updated.
-		double hd3 = 0.0; 
-		for (j = 0; j < nrb.NNODE_nrb; j++) {
-			hd3 += FFORCE[nrb.NRBA_t[j] - 1]; 
-		}
 
 		//======================NODE-BY-NODE CAVITATION CHECK=========================//
 		if (tfm == 1) {
@@ -1618,6 +1581,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		}
 
 		if (improvednrb == 1) {
+			//The content below is temporarily commented because we changed the way SHG is defined
+			/*
 			for (z = 0; z < nrbsurfnumber; z++) {
 				for (ii = 0; ii < nr[z].NEL_nrb; ii++) {
 					for (jj = 0; jj < elenode2D; jj++) {
@@ -1651,6 +1616,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					}
 				}
 			}
+			*/
 		}
 
 		if (tfm == 1) {
@@ -1822,11 +1788,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			}
 		}
 
-		double hd2 = 0.0; 
-		for (j = 0; j < nrb.NNODE_nrb; j++) {
-			hd2 += ds[nrb.NRBA_t[j] - 1][2];
-		}
-
 		for (z = 0; z < owsfnumber; z++) {
 			if (mappingalgo == 4 || mappingalgo == 5) {
 				for (j = 0; j < ol[z].FSNEL; j++) {
@@ -1843,8 +1804,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 			}
 		}
-		
-
 		//Output the pressure history under a specified point
 		//extern double BF_val[4];
 		//energyfilehd << current_time << " " << nr[1].angle_disp1[nr[1].DP_2D[2] - 1][291] << " " << nr[1].angle_disp2[nr[1].DP_2D[2] - 1][291] << " " << nr[1].P_dev[291][nr[1].DP_2D[2] - 1][0] << " " << nr[1].P_dev[291][nr[1].DP_2D[2] - 1][1] << " " << nr[1].P_dev[291][nr[1].DP_2D[2] - 1][2] << std::endl;

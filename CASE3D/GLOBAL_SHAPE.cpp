@@ -10,10 +10,13 @@
 
 //GLOBAL_SHAPE determines the global shape function derivative at the Gauss quad. points.
 
-struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double***XS, double**JACOB, double**GCOORD, int**IEN, double* JACOB_tet) {
+struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double**GCOORD, int**IEN, double* JACOB_tet, int*** LNA) {
 	int i, j, k, l, m, n;
 	GLOBAL_SHAPEstruct t;
+	t.dummy = 1; 
 
+	//Since storing SHG is too expansive, we decide to define SHG on the fly in the function that needs it. 
+	/*
 	std::clock_t start;
 	start = std::clock();
 	if (element_type == 0) {
@@ -36,38 +39,74 @@ struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double***XS, doubl
 				}
 			}
 		}
-		//---------------BEGIN GLOBAL_SHAPE COMP.----------------------------//
-		/*
+
+		double* JACOB = new double[NINT*NINT*NINT]; 
+		double** XS; //define XS to be a local variable which will be cleaned at the end of function
+		XS = new double*[9];
+		for (i = 0; i < 9; i++) {
+			XS[i] = new double[NINT*NINT*NINT];
+		}
+		for (i = 0; i < 9; i++) {
+			for (j = 0; j < NINT*NINT*NINT; j++) {
+				XS[i][j] = 0.0;
+			}
+		}
+		LOBATTOstruct bq;
+		GLLQUADstruct gq;
+		LOCAL_GSHAPEstruct lg;
+		bq = LOBATTO(N);
+		gq = GLLQUAD(bq.Z, bq.WL, N, !FEM);
+		lg = LOCAL_GSHAPE(gq.S, LNA, NINT);
+		int*cn = new int[8];
+		cn[0] = LNA[0][0][0]; cn[1] = LNA[N][0][0];
+		cn[2] = LNA[N][N][0]; cn[3] = LNA[0][N][0];
+		cn[4] = LNA[0][0][N]; cn[5] = LNA[N][0][N];
+		cn[6] = LNA[N][N][N]; cn[7] = LNA[0][N][N];
 		for (m = 0; m < NEL; m++) {
-			for (i = 0; i < NINT*NINT*NINT; i++) {
+			//derive XS first
+			for (i = 0; i < NINT; i++) {
 				for (j = 0; j < NINT; j++) {
 					for (k = 0; k < NINT; k++) {
-						for (l = 0; l < NINT; l++) {
-							t.SHG[m][0][i][j*NINT*NINT + k*NINT + l] = ((XS[m][1][1][j*NINT*NINT + k*NINT + l] * XS[m][2][2][j*NINT*NINT + k*NINT + l] - XS[m][1][2][j*NINT*NINT + k*NINT + l] * XS[m][2][1][j*NINT*NINT + k*NINT + l])*SHL[0][i][j*NINT*NINT + k*NINT + l] + (-XS[m][1][0][j*NINT*NINT + k*NINT + l] * XS[m][2][2][j*NINT*NINT + k*NINT + l] + XS[m][2][0][j*NINT*NINT + k*NINT + l] * XS[m][1][2][j*NINT*NINT + k*NINT + l])*SHL[1][i][j*NINT*NINT + k*NINT + l] + (XS[m][1][0][j*NINT*NINT + k*NINT + l] * XS[m][2][1][j*NINT*NINT + k*NINT + l] - XS[m][2][0][j*NINT*NINT + k*NINT + l] * XS[m][1][1][j*NINT*NINT + k*NINT + l])*SHL[2][i][j*NINT*NINT + k*NINT + l]) / JACOB[m][j*NINT*NINT + k*NINT + l]; //d(phi)/dx
-							t.SHG[m][1][i][j*NINT*NINT + k*NINT + l] = ((-XS[m][0][1][j*NINT*NINT + k*NINT + l] * XS[m][2][2][j*NINT*NINT + k*NINT + l] + XS[m][2][1][j*NINT*NINT + k*NINT + l] * XS[m][0][2][j*NINT*NINT + k*NINT + l])*SHL[0][i][j*NINT*NINT + k*NINT + l] + (XS[m][0][0][j*NINT*NINT + k*NINT + l] * XS[m][2][2][j*NINT*NINT + k*NINT + l] - XS[m][2][0][j*NINT*NINT + k*NINT + l] * XS[m][0][2][j*NINT*NINT + k*NINT + l])*SHL[1][i][j*NINT*NINT + k*NINT + l] + (-XS[m][0][0][j*NINT*NINT + k*NINT + l] * XS[m][2][1][j*NINT*NINT + k*NINT + l] + XS[m][2][0][j*NINT*NINT + k*NINT + l] * XS[m][0][1][j*NINT*NINT + k*NINT + l])*SHL[2][i][j*NINT*NINT + k*NINT + l]) / JACOB[m][j*NINT*NINT + k*NINT + l]; //d(phi)/dy
-							t.SHG[m][2][i][j*NINT*NINT + k*NINT + l] = ((XS[m][0][1][j*NINT*NINT + k*NINT + l] * XS[m][1][2][j*NINT*NINT + k*NINT + l] - XS[m][1][1][j*NINT*NINT + k*NINT + l] * XS[m][0][2][j*NINT*NINT + k*NINT + l])*SHL[0][i][j*NINT*NINT + k*NINT + l] + (-XS[m][0][0][j*NINT*NINT + k*NINT + l] * XS[m][1][2][j*NINT*NINT + k*NINT + l] + XS[m][1][0][j*NINT*NINT + k*NINT + l] * XS[m][0][2][j*NINT*NINT + k*NINT + l])*SHL[1][i][j*NINT*NINT + k*NINT + l] + (XS[m][0][0][j*NINT*NINT + k*NINT + l] * XS[m][1][1][j*NINT*NINT + k*NINT + l] - XS[m][1][0][j*NINT*NINT + k*NINT + l] * XS[m][0][1][j*NINT*NINT + k*NINT + l])*SHL[2][i][j*NINT*NINT + k*NINT + l]) / JACOB[m][j*NINT*NINT + k*NINT + l]; //d(phi)/dz
-							t.SHG[m][3][i][j*NINT*NINT + k*NINT + l] = SHL[3][i][j*NINT*NINT + k*NINT + l]; //phi=phi
+						XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] = 0;
+						XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] = 0;
+						XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] = 0;
+						for (l = 0; l < 8; l++) {
+							XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dxi
+							XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/deta 
+							XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dzeta  
+							XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dxi 
+							XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/deta
+							XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dzeta 
+							XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dxi 
+							XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/deta 
+							XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dzeta
 						}
+						JACOB[i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] * (XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] - XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k])
+							- XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] * (XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] - XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k])
+							+ XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] * (XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] - XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k]);
 					}
 				}
 			}
-		}
-		*/
-		for (m = 0; m < NEL; m++) {
 			for (i = 0; i < NINT*NINT*NINT; i++) {
 				for (j = 0; j < NINT; j++) {
 					for (k = 0; k < NINT; k++) {
 						for (l = 0; l < NINT; l++) {
-							t.SHG[m][0][i][j*NINT*NINT + k*NINT + l] = ((XS[m][1 * 3 + 1][j*NINT*NINT + k*NINT + l] * XS[m][2 * 3 + 2][j*NINT*NINT + k*NINT + l] - XS[m][2 * 3 + 1][j*NINT*NINT + k*NINT + l] * XS[m][1 * 3 + 2][j*NINT*NINT + k*NINT + l])*SHL[0][i][j*NINT*NINT + k*NINT + l] + (-XS[m][0 * 3 + 1][j*NINT*NINT + k*NINT + l] * XS[m][2 * 3 + 2][j*NINT*NINT + k*NINT + l] + XS[m][2 * 3 + 1][j*NINT*NINT + k*NINT + l] * XS[m][0 * 3 + 2][j*NINT*NINT + k*NINT + l])*SHL[1][i][j*NINT*NINT + k*NINT + l] + (XS[m][0 * 3 + 1][j*NINT*NINT + k*NINT + l] * XS[m][1 * 3 + 2][j*NINT*NINT + k*NINT + l] - XS[m][1 * 3 + 1][j*NINT*NINT + k*NINT + l] * XS[m][0 * 3 + 2][j*NINT*NINT + k*NINT + l])*SHL[2][i][j*NINT*NINT + k*NINT + l]) / JACOB[m][j*NINT*NINT + k*NINT + l]; //d(phi)/dx
-							t.SHG[m][1][i][j*NINT*NINT + k*NINT + l] = ((-XS[m][1 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[m][2 * 3 + 2][j*NINT*NINT + k*NINT + l] + XS[m][2 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[m][1 * 3 + 2][j*NINT*NINT + k*NINT + l])*SHL[0][i][j*NINT*NINT + k*NINT + l] + (XS[m][0 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[m][2 * 3 + 2][j*NINT*NINT + k*NINT + l] - XS[m][2 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[m][0 * 3 + 2][j*NINT*NINT + k*NINT + l])*SHL[1][i][j*NINT*NINT + k*NINT + l] + (-XS[m][0 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[m][1 * 3 + 2][j*NINT*NINT + k*NINT + l] + XS[m][1 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[m][0 * 3 + 2][j*NINT*NINT + k*NINT + l])*SHL[2][i][j*NINT*NINT + k*NINT + l]) / JACOB[m][j*NINT*NINT + k*NINT + l]; //d(phi)/dy
-							t.SHG[m][2][i][j*NINT*NINT + k*NINT + l] = ((XS[m][1 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[m][2 * 3 + 1][j*NINT*NINT + k*NINT + l] - XS[m][2 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[m][1 * 3 + 1][j*NINT*NINT + k*NINT + l])*SHL[0][i][j*NINT*NINT + k*NINT + l] + (-XS[m][0 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[m][2 * 3 + 1][j*NINT*NINT + k*NINT + l] + XS[m][2 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[m][0 * 3 + 1][j*NINT*NINT + k*NINT + l])*SHL[1][i][j*NINT*NINT + k*NINT + l] + (XS[m][0 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[m][1 * 3 + 1][j*NINT*NINT + k*NINT + l] - XS[m][1 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[m][0 * 3 + 1][j*NINT*NINT + k*NINT + l])*SHL[2][i][j*NINT*NINT + k*NINT + l]) / JACOB[m][j*NINT*NINT + k*NINT + l]; //d(phi)/dz
+							t.SHG[m][0][i][j*NINT*NINT + k*NINT + l] = ((XS[1 * 3 + 1][j*NINT*NINT + k*NINT + l] * XS[2 * 3 + 2][j*NINT*NINT + k*NINT + l] - XS[2 * 3 + 1][j*NINT*NINT + k*NINT + l] * XS[1 * 3 + 2][j*NINT*NINT + k*NINT + l])*SHL[0][i][j*NINT*NINT + k*NINT + l] + (-XS[0 * 3 + 1][j*NINT*NINT + k*NINT + l] * XS[2 * 3 + 2][j*NINT*NINT + k*NINT + l] + XS[2 * 3 + 1][j*NINT*NINT + k*NINT + l] * XS[0 * 3 + 2][j*NINT*NINT + k*NINT + l])*SHL[1][i][j*NINT*NINT + k*NINT + l] + (XS[0 * 3 + 1][j*NINT*NINT + k*NINT + l] * XS[1 * 3 + 2][j*NINT*NINT + k*NINT + l] - XS[1 * 3 + 1][j*NINT*NINT + k*NINT + l] * XS[0 * 3 + 2][j*NINT*NINT + k*NINT + l])*SHL[2][i][j*NINT*NINT + k*NINT + l]) / JACOB[j*NINT*NINT + k*NINT + l]; //d(phi)/dx
+							t.SHG[m][1][i][j*NINT*NINT + k*NINT + l] = ((-XS[1 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[2 * 3 + 2][j*NINT*NINT + k*NINT + l] + XS[2 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[1 * 3 + 2][j*NINT*NINT + k*NINT + l])*SHL[0][i][j*NINT*NINT + k*NINT + l] + (XS[0 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[2 * 3 + 2][j*NINT*NINT + k*NINT + l] - XS[2 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[0 * 3 + 2][j*NINT*NINT + k*NINT + l])*SHL[1][i][j*NINT*NINT + k*NINT + l] + (-XS[0 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[1 * 3 + 2][j*NINT*NINT + k*NINT + l] + XS[1 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[0 * 3 + 2][j*NINT*NINT + k*NINT + l])*SHL[2][i][j*NINT*NINT + k*NINT + l]) / JACOB[j*NINT*NINT + k*NINT + l]; //d(phi)/dy
+							t.SHG[m][2][i][j*NINT*NINT + k*NINT + l] = ((XS[1 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[2 * 3 + 1][j*NINT*NINT + k*NINT + l] - XS[2 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[1 * 3 + 1][j*NINT*NINT + k*NINT + l])*SHL[0][i][j*NINT*NINT + k*NINT + l] + (-XS[0 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[2 * 3 + 1][j*NINT*NINT + k*NINT + l] + XS[2 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[0 * 3 + 1][j*NINT*NINT + k*NINT + l])*SHL[1][i][j*NINT*NINT + k*NINT + l] + (XS[0 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[1 * 3 + 1][j*NINT*NINT + k*NINT + l] - XS[1 * 3 + 0][j*NINT*NINT + k*NINT + l] * XS[0 * 3 + 1][j*NINT*NINT + k*NINT + l])*SHL[2][i][j*NINT*NINT + k*NINT + l]) / JACOB[j*NINT*NINT + k*NINT + l]; //d(phi)/dz
 							t.SHG[m][3][i][j*NINT*NINT + k*NINT + l] = SHL[3][i][j*NINT*NINT + k*NINT + l]; //phi=phi 
 						}
 					}
 				}
 			}
 		}
+		for (i = 0; i < 9; i++) {
+			delete[] XS[i];
+		}
+		delete[] XS; 
+		delete[] JACOB; 
 	}
+	*/
 
 	if (element_type == 1) {
 		t.SHG_tet = new double**[NEL];
@@ -121,9 +160,6 @@ struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double***XS, doubl
 
 	}
 
-	double duration;
-	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC * 1000;
-	std::cout << "total CPU time (ms): " << duration << std::endl;
-	std::cout << " " << std::endl;
 	return t;
+
 }

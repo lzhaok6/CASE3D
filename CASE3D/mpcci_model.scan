@@ -2,8 +2,8 @@
 #@ Code: "3Dbarge_Nastran_test"
 #@ Scan: "C:\Program Files\MpCCI\4.4.2\codes\3Dbarge_Nastran_test\Scanner.pm"
 #@ File: "model.txt"
-#@ Path: "C:\Users\lzhaok6\OneDrive\UNDEX research\MpCCI\codes\CASE3D\CASE3D"
-#@ Date: "Sun Nov 18 11:22:07 2018"
+#@ Path: "C:\Users\lzhaok6\Desktop\CASE3D_debug2\CASE3D"
+#@ Date: "Tue Nov 27 16:07:10 2018"
 #@ User: "lzhaok6"
 #@ Host: "distance7"
 #
@@ -18,6 +18,3 @@
    Physical-Time      GLOBAL     1
    Time-Step-Size     GLOBAL     1
    wetsurface1        Face       1
-   wetsurface2        Face       2
-   wetsurface3        Face       3
-   wetsurface4        Face       4
