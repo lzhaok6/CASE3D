@@ -25,7 +25,7 @@ double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, 
 void FSILINK(int*** LNA);
 struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD, double* WP, int** IEN, int***LNA);
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
-	double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double****Gn,
+	double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double***Gn,
 	double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double** HMASTER);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
@@ -245,7 +245,8 @@ struct MATRIXstruct {
 	double ****gamma_t;
 	double gamma_tn[NINT*NINT*NINT * 3];
 	double *****G;
-	double ****Gn;
+	//double ****Gn;
+	double ***Gn;
 	double LMAX; 
 };
 

@@ -393,7 +393,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 			t.gamma_tn[i] = 0.0;
 		}
 
-		//double*****t.G;
+		/*
 		t.G = new double****[3];
 		for (i = 0; i < 3; i++) {
 			t.G[i] = new double***[3];
@@ -407,23 +407,19 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 				}
 			}
 		}
+		*/
 
-		t.Gn = new double***[NEL];
+		t.Gn = new double**[NEL];
 		for (i = 0; i < NEL; i++) {
-			t.Gn[i] = new double**[3];
-			for (j = 0; j < 3; j++) {
-				t.Gn[i][j] = new double*[3];
-				for (k = 0; k < 3; k++) {
-					t.Gn[i][j][k] = new double[NINT*NINT*NINT];
-				}
+			t.Gn[i] = new double*[9];
+			for (j = 0; j < 9; j++) {
+				t.Gn[i][j] = new double[NINT*NINT*NINT];
 			}
 		}
 
 		//need to initialize here!!!
-		Eigen::MatrixXd JB(3, 3);
-		Eigen::MatrixXd ga(3, 3);
-		//Eigen::Matrix3d JB;
-		//Eigen::Matrix3d ga;
+		//Eigen::MatrixXd JB(3, 3);
+		//Eigen::MatrixXd ga(3, 3);
 		//std::clock_t start;
 		//start = std::clock();
 
@@ -450,7 +446,11 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 		lg = LOCAL_GSHAPE(gq.S, LNA, NINT);
 
 		int ct;
-		for (e = 0; e < NEL; e++) {
+		double ga[3][3];
+		for (e = 0; e < NEL; e++) {	
+			if (e % 5000 == 0) {
+				std::cout << "element: " << e << std::endl; //output which line is being read
+			}
 			for (i = 0; i < NINT; i++) {
 				for (j = 0; j < NINT; j++) {
 					for (k = 0; k < NINT; k++) {
@@ -474,7 +474,9 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 					}
 				}
 			}
-			//std::cout << e << std::endl; 
+
+			/*
+			//std::cout << e << std::endl;
 			for (i = 0; i < NINT; i++) {
 				for (j = 0; j < NINT; j++) {
 					for (k = 0; k < NINT; k++) {
@@ -498,20 +500,38 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 					}
 				}
 			}
+			*/
 
 			//JB is the jacobian matrix and JACOB is the determinant of jacobian matrix
 			ct = 0;
 			//#pragma omp parallel for num_threads(6)
 			for (int k = 0; k < NINT*NINT*NINT; k++) {
+				/*
 				for (int l = 0; l < 3; l++) {
 					for (int m = 0; m < 3; m++) {
 						JB(l, m) = XS[l * 3 + m][k]; //Jacobian matrix
 					}
 				}
 				ga = (JB.inverse().transpose())*JB.inverse(); //3*3 matrix
+				*/
+				//Instead of deriving gs using eigen matrix manipulation, we use matlab to get do the calculation and explicitly write out the final expression (much faster than before). 
+				double A = XS[0 * 3 + 0][k]; double B = XS[0 * 3 + 1][k]; double C = XS[0 * 3 + 2][k];
+				double D = XS[1 * 3 + 0][k]; double E = XS[1 * 3 + 1][k]; double F = XS[1 * 3 + 2][k];
+				double G = XS[2 * 3 + 0][k]; double H = XS[2 * 3 + 1][k]; double I = XS[2 * 3 + 2][k];
+				ga[0][0] = pow((D*H - E*G), 2) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) + pow((F*G - D*I), 2) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) + pow((F*H - E*I), 2) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2);
+				ga[0][1] = -((A*H - B*G)*(D*H - E*G)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((C*G - A*I)*(F*G - D*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((C*H - B*I)*(F*H - E*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2);
+				ga[0][2] = ((A*E - B*D)*(D*H - E*G)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((A*F - C*D)*(F*G - D*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((B*F - C*E)*(F*H - E*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2);
+				ga[1][0] = -((A*H - B*G)*(D*H - E*G)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((C*G - A*I)*(F*G - D*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((C*H - B*I)*(F*H - E*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2);
+				ga[1][1] = pow((A*H - B*G), 2) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) + pow((C*G - A*I), 2) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) + pow((C*H - B*I), 2) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2);
+				ga[1][2] = ((A*F - C*D)*(C*G - A*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((A*E - B*D)*(A*H - B*G)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) + ((B*F - C*E)*(C*H - B*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2);
+				ga[2][0] = ((A*E - B*D)*(D*H - E*G)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((A*F - C*D)*(F*G - D*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((B*F - C*E)*(F*H - E*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2);
+				ga[2][1] = ((A*F - C*D)*(C*G - A*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((A*E - B*D)*(A*H - B*G)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) + ((B*F - C*E)*(C*H - B*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2);
+				ga[2][2] = pow((A*E - B*D), 2) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) + pow((A*F - C*D), 2) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) + pow((B*F - C*E), 2) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2);
+				
 				for (int l = 0; l < 3; l++) {
 					for (int m = 0; m < 3; m++) {
-						t.Gn[e][l][m][ct] = ga(l, m) * W_new[k] * JACOB[k];
+						t.Gn[e][l * 3 + m][ct] = ga[l][m] * W_new[k] * JACOB[k];
+						//t.Gn[e][l * 3 + m][ct] = ga(l, m) * W_new[k] * JACOB[k];
 					}
 				}
 				ct += 1;

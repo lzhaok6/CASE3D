@@ -17,7 +17,7 @@
 
 //NRB determines the NRB local node numbering and the associated NRB arrays
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC,
-	double ZC, double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double****Gn, double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double** HMASTER) {
+	double ZC, double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double***Gn, double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double** HMASTER) {
 	int h, i, j, k, q, z, ii, jj, kk, m;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[nrbsurfnumber];
@@ -1418,11 +1418,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				}
 				//takes 15*NINT^3*NEL FLOP
 				for (int ii = 0; ii < NINT*NINT*NINT; ii++) { //takes NEL*(2 * NINT + 2) operations
-					gamma_tn[3 * ii + 0] = Gn[j][0][0][ii] * gamman[3 * ii + 0] + Gn[j][0][1][ii] * gamman[3 * ii + 1] + Gn[j][0][2][ii] * gamman[3 * ii + 2];
+					gamma_tn[3 * ii + 0] = Gn[j][0 * 3 + 0][ii] * gamman[3 * ii + 0] + Gn[j][0 * 3 + 1][ii] * gamman[3 * ii + 1] + Gn[j][0 * 3 + 2][ii] * gamman[3 * ii + 2];
 					//ipk
-					gamma_tn[3 * ii + 1] = Gn[j][1][1][ii] * gamman[3 * ii + 1] + Gn[j][0][1][ii] * gamman[3 * ii + 0] + Gn[j][1][2][ii] * gamman[3 * ii + 2];
+					gamma_tn[3 * ii + 1] = Gn[j][1 * 3 + 1][ii] * gamman[3 * ii + 1] + Gn[j][0 * 3 + 1][ii] * gamman[3 * ii + 0] + Gn[j][1 * 3 + 2][ii] * gamman[3 * ii + 2];
 					//ijp
-					gamma_tn[3 * ii + 2] = Gn[j][2][2][ii] * gamman[3 * ii + 2] + Gn[j][0][2][ii] * gamman[3 * ii + 0] + Gn[j][1][2][ii] * gamman[3 * ii + 1];
+					gamma_tn[3 * ii + 2] = Gn[j][2 * 3 + 2][ii] * gamman[3 * ii + 2] + Gn[j][0 * 3 + 2][ii] * gamman[3 * ii + 0] + Gn[j][1 * 3 + 2][ii] * gamman[3 * ii + 1];
 					//oc += 15;
 				}
 				//takes 6*NINT^4*NEL FLOP
