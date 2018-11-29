@@ -125,36 +125,70 @@ int main()
 	JACOBIANstruct m;
 	//m = JACOBIAN(a.NEL, a.GCOORD, a.IEN, c.LNA, NINT, f.S);
 	m = JACOBIAN(a.NEL, a.GCOORD, a.IEN, c.LNA);
-	/*
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < 8; j++) {
-			for (k = 0; k < NINT; k++) {
-				for (h = 0; h < NINT; h++) {
-					delete[] l.GSHL[i][j][k][h];
-				}
-				delete[] l.GSHL[i][j][k];
-			}
-			delete[] l.GSHL[i][j];
-		}
-		delete[] l.GSHL[i];
-	}
-	delete[] l.GSHL;
-	*/
 	//std::cout << "JACOBIAN done" << std::endl;
 	GLOBAL_SHAPEstruct n;
 	n = GLOBAL_SHAPE(a.NEL, g.SHL, m.XS, m.JACOB, a.GCOORD, a.IEN, m.JACOB_tet);
 	//std::cout << "GLOBAL_SHAPE done" << std::endl;
 	MATRIXstruct o;
 	o = MATRIX(a.NEL, a.NNODE, g.SHL, f.W, a.IEN, c.LNA, m.XS, n.SHG, m.JACOB, m.JACOB_tet, n.SHG_tet);
-	//duration_int = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-	//std::cout << "time lapse for until this point: " << duration_int << std::endl;
+	
+	//XS ends here.
+	for (i = 0; i < a.NEL; i++) {
+		for (j = 0; j < 9; j++) {
+			delete[] m.XS[i][j];
+		}
+		delete[] m.XS[i]; 
+	}
+	delete[] m.XS; 
+	//JACOB ends here
+	if (element_type == 0) {
+		for (i = 0; i < a.NEL; i++) {
+			delete[] m.JACOB[i];
+		}
+		delete[] m.JACOB;
+	}
+	//JACOB_tet ends here
+	if (element_type == 1) {
+		delete[] m.JACOB_tet;
+	}
 
-	//std::cout << "MATRIX done" << std::endl;
-	//DETERMINE MAXIMUM MESH EIGENVALUE TO FIND CFL TIMESTEP
 	LMAX = EIGENMAX(o.QMASTER, o.HMASTER, a.NEL);
+	//delete QMASTER
+	if (element_type == 0) {
+		for (i = 0; i < a.NEL; i++) {
+			for (j = 0; j < NINT*NINT*NINT; j++) {
+				delete[] o.QMASTER[i][j];
+			}
+			delete[] o.QMASTER[i];
+		}
+		delete[] o.QMASTER;
+	}
+	if (element_type == 1) {
+		for (i = 0; i < a.NEL; i++) {
+			for (j = 0; j < 4; j++) {
+				delete[] o.QMASTER[i][j];
+			}
+			delete[] o.QMASTER[i];
+		}
+		delete[] o.QMASTER;
+	}
 
 	//Derive the integration weight of the wetted surface elements
 	FSILINK(c.LNA);
+
+	//clean ol[z].Jacob_2D
+	if (mappingalgo == 2 || mappingalgo == 4 || mappingalgo == 5) {
+		for (z = 0; z < owsfnumber; z++) {
+			for (i = 0; i < ol[z].FSNEL; i++) {
+				delete[] ol[z].Jacob_2D[i];
+			}
+			delete[] ol[z].Jacob_2D;
+		}
+	}
+	else {
+		std::cout << "are you sure you don't want to delete the ol[z].Jacob_2D?";
+		system("PAUSE ");
+	}
 
 	//read the model file to MpCCI adapter
 	char* modelfile = "model.txt";

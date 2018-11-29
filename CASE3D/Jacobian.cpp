@@ -144,113 +144,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				}
 			}
 		}
-		/*
-		for (z = 0; z < nrbsurfnumber; z++) {
-			nr[z].xs = new double***[nr[z].NEL_nrb];
-			for (i = 0; i < nr[z].NEL_nrb; i++) {
-				nr[z].xs[i] = new double**[3];
-				for (j = 0; j < 3; j++) {
-					nr[z].xs[i][j] = new double*[3];
-					for (k = 0; k < 3; k++) {
-						nr[z].xs[i][j][k] = new double[NqINT*NqINT*NqINT];
-					}
-				}
-			}
-			for (i = 0; i < nr[z].NEL_nrb; i++) {
-				for (j = 0; j < 3; j++) {
-					for (k = 0; k < 3; k++) {
-						for (l = 0; l < NqINT*NqINT*NqINT; l++) {
-							nr[z].xs[i][j][k][l] = 0.0;
-						}
-					}
-				}
-			}
-			nr[z].JACOB = new double*[nr[z].NEL_nrb];
-			for (i = 0; i < nr[z].NEL_nrb; i++) {
-				nr[z].JACOB[i] = new double[NqINT*NqINT*NqINT];
-			}
-			for (m = 0; m < nr[z].NEL_nrb; m++) {
-				//std::cout << m << std::endl;
-				for (i = 0; i < NqINT; i++) {
-					for (j = 0; j < NqINT; j++) {
-						for (k = 0; k < NqINT; k++) {
-							for (l = 0; l < 8; l++) {
-								//same with 2D code, the transpose of that in Mindmap (the determinant of two transpose matrix is the same)
-								nr[z].xs[m][0][0][i*NqINT*NqINT + j*NqINT + k] = nr[z].xs[m][0][0][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][nr[z].NRBELE_ARR[m] - 1] - 1][0]; //dx/dxi
-								nr[z].xs[m][1][0][i*NqINT*NqINT + j*NqINT + k] = nr[z].xs[m][1][0][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][nr[z].NRBELE_ARR[m] - 1] - 1][1]; //dy/dxi
-								nr[z].xs[m][2][0][i*NqINT*NqINT + j*NqINT + k] = nr[z].xs[m][2][0][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][nr[z].NRBELE_ARR[m] - 1] - 1][2]; //dz/dxi
-								nr[z].xs[m][0][1][i*NqINT*NqINT + j*NqINT + k] = nr[z].xs[m][0][1][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][nr[z].NRBELE_ARR[m] - 1] - 1][0]; //dx/deta
-								nr[z].xs[m][1][1][i*NqINT*NqINT + j*NqINT + k] = nr[z].xs[m][1][1][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][nr[z].NRBELE_ARR[m] - 1] - 1][1]; //dy/deta
-								nr[z].xs[m][2][1][i*NqINT*NqINT + j*NqINT + k] = nr[z].xs[m][2][1][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][nr[z].NRBELE_ARR[m] - 1] - 1][2]; //dz/deta
-								nr[z].xs[m][0][2][i*NqINT*NqINT + j*NqINT + k] = nr[z].xs[m][0][2][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][nr[z].NRBELE_ARR[m] - 1] - 1][0]; //dx/dzeta
-								nr[z].xs[m][1][2][i*NqINT*NqINT + j*NqINT + k] = nr[z].xs[m][1][2][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][nr[z].NRBELE_ARR[m] - 1] - 1][1]; //dy/dzeta
-								nr[z].xs[m][2][2][i*NqINT*NqINT + j*NqINT + k] = nr[z].xs[m][2][2][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][nr[z].NRBELE_ARR[m] - 1] - 1][2]; //dz/dzeta
-							}
-							//The determinant of jacobian matrix for each node in the element
-							nr[z].JACOB[m][i*NqINT*NqINT + j*NqINT + k] = nr[z].xs[m][0][0][i*NqINT*NqINT + j*NqINT + k] * (nr[z].xs[m][1][1][i*NqINT*NqINT + j*NqINT + k] * nr[z].xs[m][2][2][i*NqINT*NqINT + j*NqINT + k] - nr[z].xs[m][2][1][i*NqINT*NqINT + j*NqINT + k] * nr[z].xs[m][1][2][i*NqINT*NqINT + j*NqINT + k])
-								- nr[z].xs[m][1][0][i*NqINT*NqINT + j*NqINT + k] * (nr[z].xs[m][0][1][i*NqINT*NqINT + j*NqINT + k] * nr[z].xs[m][2][2][i*NqINT*NqINT + j*NqINT + k] - nr[z].xs[m][2][1][i*NqINT*NqINT + j*NqINT + k] * nr[z].xs[m][0][2][i*NqINT*NqINT + j*NqINT + k])
-								+ nr[z].xs[m][2][0][i*NqINT*NqINT + j*NqINT + k] * (nr[z].xs[m][0][1][i*NqINT*NqINT + j*NqINT + k] * nr[z].xs[m][1][2][i*NqINT*NqINT + j*NqINT + k] - nr[z].xs[m][1][1][i*NqINT*NqINT + j*NqINT + k] * nr[z].xs[m][0][2][i*NqINT*NqINT + j*NqINT + k]);
-						}
-					}
-				}
-			}
-		}
-		*/
-
-		//Derive the Jacobian determinant on boundary elements (wetted surface)
-		/*
-		for (z = 0; z < owsfnumber; z++) {
-			ol[z].xs = new double***[ol[z].FSNEL];
-			for (i = 0; i < ol[z].FSNEL; i++) {
-				ol[z].xs[i] = new double**[3];
-				for (j = 0; j < 3; j++) {
-					ol[z].xs[i][j] = new double*[3];
-					for (k = 0; k < 3; k++) {
-						ol[z].xs[i][j][k] = new double[NqINT*NqINT*NqINT];
-					}
-				}
-			}
-			for (i = 0; i < ol[z].FSNEL; i++) {
-				for (j = 0; j < 3; j++) {
-					for (k = 0; k < 3; k++) {
-						for (l = 0; l < NqINT*NqINT*NqINT; l++) {
-							ol[z].xs[i][j][k][l] = 0.0;
-						}
-					}
-				}
-			}
-			ol[z].JACOB = new double*[ol[z].FSNEL];
-			for (i = 0; i < ol[z].FSNEL; i++) {
-				ol[z].JACOB[i] = new double[NqINT*NqINT*NqINT];
-			}
-			for (m = 0; m < ol[z].FSNEL; m++) {
-				//std::cout << m << std::endl;
-				for (i = 0; i < NqINT; i++) {
-					for (j = 0; j < NqINT; j++) {
-						for (k = 0; k < NqINT; k++) {
-							for (l = 0; l < 8; l++) {
-								//same with 2D code, the transpose of that in Mindmap (the determinant of two transpose matrix is the same)
-								ol[z].xs[m][0][0][i*NqINT*NqINT + j*NqINT + k] = ol[z].xs[m][0][0][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][ol[z].GIDF[m] - 1] - 1][0]; //dx/dxi
-								ol[z].xs[m][1][0][i*NqINT*NqINT + j*NqINT + k] = ol[z].xs[m][1][0][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][ol[z].GIDF[m] - 1] - 1][1]; //dy/dxi
-								ol[z].xs[m][2][0][i*NqINT*NqINT + j*NqINT + k] = ol[z].xs[m][2][0][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][ol[z].GIDF[m] - 1] - 1][2]; //dz/dxi
-								ol[z].xs[m][0][1][i*NqINT*NqINT + j*NqINT + k] = ol[z].xs[m][0][1][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][ol[z].GIDF[m] - 1] - 1][0]; //dx/deta
-								ol[z].xs[m][1][1][i*NqINT*NqINT + j*NqINT + k] = ol[z].xs[m][1][1][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][ol[z].GIDF[m] - 1] - 1][1]; //dy/deta
-								ol[z].xs[m][2][1][i*NqINT*NqINT + j*NqINT + k] = ol[z].xs[m][2][1][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][ol[z].GIDF[m] - 1] - 1][2]; //dz/deta
-								ol[z].xs[m][0][2][i*NqINT*NqINT + j*NqINT + k] = ol[z].xs[m][0][2][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][ol[z].GIDF[m] - 1] - 1][0]; //dx/dzeta
-								ol[z].xs[m][1][2][i*NqINT*NqINT + j*NqINT + k] = ol[z].xs[m][1][2][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][ol[z].GIDF[m] - 1] - 1][1]; //dy/dzeta
-								ol[z].xs[m][2][2][i*NqINT*NqINT + j*NqINT + k] = ol[z].xs[m][2][2][i*NqINT*NqINT + j*NqINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][ol[z].GIDF[m] - 1] - 1][2]; //dz/dzeta
-							}
-							//The determinant of jacobian matrix for each node in the element
-							ol[z].JACOB[m][i*NqINT*NqINT + j*NqINT + k] = ol[z].xs[m][0][0][i*NqINT*NqINT + j*NqINT + k] * (ol[z].xs[m][1][1][i*NqINT*NqINT + j*NqINT + k] * ol[z].xs[m][2][2][i*NqINT*NqINT + j*NqINT + k] - ol[z].xs[m][2][1][i*NqINT*NqINT + j*NqINT + k] * ol[z].xs[m][1][2][i*NqINT*NqINT + j*NqINT + k])
-								- ol[z].xs[m][1][0][i*NqINT*NqINT + j*NqINT + k] * (ol[z].xs[m][0][1][i*NqINT*NqINT + j*NqINT + k] * ol[z].xs[m][2][2][i*NqINT*NqINT + j*NqINT + k] - ol[z].xs[m][2][1][i*NqINT*NqINT + j*NqINT + k] * ol[z].xs[m][0][2][i*NqINT*NqINT + j*NqINT + k])
-								+ ol[z].xs[m][2][0][i*NqINT*NqINT + j*NqINT + k] * (ol[z].xs[m][0][1][i*NqINT*NqINT + j*NqINT + k] * ol[z].xs[m][1][2][i*NqINT*NqINT + j*NqINT + k] - ol[z].xs[m][1][1][i*NqINT*NqINT + j*NqINT + k] * ol[z].xs[m][0][2][i*NqINT*NqINT + j*NqINT + k]);
-						}
-					}
-				}
-			}
-		}
-		*/
-
+		
 		if (mappingalgo == 2) {
 			bq = LOBATTO(Nq);
 			gq = GLLQUAD(bq.Z, bq.WL, Nq, !FEM);
@@ -327,7 +221,22 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				}
 				//check if the value is positive and check if i and j is exchanged, would the value of FPMASTER_2D be changed!!!
 			}
+
+			//clean ol[z].xs_2D
+			for (z = 0; z < owsfnumber; z++) {
+				for (i = 0; i < ol[z].FSNEL; i++) {
+					for (j = 0; j < 3; j++) {
+						for (k = 0; k < 2; k++) {
+							delete[] ol[z].xs_2D[i][j][k]; 
+						}
+						delete[] ol[z].xs_2D[i][j]; 
+					}
+					delete[] ol[z].xs_2D[i]; 
+				}
+				delete[] ol[z].xs_2D; 
+			}
 		}
+
 		if (mappingalgo == 5 || mappingalgo == 4) {
 			bq = LOBATTO(hprefg_flu);
 			gq = GLLQUAD(bq.Z, bq.WL, hprefg_flu, 0);
@@ -404,7 +313,20 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				}
 				//check if the value is positive and check if i and j is exchanged, would the value of FPMASTER_2D be changed!!!
 			}
-			std::cout << " " << std::endl;
+			
+			//clean xs_2D
+			for (z = 0; z < owsfnumber; z++) {
+				for (i = 0; i < ol[z].FSNEL; i++) {
+					for (j = 0; j < 3; j++) {
+						for (k = 0; k < 2; k++) {
+							delete[] ol[z].xs_2D[i][j][k];
+						}
+						delete[] ol[z].xs_2D[i][j];
+					}
+					delete[] ol[z].xs_2D[i];
+				}
+				delete[] ol[z].xs_2D;
+			}
 		}
 
 		//For NRB boundary force integration, we still use the approach in algorithm 2 (insert one more quadrature point)
@@ -476,8 +398,23 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				}
 			}
 		}
+		//clean nr[z].xs_2D
+		for (z = 0; z < nrbsurfnumber; z++) {
+			for (i = 0; i < nr[z].NEL_nrb; i++) {
+				for (j = 0; j < 3; j++) {
+					for (k = 0; k < 2; k++) {
+						delete[] nr[z].xs_2D[i][j][k];
+					}
+					delete[] nr[z].xs_2D[i][j];
+				}
+				delete[] nr[z].xs_2D[i];
+			}
+			delete[] nr[z].xs_2D;
+		}
 		//Finish the definition for hexahedral element 
 	}
+
+
 	if (element_type == 1) {
 		t.JACOB_tet = new double[NEL]; //For first order tetrahedral element, the Jacobian determinant is the same throught the element
 		double XS_tet[3][3];
@@ -507,82 +444,90 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 	}
 
 	//Define the Jacobian matrix for structural boundary force integration
-	bq = LOBATTO(hprefg);
-	gq = GLLQUAD(bq.Z, bq.WL, hprefg, FEM);
-	lg = LOCAL_GSHAPE(gq.S, LNA, hprefg + 1);
-	for (z = 0; z < ssnumber; z++) {
-		ss[z].GSHL_2D = new double***[3];
-		for (i = 0; i < 3; i++) {
-			ss[z].GSHL_2D[i] = new double**[4]; //4 points
-			for (j = 0; j < 4; j++) {
-				ss[z].GSHL_2D[i][j] = new double*[hprefg + 1];
-				for (k = 0; k < hprefg + 1; k++) {
-					ss[z].GSHL_2D[i][j][k] = new double[hprefg + 1];
+	if (mappingalgo == 4 || mappingalgo == 5) {
+		bq = LOBATTO(hprefg);
+		gq = GLLQUAD(bq.Z, bq.WL, hprefg, FEM);
+		lg = LOCAL_GSHAPE(gq.S, LNA, hprefg + 1);
+		for (z = 0; z < ssnumber; z++) {
+			ss[z].GSHL_2D = new double***[3];
+			for (i = 0; i < 3; i++) {
+				ss[z].GSHL_2D[i] = new double**[4]; //4 points
+				for (j = 0; j < 4; j++) {
+					ss[z].GSHL_2D[i][j] = new double*[hprefg + 1];
+					for (k = 0; k < hprefg + 1; k++) {
+						ss[z].GSHL_2D[i][j][k] = new double[hprefg + 1];
+					}
 				}
 			}
-		}
-		for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
-			for (j = 0; j < hprefg + 1; j++) { // j k are integration point where discrete value of shape function is derived
-				for (k = 0; k < hprefg + 1; k++) {
-					ss[z].GSHL_2D[2][i][j][k] = (1.0 / 4.0)*(1 + lg.MCOORD_2D[i][0] * gq.S[j])*(1 + lg.MCOORD_2D[i][1] * gq.S[k]);
-					//not derivative
-					ss[z].GSHL_2D[0][i][j][k] = (1.0 / 4.0)*lg.MCOORD_2D[i][0] * (1 + lg.MCOORD_2D[i][1] * gq.S[k]);
-					//xi direction derivative
-					ss[z].GSHL_2D[1][i][j][k] = (1.0 / 4.0)*lg.MCOORD_2D[i][1] * (1 + lg.MCOORD_2D[i][0] * gq.S[j]);
-					//eta direction derivatived
+			for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
+				for (j = 0; j < hprefg + 1; j++) { // j k are integration point where discrete value of shape function is derived
+					for (k = 0; k < hprefg + 1; k++) {
+						ss[z].GSHL_2D[2][i][j][k] = (1.0 / 4.0)*(1 + lg.MCOORD_2D[i][0] * gq.S[j])*(1 + lg.MCOORD_2D[i][1] * gq.S[k]);
+						//not derivative
+						ss[z].GSHL_2D[0][i][j][k] = (1.0 / 4.0)*lg.MCOORD_2D[i][0] * (1 + lg.MCOORD_2D[i][1] * gq.S[k]);
+						//xi direction derivative
+						ss[z].GSHL_2D[1][i][j][k] = (1.0 / 4.0)*lg.MCOORD_2D[i][1] * (1 + lg.MCOORD_2D[i][0] * gq.S[j]);
+						//eta direction derivatived
+					}
 				}
 			}
-		}
-		ss[z].Jacob_stru = new double*[ss[z].ELE_stru];
-		for (i = 0; i < ss[z].ELE_stru; i++) {
-			ss[z].Jacob_stru[i] = new double[(hprefg + 1)*(hprefg + 1)];
-		}
-		ss[z].xs_2D = new double***[ss[z].ELE_stru];
-		for (i = 0; i < ss[z].ELE_stru; i++) {
-			ss[z].xs_2D[i] = new double**[3];
-			for (j = 0; j < 3; j++) {
-				ss[z].xs_2D[i][j] = new double*[2];
-				for (k = 0; k < 2; k++) {
-					ss[z].xs_2D[i][j][k] = new double[(hprefg + 1)*(hprefg + 1)];
+			ss[z].Jacob_stru = new double*[ss[z].ELE_stru];
+			for (i = 0; i < ss[z].ELE_stru; i++) {
+				ss[z].Jacob_stru[i] = new double[(hprefg + 1)*(hprefg + 1)];
+			}
+			ss[z].xs_2D = new double***[ss[z].ELE_stru];
+			for (i = 0; i < ss[z].ELE_stru; i++) {
+				ss[z].xs_2D[i] = new double**[3];
+				for (j = 0; j < 3; j++) {
+					ss[z].xs_2D[i][j] = new double*[2];
+					for (k = 0; k < 2; k++) {
+						ss[z].xs_2D[i][j][k] = new double[(hprefg + 1)*(hprefg + 1)];
+					}
 				}
 			}
-		}
-		for (i = 0; i < ss[z].ELE_stru; i++) {
-			for (j = 0; j < 3; j++) {
-				for (k = 0; k < 2; k++) {
-					for (l = 0; l < (hprefg + 1)*(hprefg + 1); l++) {
-						ss[z].xs_2D[i][j][k][l] = 0.0;
+			for (i = 0; i < ss[z].ELE_stru; i++) {
+				for (j = 0; j < 3; j++) {
+					for (k = 0; k < 2; k++) {
+						for (l = 0; l < (hprefg + 1)*(hprefg + 1); l++) {
+							ss[z].xs_2D[i][j][k][l] = 0.0;
+						}
+					}
+				}
+			}
+			for (m = 0; m < ss[z].ELE_stru; m++) { //loop through each element on wetted surface
+				for (i = 0; i < (hprefg + 1); i++) {
+					for (j = 0; j < (hprefg + 1); j++) {
+						for (l = 0; l < 4; l++) { //4 nodes on the linear element
+							//Is the l in ss[z].GSHL_2D[0][l][i][j] and in ss[z].LNA_norm[l] must be consistent (the same surface). 
+							ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][0]; //dx/dnu
+							ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][1]; //dy/dnu
+							ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][2]; //dz/dnu
+							ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][0]; //dx/dmu
+							ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][1]; //dy/dmu
+							ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][2]; //dz/dmu
+						}
+						ss[z].Jacob_stru[m][i * (hprefg + 1) + j] = pow(pow((ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j]), 2) +
+							pow((ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j]), 2) +
+							pow((ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j]), 2), 0.5);
 					}
 				}
 			}
 		}
-		for (m = 0; m < ss[z].ELE_stru; m++) { //loop through each element on wetted surface
-			for (i = 0; i < (hprefg + 1); i++) {
-				for (j = 0; j < (hprefg + 1); j++) {
-					for (l = 0; l < 4; l++) { //4 nodes on the linear element
-						//Is the l in ss[z].GSHL_2D[0][l][i][j] and in ss[z].LNA_norm[l] must be consistent (the same surface). 
-						ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][0]; //dx/dnu
-						ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][1]; //dy/dnu
-						ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][2]; //dz/dnu
-						ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][0]; //dx/dmu
-						ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][1]; //dy/dmu
-						ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][2]; //dz/dmu
+
+		//clean ss[z].xs_2D[i][j][k][l]
+		for (z = 0; z < ssnumber; z++) {
+			for (i = 0; i < ss[z].ELE_stru; i++) {
+				for (j = 0; j < 3; j++) {
+					for (k = 0; k < 2; k++) {
+						delete[] ss[z].xs_2D[i][j][k];
 					}
-					ss[z].Jacob_stru[m][i * (hprefg + 1) + j] = pow(pow((ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j]), 2) +
-						pow((ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j]), 2) +
-						pow((ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j]), 2), 0.5);
+					delete[] ss[z].xs_2D[i][j];
 				}
+				delete[] ss[z].xs_2D[i];
 			}
+			delete[] ss[z].xs_2D;
 		}
 	}
-	std::cout << " " << std::endl; 
-	/*
-	//The total value of the Jacobian determinant should be the 6 times of the total volume 
-	double hd = 0.0; 
-	for (i = 0; i < NEL; i++) {
-		hd += t.JACOB_tet[i]; 
-	}
-	*/
-	std::cout << " " << std::endl;
+
 	return t;
 }

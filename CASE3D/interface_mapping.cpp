@@ -31,7 +31,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 	extern STRU_WET_SURF ss[ssnumber]; //data structure used to store the properties on the structure wetted surface
 	double accu = 0.0;
 	int ct = 0;
-	
+
 	//This subroutine is temporarily changed to test the BS fluid domain (without side modules)
 	switch (fluid2structure) //sem points to fem points
 	{
@@ -108,18 +108,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					ct += 1;
 				}
 			}
-			/*
-			if (debug3 == 1) {
-				for (z = 0; z < ssnumber; z++) {
-					for (j = 0; j < wsflist[z]->nnodes; j++) {
-						wsflist[z]->nodeforce[j * 3 + 0] = 0;
-						wsflist[z]->nodeforce[j * 3 + 1] = 9.16e7 / wsflist[z]->nnodes;
-						wsflist[z]->nodeforce[j * 3 + 2] = 0;
-					}
-				}
-			}
-			*/
-			
+
 			double BF_valY[ssnumber];
 			for (z = 0; z < ssnumber; z++) {
 				BF_valY[z] = 0.0;
@@ -361,7 +350,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 
 	case 0: //map disp from coupling mesh(fem mesh) to user defined mesh(sem mesh)
 		//The displacement is mapped from the linear element to the corresponding high-order element
-		double hd = 0.0; 
+		double hd = 0.0;
 
 		int elenode2D_gs;
 		if (element_type == 0) { //hex element
@@ -372,7 +361,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 		}
 
 		if (mappingalgo == 2) {
-			
+
 			if (element_type == 0) {
 				hd = 0.0;
 				for (z = 0; z < owsfnumber; z++) {
@@ -392,7 +381,6 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
 							for (i = 0; i < NINT; i++) { //loop through each point on element surface 
 								for (j = 0; j < NINT; j++) {
-
 									ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[i][j] - 1][0] = 0.0;
 									ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[i][j] - 1][1] = 0.0;
 									ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[i][j] - 1][2] = 0.0;
@@ -400,9 +388,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 										for (v = 0; v < 2; v++) {
 											for (n = 0; n < 3; n++) {
 												DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[u][v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[ol[z].LNA_algo2[u][v] - 1] - 1][l] - 1][n];
-
 												ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[i][j] - 1][n] += DISPTEMP * ol[z].phi_fem[ol[z].LNA_algo2[u][v] - 1][i][j];
-
 											}
 										}
 									}
@@ -475,7 +461,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						else { //the node is an orphan
 							for (n = 0; n < 3; n++) {
 								ol[z].DISP_gs[l*elenode2D_gs + i][n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*elenode2D_gs + i] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
-								
+
 								//flu_stru for orphan node is actually the node number instead of the element number 
 							}
 						}
@@ -486,14 +472,14 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 
 		else if (mappingalgo == 5) {
 			//Interpolate the structural displacement to fluid interpolation node
-			double basep[2]; 
+			double basep[2];
 			basep[0] = -1;
 			basep[1] = 1;
 			double lcx, lcy;
 			double nomx, nomy; double denomx, denomy;
 			double phig;
 			double DISPTEMP = 0.0;
-			
+
 			if (debug_algo5 == 1) {
 				for (z = 0; z < ssnumber; z++) {
 					for (i = 0; i < ss[z].Node_stru; i++) {
@@ -503,7 +489,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					}
 				}
 			}
-			
+
 			for (z = 0; z < owsfnumber; z++) {
 				for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
 					for (i = 0; i < elenode2D_gs; i++) { //loop through each point on element surface
@@ -544,23 +530,11 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					}
 				}
 			}
-
-			hd = 0.0;
-			for (z = 0; z < owsfnumber; z++) {
-				for (i = 0; i < ol[z].FSNEL*elenode2D_gs; i++) {
-					for (n = 0; n < 3; n++) {
-						hd += ol[z].DISP_gs[i][n];
-					}
-				}
-			}
-			//std::cout << " " << std::endl;
 		}
-
-		
 		break;
 	}
 	t.energy_rec = 0;
-	t.energy_sent = 0; 
+	t.energy_sent = 0;
 
 	return t;
 }
