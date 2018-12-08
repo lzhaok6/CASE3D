@@ -91,6 +91,10 @@ int main()
 		std::cout << "Are you sure you don't want to use any damping?" << std::endl;
 		system("PAUSE");
 	}
+	if (CFLFRAC != 0.5) {
+		std::cout << "Are you sure you want to use CFL other than 0.5?" << std::endl;
+		system("PAUSE");
+	}
 
 	meshgenerationstruct a;
 	a = meshgeneration();

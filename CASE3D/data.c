@@ -107,7 +107,6 @@ void readfile(const char* filename){
       printf("\n");
       fscanf(fhandle,"\n");
     }
-
     //scan all the way to the end of the module. (start from here in the next loop) 
     printf("  allocating memory...\n"); 
 	//allocating memory for values being exchanged in this module

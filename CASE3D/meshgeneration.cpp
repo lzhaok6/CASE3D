@@ -49,7 +49,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/Fluidcolumn_1fthex_N4.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
@@ -119,7 +119,11 @@ struct meshgenerationstruct meshgeneration() {
 		ele_type[36] = 4 * 4; //3rd order 4-node quadrangle
 		ele_type[92] = 4 * 4 * 4; //3rd order 8-node hexahedron
 		ele_type[37] = 5 * 5; //4th order quadrature
+		ele_type[38] = 6 * 6; //5th order quadrature
+		ele_type[47] = 7 * 7; //6th order quadrature
 		ele_type[93] = 5 * 5 * 5; //4th order hexahedron
+		ele_type[94] = 6 * 6 * 6; //5th order hexahedron
+		ele_type[95] = 7 * 7 * 7; //6th order hexahedron
 		int psy_curt; //store the current physical group number
 		int ele_typ[20]; //maximum 20 physical groups
 		int physicalgroups = 1; //number of physical groups

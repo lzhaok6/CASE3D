@@ -1739,6 +1739,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					}
 				}
 			}
+			/*
 			if (i == 0) {
 				//output the tecplot data file
 				for (j = 0; j < NNODE; j++) {
@@ -1752,6 +1753,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					tecplotfilehd << std::endl;
 				}
 			}
+			*/
 		}
 	
 		for (j = 0; j < NNODE; j++) {

@@ -611,8 +611,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	//We assume the structural wetted surface is imported as a whole surface and the fluid wetted surface could have several groups
 	for (e = 0; e < ssnumber; e++) {
 		for (i = 0; i < ss[e].ELE_stru; i++) {
-			//for (j = 0; j < (hprefg + 1)*(hprefg + 1); j++) {
-			for (j = 0; j < hprefg + 1; j++) {
+			for (j = 0; j < hprefg + 1; j++) { //j and q stand for gauss points
 				for (q = 0; q < hprefg + 1; q++) {
 					orphan = 1; //let's first assume the node is an orphan. If the corresponding element is found, the flag is turned to 0 
 					//Start searching for fluid element for gauss node IEN_gs[j][i]
@@ -621,7 +620,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 					range[1] = search_range; //initiate the fluid node distance to be equal to the searching range for every gauss node
 					for (k = 0; k < ol[e].FSNEL; k++) { //looping through fluid wetted elements
 						flag = 1;
-						//First determine if the fluid element is inside the searching range
+						//First determine if the fluid element is inside the searching range (If not, we would not project the structural gauss node)
 						for (l = 0; l < elenode2D_ln; l++) {
 							range[0] = pow(pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][0] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][0], 2) + pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][1] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][1], 2) + pow(GCOORD[ol[e].IEN_flu_2D[l][k] - 1][2] - ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[ct_gs.LNA[j][q] - 1][i] - 1][2], 2), 0.5);
 							if (range[0] < range[1]) {
@@ -662,6 +661,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							double xi = 0.0;
 							double eta = 0.0;
 							double zeta = 0.0;  //converged local coordinate
+							//the local coordinate in tetrahedral and hexahedral fluid elements is derived differently. 
 							if (element_type == 1) { //tetrahedral element
 								//Need to change the name of the matrix and vectors. also need to change the if(){} below 
 								//determine the local coordinate in the tetrahedral element
@@ -688,7 +688,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 									orphan = 0;
 									inelement = 1;
 								}
-								else { //The node is an orphan
+								else { //The node is an orphan (the orphan flag is not turned off)
 									//Search for the nearest point on the fluid FSI interface
 									//orphan = 1;
 									inelement = 0;
@@ -778,7 +778,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 									orphan = 0;
 									inelement = 1;
 								}
-								else { //The node is not in the current searched element (might be an orphan)
+								else { //The node is an orphan (the orphan flag is not turned off)
 									inelement = 0;
 								}
 							}
@@ -789,7 +789,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							if (inelement == 1) { //if the node is within the current fluid element
 								distance[1] = pow(pow(xn - xu, 2) + pow(yn - yu, 2) + pow(zn - zu, 2), 0.5);
 								//if (distance[1] < distance[0]) {
-								if (distance[1] - distance[0] < -1e-5) {
+								if (distance[1] - distance[0] < -1e-5) { //the newly found projection has the shorted distance, need to update the projected node 
 									//store the local coordinate in the fluid mesh of the projected structure gauss node
 									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][0] = xi; //xi
 									ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + j * (hprefg + 1) + q][1] = eta; //eta
@@ -885,9 +885,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		std::cout << " " << std::endl; 
 	}
 	if (element_type == 1) {
-		//Derive the 3-point quadrature node location on the interface triangle elements
+		//Derive the 3-point quadrature node location on the interface triangle elements 
 		double xi[3]; double eta[3]; double phi[3];
-		xi[0] = 1.0 / 6.0; xi[1] = 2.0 / 3.0; xi[2] = 1.0 / 6.0;
+		xi[0] = 1.0 / 6.0; xi[1] = 2.0 / 3.0; xi[2] = 1.0 / 6.0;  //From Ragab FEM course note
 		eta[0] = 1.0 / 6.0; eta[1] = 1.0 / 6.0; eta[2] = 2.0 / 3.0;
 		for (z = 0; z < owsfnumber; z++) {
 			ol[z].GCOORD_flu_gs = new double*[ol[z].FSNEL * 3];
@@ -910,8 +910,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		}
 	}
 
-
 	//Node projection from fluid to structure (Project the fluid interpolation points to structural elements)
+	//Here, we only assume that the structural FSI surface elements are all quad element but it isn't the case. 
 	Eigen::Matrix2d fdot_f;
 	Eigen::Vector2d f_f;
 	Eigen::Vector2d dx_f;

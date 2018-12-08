@@ -527,7 +527,6 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 				ga[2][0] = ((A*E - B*D)*(D*H - E*G)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((A*F - C*D)*(F*G - D*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((B*F - C*E)*(F*H - E*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2);
 				ga[2][1] = ((A*F - C*D)*(C*G - A*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) - ((A*E - B*D)*(A*H - B*G)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) + ((B*F - C*E)*(C*H - B*I)) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2);
 				ga[2][2] = pow((A*E - B*D), 2) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) + pow((A*F - C*D), 2) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2) + pow((B*F - C*E), 2) / pow((A*F*H - B*F*G - C*D*H + C*E*G - A*E*I + B*D*I), 2);
-				
 				for (int l = 0; l < 3; l++) {
 					for (int m = 0; m < 3; m++) {
 						t.Gn[e][l * 3 + m][ct] = ga[l][m] * W_new[k] * JACOB[k];
