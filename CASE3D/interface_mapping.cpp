@@ -136,6 +136,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 
 			int localnode[2];
 			localnode[0] = 3; localnode[1] = (hprefg + 1)*(hprefg + 1);
+			/*
 			std::vector<int> localnode_seq_1D;
 			std::vector<std::vector<int>> localnode_seq;
 			std::vector<int> LNA_seq_1D;
@@ -159,9 +160,28 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			}
 			LNA_seq.push_back(LNA_seq_1D);
 			int ele_id;
+			*/
+			int localnode_seq[2][(hprefg + 1)*(hprefg + 1)];
+			localnode_seq[0][0] = 0; localnode_seq[0][1] = 1; localnode_seq[0][2] = 2;
+			ct = 0;
+			for (j = 0; j < hprefg + 1; j++) {
+				for (q = 0; q < hprefg + 1; q++) {
+					localnode_seq[1][ct] = j*(hprefg + 1) + q; //LNA_gs is the same for all wetted surface 
+					ct += 1;
+				}
+			}
+			int LNA_seq[2][(hprefg + 1)*(hprefg + 1)];
+			LNA_seq[0][0] = 0; LNA_seq[0][1] = 1; LNA_seq[0][2] = 2;
+			ct = 0;
+			for (j = 0; j < hprefg + 1; j++) {
+				for (q = 0; q < hprefg + 1; q++) {
+					LNA_seq[1][ct] = ss[0].LNA_gs[j][q] - 1; //LNA_gs is the same for all wetted surface 
+					ct += 1;
+				}
+			}
+			int ele_id;
 			for (z = 0; z < ssnumber; z++) {
 				for (l = 0; l < ss[z].ELE_stru; l++) {
-					localnode_seq.clear(); LNA_seq.clear();
 					if (ss[z].elenode[i] == 3) { //triangular element
 						ele_id = 0;
 					}
@@ -265,7 +285,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 
 			int localnode[2];
 			localnode[0] = 3; localnode[1] = (hprefg + 1)*(hprefg + 1);
-
+			/*
 			std::vector<int> localnode_seq_1D;
 			std::vector<std::vector<int>> localnode_seq;
 			std::vector<int> LNA_seq_1D;
@@ -289,8 +309,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			}
 			LNA_seq.push_back(LNA_seq_1D);
 			int ele_id;
-
-			/*
+			*/
 			int localnode_seq[2][(hprefg + 1)*(hprefg + 1)];
 			localnode_seq[0][0] = 0; localnode_seq[0][1] = 1; localnode_seq[0][2] = 2;
 			ct = 0; 
@@ -310,7 +329,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 				}
 			}
 			int ele_id;
-			*/
+			
 			if (element_type == 0) {
 				for (z = 0; z < ssnumber; z++) {
 					for (l = 0; l < ss[z].ELE_stru; l++) {
