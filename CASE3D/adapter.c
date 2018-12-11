@@ -18,7 +18,12 @@
 #include <string.h>
 #include "adapter.h"   /* code adapter header file */
 #include "data.h"     /* CHANGED: added data.h for    data access */
+//#include "header.h"
 
+extern double time_step_size;
+extern double current_time;
+//extern int nodesperelem2;
+extern int** nodesperelem;
 /*#########################################################################
  *############  DATA STRUCTURES                             ###############
  *#########################################################################*/
@@ -230,8 +235,8 @@ void initcoupling(){
 //The code has an dotransfer() method available to implement a call to the MpCCI data transfer function ampcci transfer/lu
 void dotransfer(){
    int ret;
-   extern double current_time;
-   extern double time_step_size;
+   //extern double current_time;
+   //extern double time_step_size;
 
    if (!mpcciTinfo.mpcci_state) //mpcciTinfo.mpcci_state=1 if successfully initialized already/lu
 	   initcoupling();
@@ -322,12 +327,14 @@ int MpCCI_Driver_partUpdate(MPCCI_PART *part, MPCCI_QUANT *quant)
  *
  ****************************************************************************/
 /*****************************************************************************/
+//extern int** nodesperelem;
 int MpCCI_Driver_definePart(MPCCI_SERVER *server, MPCCI_PART *part)
 /*****************************************************************************/
 {
    /* IMPORTANT: The node definitions may look completely different in your
                  code. This is just an example! */
-
+   //extern int nodesperelem2;
+   //extern int** nodesperelem;
    double *nodeCoords;      /* node coordinates */
    int surfaceID;           /* surface ID */
    int maxNumNodes;         /* maximum number of nodes */
@@ -439,26 +446,28 @@ int MpCCI_Driver_definePart(MPCCI_SERVER *server, MPCCI_PART *part)
 	  {
 		  /* get element ID and element information */
 		  elemID = i;
-
-		  switch (dim)
+		  switch (nodesperelem[surfaceID][i])
 		  {
 		  case 2:  /* -> line elements */
 			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 2];
 			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 2 + 1];
 			  elemTypes[i] = MPCCI_ETYP_LINE2;
 			  break;
-		  case 3:  /* -> quadrilaterals */
+		  case 3: /* -> triangular element */ //edited by lu
+			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 4];
+			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 4 + 1];
+			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 4 + 2];
+			  elemTypes[i] = MPCCI_ETYP_TRIA3;
+			  //linear quad element, need to change to higher order/lu
+			  //*elemNodePtr may have to be changed too/lu
+			  //element type macros are defined in the file "mpcci elements.h"/lu
+			  break;
+		  case 4:  /* -> quadrilaterals */
 			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 4];
 			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 4 + 1];
 			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 4 + 2];
 			  *elemNodePtr++ = wsflist[surfaceID]->elemnodes[i * 4 + 3];
-			  //elemTypes[i]   = MPCCI_ETYP_QUAD4;  //change element type by changing macro/lu
-			  if (ele_type == 0) {
-				  elemTypes[i] = MPCCI_ETYP_QUAD4;
-			  }
-			  if (ele_type == 1) { //tetrahedral element
-				  elemTypes[i] = MPCCI_ETYP_TRIA3;
-			  }
+			  elemTypes[i] = MPCCI_ETYP_QUAD4;
 			  //linear quad element, need to change to higher order/lu
 			  //*elemNodePtr may have to be changed too/lu
 			  //element type macros are defined in the file "mpcci elements.h"/lu
@@ -660,7 +669,7 @@ void MpCCI_Driver_putFaceNodeValues(const MPCCI_PART *part,
 
 //It is important to keep in mind, that sending of data is always possible: The data is stored by MpCCI,
 //i. e. it can be received later by the other code. (stored in pointer buffer: valptr)
-extern double time_step_size;
+//extern double time_step_size;
 static int MpCCI_Driver_getGlobValues(const MPCCI_GLOB *glob, void *values)
 {
 	static const char module[] = "Get global quantity";

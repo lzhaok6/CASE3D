@@ -33,6 +33,7 @@ typedef struct wetsurf{
   int* elemnodes; //1D connectivity matrix for coupling elements [nelems * nodesperelem]
   double dt;
   int element_type_hd;
+  //int* nodesperelem; 
 } WETSURF;
 
 /* list of foundations */
@@ -45,7 +46,8 @@ extern int wetsurfnumber;
 extern int ele_type;
 extern double time_step_size;
 extern double current_time;
-
+extern int** nodesperelem; 
+extern int nodesperelem2;
 /*  read foundation definitions from a file  */
 void readfile(const char* filename);
 

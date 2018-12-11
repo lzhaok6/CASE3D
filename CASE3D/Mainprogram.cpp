@@ -20,9 +20,12 @@ This code dedicated for frigate currently only support mapping algorithm 2.
 
 double time_step_size;
 double current_time;
+double test; 
 OWETSURF ol[owsfnumber]; //declear the data structure globally
 NRBSURF nr[nrbsurfnumber]; 
 STRU_WET_SURF ss[ssnumber];
+int** nodesperelem; 
+int nodesperelem2; 
 int main()
 {	
 	//double LMAX;

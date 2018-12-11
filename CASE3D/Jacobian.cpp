@@ -445,20 +445,29 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				}
 			}
 			for (m = 0; m < ss[z].ELE_stru; m++) { //loop through each element on wetted surface
-				for (i = 0; i < (hprefg + 1); i++) {
-					for (j = 0; j < (hprefg + 1); j++) {
-						for (l = 0; l < 4; l++) { //4 nodes on the linear element
-							//Is the l in ss[z].GSHL_2D[0][l][i][j] and in ss[z].LNA_norm[l] must be consistent (the same surface). 
-							ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][0]; //dx/dnu
-							ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][1]; //dy/dnu
-							ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][2]; //dz/dnu
-							ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][0]; //dx/dmu
-							ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][1]; //dy/dmu
-							ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][2]; //dz/dmu
+				if (ss[z].elenode[m] == 4) {
+					for (i = 0; i < (hprefg + 1); i++) {
+						for (j = 0; j < (hprefg + 1); j++) {
+							for (l = 0; l < 4; l++) { //4 nodes on the linear element
+								//Is the l in ss[z].GSHL_2D[0][l][i][j] and in ss[z].LNA_norm[l] must be consistent (the same surface). 
+								ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][0]; //dx/dnu
+								ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][1]; //dy/dnu
+								ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j] += ss[z].GSHL_2D[0][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][2]; //dz/dnu
+								ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][0]; //dx/dmu
+								ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][1]; //dy/dmu
+								ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] += ss[z].GSHL_2D[1][l][i][j] * ss[z].GCOORD_stru[ss[z].IEN_stru[l][m] - 1][2]; //dz/dmu
+							}
+							ss[z].Jacob_stru[m][i * (hprefg + 1) + j] = pow(pow((ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j]), 2) +
+								pow((ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j]), 2) +
+								pow((ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j]), 2), 0.5);
 						}
-						ss[z].Jacob_stru[m][i * (hprefg + 1) + j] = pow(pow((ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j]), 2) +
-							pow((ss[z].xs_2D[m][0][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][0][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j]), 2) +
-							pow((ss[z].xs_2D[m][1][0][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][1][i * (hprefg + 1) + j] - ss[z].xs_2D[m][1][1][i * (hprefg + 1) + j] * ss[z].xs_2D[m][2][0][i * (hprefg + 1) + j]), 2), 0.5);
+					}
+				}
+				else { //Pozrikidis Page 260 
+					int x1 = ss[z].GCOORD_stru[ss[z].IEN_stru[0][m] - 1][0]; int x2 = ss[z].GCOORD_stru[ss[z].IEN_stru[1][m] - 1][0]; int x3 = ss[z].GCOORD_stru[ss[z].IEN_stru[2][m] - 1][0];
+					int y1 = ss[z].GCOORD_stru[ss[z].IEN_stru[0][m] - 1][1]; int y2 = ss[z].GCOORD_stru[ss[z].IEN_stru[1][m] - 1][1]; int y3 = ss[z].GCOORD_stru[ss[z].IEN_stru[2][m] - 1][1];
+					for (l = 0; l < 3; l++) {
+						ss[z].Jacob_stru[m][l] = (x2 - x1)*(y3 - y1) - (x3 - x1)*(y2 - y1); 
 					}
 				}
 			}
