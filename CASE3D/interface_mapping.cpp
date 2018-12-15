@@ -196,8 +196,13 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								ss[z].P_gs[LNA_seq[ele_id][h]][l] += WP[IEN[ss[z].FP_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]][ii] - 1][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1] - 1] * phig;
 							}
 						}
-						else { //the node is an orphan, directly give the value on the nearest node 
-							ss[z].P_gs[LNA_seq[ele_id][h]][l] = WP[ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1];
+						else { //The node is an orphan, directly give the value on the nearest node 
+							if (ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] != 0) {
+								ss[z].P_gs[LNA_seq[ele_id][h]][l] = WP[ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1];
+							}
+							else { //The node is out of searching range. It should get no value. 
+								ss[z].P_gs[LNA_seq[ele_id][h]][l] = 0.0; 
+							}
 						}
 					}
 				}
@@ -373,10 +378,14 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								}
 							}
 							else { //the node is an orphan, directly give the value on the nearest node 
-								ss[z].P_gs[LNA_seq[ele_id][h]][l] = WP[ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1];
+								if (ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] != 0) {
+									ss[z].P_gs[LNA_seq[ele_id][h]][l] = WP[ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1];
+								}
+								else {
+									ss[z].P_gs[LNA_seq[ele_id][h]][l] = 0.0; 
+								}
 							}
 						}
-						//
 					}
 				}
 			}
@@ -613,9 +622,16 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 							}
 						}
 						else { //the node is an orphan
-							for (n = 0; n < 3; n++) {
-								ol[z].DISP_gs[l*elenode2D_gs + i][n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*elenode2D_gs + i] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
-								//flu_stru for orphan node is actually the node number instead of the element number 
+							if (ol[z].flu_stru[l*elenode2D_gs + i] != 0) {
+								for (n = 0; n < 3; n++) {
+									ol[z].DISP_gs[l*elenode2D_gs + i][n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*elenode2D_gs + i] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
+									//flu_stru for orphan node is actually the node number instead of the element number 
+								}
+							}
+							else {
+								for (n = 0; n < 3; n++) {
+									ol[z].DISP_gs[l*elenode2D_gs + i][n] = 0.0;
+								}
 							}
 						}
 					}
@@ -676,9 +692,17 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 							}
 						}
 						else { //the node is an orphan
-							for (n = 0; n < 3; n++) {
-								ol[z].DISP_gs[l*elenode2D_gs + i][n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*elenode2D_gs + i] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
-								//flu_stru for orphan node is actually the node number instead of the element number 
+							if (ol[z].flu_stru[l*elenode2D_gs + i] != 0) {
+								for (n = 0; n < 3; n++) {
+									ol[z].DISP_gs[l*elenode2D_gs + i][n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*elenode2D_gs + i] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
+									//flu_stru for orphan node is actually the node number instead of the element number 
+								}
+							}
+							else {
+								for (n = 0; n < 3; n++) {
+									ol[z].DISP_gs[l*elenode2D_gs + i][n] = 0.0;
+									//flu_stru for orphan node is actually the node number instead of the element number 
+								}
 							}
 						}
 					}
