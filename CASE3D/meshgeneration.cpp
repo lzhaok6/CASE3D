@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Header.h"
+#include "data.h"
 #include <stdio.h>
 #include <iostream>
 #include <stdlib.h>
@@ -50,7 +51,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_2ftftbasemesh_fs_150m_10m_24m.msh";
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=1_0.25ft.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
@@ -1229,7 +1230,6 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 
-
 		//define GIDN (the counterpart of NRBA on non-reflecting boundary)
 		std::vector<int>GIDN_total;
 		for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
@@ -1314,6 +1314,21 @@ struct meshgenerationstruct meshgeneration() {
 
 	//================================Write the model file for MpCCI here================================//
 	if (mappingalgo == 2) {
+		nodesperelem = new int*[owsfnumber];
+		for (z = 0; z < owsfnumber; z++) {
+			nodesperelem[z] = new int[ol[z].FSNEL];
+		}
+		for (z = 0; z < owsfnumber; z++) {
+			for (i = 0; i < ol[z].FSNEL; i++) {
+				if (element_type == 0) {
+					nodesperelem[z][i] = 4;
+				}
+				else if (element_type == 1) {
+					nodesperelem[z][i] = 3;
+				}
+			}
+		}
+
 		std::ofstream myfile;
 		myfile.open("model.txt");
 		for (z = 0; z < wt_pys_size; z++) {
