@@ -97,7 +97,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	}
 
 	//First bring in the structural wetted surface mesh into the code
-	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp"); //The Abaqus input file
+	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl_1surf.inp"); //The Abaqus input file
 	//std::ifstream infile_algo5("C:/Users/lzhaok6/OneDrive/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp");
 	if (!infile_algo5) {
 		std::cout << "can not open the mesh file" << std::endl;
@@ -744,7 +744,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	LNA_seq.push_back(LNA_seq_1D);
 	int ele_id; 
 
-	
+	/*
 	double xs = 6.2405066666666702;
 	double ys = -4.2162466866666666;
 	double zs = -0.65991649066666680;
@@ -761,7 +761,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			}
 		}
 	}
-	
+	*/
 
 	//There are two types of orphans. The first type does not have corresponding element (the projected node does not belong to any element). However, the node is still in the searching range. Thus, the value on the closest point is assigned. 
 	//The second type is out of the searching range, no value should be assigned on this point. 
@@ -963,6 +963,10 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							if (xi + 1.1 > -1e-5 && xi - 1.1 < 1e-5 && eta + 1.1 > -1e-5 && eta - 1.1 < 1e-5 && zeta + 1.1 > -1e-5 && zeta - 1.1 < 1e-5) {
 								//since the interface element might be warped, we need to leave a margin. (See 2018 Fall report 15). 
 								//The point is indeed inside the searched element. We can turn off the orphan flag
+								//orphannodehd << x1 << ", " << x2 << ", " << x3 << ", " << x4 << ", " << x5 << ", " << x6 << ", " << x7 << ", " << x8 << std::endl;
+								//orphannodehd << y1 << ", " << y2 << ", " << y3 << ", " << y4 << ", " << y5 << ", " << y6 << ", " << y7 << ", " << y8 << std::endl;
+								//orphannodehd << z1 << ", " << z2 << ", " << z3 << ", " << z4 << ", " << z5 << ", " << z6 << ", " << z7 << ", " << z8 << std::endl;
+								//orphannodehd << xu << ", " << yu << ", " << zu << std::endl;
 								orphan = 0;
 								inelement = 1;
 							}
@@ -982,6 +986,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 								ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][0] = xi; //xi
 								ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][1] = eta; //eta
 								ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][2] = zeta; //zeta
+								orphannodehd << xi << " " << eta << " " << zeta << std::endl; 
 								//store the global coordinate in the fluid mesh of the projected structure gauss node
 								xu_searched = xu; yu_searched = yu; zu_searched = zu;
 								distance[0] = distance[1]; //update the shortest orthogonal distance so far
@@ -1242,6 +1247,11 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							xi = xi_k; eta = eta_k; //the local coordinate obtained! 
 							if (xi + 1 > -1e-5 && xi - 1 < 1e-5 && eta + 1 > -1e-5 && eta - 1 < 1e-5) {
 								//The point is indeed inside the searched element and we can store the local coordinate in that element
+								orphannodehd << x1 << ", " << x2 << ", " << x3 << ", " << x4 << std::endl;
+								orphannodehd << y1 << ", " << y2 << ", " << y3 << ", " << y4 << std::endl;
+								orphannodehd << z1 << ", " << z2 << ", " << z3 << ", " << z4 << std::endl;
+								orphannodehd << xu << ", " << yu << ", " << zu << std::endl;
+								orphannodehd << xi << ", " << eta << std::endl;
 								orphan = 0; //turn off the orphan flag
 								inelement = 1;
 							}
@@ -1272,7 +1282,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						}
 						//If the projected node is indeed within the searched element, calculate the orthogonal distance 
 						//Calculate the distance between the fluid interpolation nodes and the projected node
-						if (orphan == 0) { //if the node is not an orphan
+						if (inelement == 1) { //if the node is not an orphan
 							distance[1] = pow(pow(xn - xu, 2) + pow(yn - yu, 2) + pow(zn - zu, 2), 0.5);
 							//if (distance[1] < distance[0]) {
 							if (distance[1] - distance[0] < -1e-5) {

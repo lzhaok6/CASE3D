@@ -501,9 +501,9 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			for (z = 0; z < ssnumber; z++) {
 				BF_val[z] = 0.0;
 				for (j = 0; j < wsflist[z]->nnodes; j++) {
-					for (k = 0; k < 3; k++) {
-						BF_val[z] += wsflist[z]->nodeforce[j * 3 + k];
-					}
+					//for (k = 0; k < 3; k++) {
+						BF_val[z] += wsflist[z]->nodeforce[j * 3 + 1];
+					//}
 				}
 			}
 			std::cout << " " << std::endl;

@@ -31,7 +31,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 
 //extern int** nodesperelem;
 //extern int nodesperelem2; 
-const int N = 2;    //N is the element order of fluid mesh 
+const int N = 1;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;
 const int hprefg = 1; //The level of Gauss-Legendre integration on the structure mesh (for mapping algorithm 4 and 5)
 const int hprefg_flu = N; //The level of Gauss-Legendre integration on the fluid mesh (for mapping algorithm 4 and 5) 
@@ -319,7 +319,7 @@ const int debug2 = 0;
 const int debug3 = 0; 
 const int debug4 = 0; 
 const int debug_algo5 = 0; 
-const int debug_hydro = 0; 
+const int debug_PH = 0; 
 const int debug_IEN = 0; 
 const int fsdebug = 0;
 const int tfm = 1; //is total field model used? 
@@ -328,13 +328,13 @@ const int TNT = 1;
 const int output = 0;
 const int FEM = 0; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
-const int owsfnumber = 4; //The number of fluid wetted surfaces. 
-const int nrbsurfnumber = 4; //The number of fluid NRB surface. 
-const int ssnumber = 4; //The number of structural wetted surface (used for algorithm 4 and 5)
-//const int wt_pys_num[owsfnumber] = { 0 };  //the physical group number that corresponds to the wet surface (physical group 3)
-//const int nrb_pys_num[nrbsurfnumber] = { 1 }; 
-const int wt_pys_num[4] = { 0,1,2,3 };
-const int nrb_pys_num[4] = { 4,5,6,7 };
+const int owsfnumber = 1; //The number of fluid wetted surfaces. 
+const int nrbsurfnumber = 1; //The number of fluid NRB surface. 
+const int ssnumber = 1; //The number of structural wetted surface (used for algorithm 4 and 5)
+const int wt_pys_num[owsfnumber] = { 0 };  //the physical group number that corresponds to the wet surface (physical group 3)
+const int nrb_pys_num[nrbsurfnumber] = { 1 }; 
+//const int wt_pys_num[owsfnumber] = { 0,1,2,3 };
+//const int nrb_pys_num[nrbsurfnumber] = { 4,5,6,7 };
 const double XHE = 0.3048;
 //const double XHE = 0.1; //Bleich_Sandler
 const double YHE = 0.3048;

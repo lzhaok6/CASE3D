@@ -86,8 +86,8 @@ int main()
 		std::cout << "Do you really need free surface offset???" << std::endl;
 		system("PAUSE ");
 	}
-	if (debug_hydro == 1) {
-		std::cout << "Do you really not want to sent hydrostatic pressure to structure?" << std::endl;
+	if (debug_PH == 1) {
+		std::cout << "Do you really not want to sent only incident pressure to structure?" << std::endl;
 		system("PAUSE"); 
 	}
 	if (BETA == 0) {
