@@ -88,6 +88,7 @@ typedef struct owetsurf {
 	int** IEN_flu_2D;
 	double** GCOORD_flu_gs; //the gauss point on fluid element 
 	double** DISP_gs; //The displacement on gauss nodes  
+	double* GCOORD_fs; //The array built for fast access
 } OWETSURF;
 
 typedef struct stru_wet_surf {
@@ -118,6 +119,7 @@ typedef struct stru_wet_surf {
 	int gs_num; 
 	int** FP_flu; //store the interface node for mapping algorithm 4
 	int* elenode; //the number of node of the element (3 means triangular element; 4 means quad element)
+	double* GCOORD_stru_fs;
 }STRU_WET_SURF;
 
 //Store the properties on NRB surface (currently just one)
@@ -267,15 +269,15 @@ struct TIMINTstruct {
 
 //Input values
 //const double fs_offset = -6.02674; //Used to draft the free surface to y=0 position.
-//const double fs_offset = -6.0;
-const double fs_offset = 0.0;
+const double fs_offset = -6.0;
+//const double fs_offset = 0.0;
 //const double SX = 0.1;
 const double SX = 8.5344 / 2; //14ft (FSP)
-const double SY = 1.2192; //4ft (FSP)
-//const double SY = -fs_offset; //for DDG case
+//const double SY = 1.2192; //4ft (FSP)
+const double SY = -fs_offset; //for DDG case
 //const double SY = 3.048; //10ft
-const double SZ = 4.8768; //16ft (FSP)
-//const double SZ = 0.0; //for DDG case (the stand-off is at the keel)
+//const double SZ = 4.8768; //16ft (FSP)
+const double SZ = 0.0; //for DDG case (the stand-off is at the keel)
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;
 const int Nq = N + 1; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
@@ -293,19 +295,19 @@ const double C = 1500.0; //original
 //const double C = 1450.0; //Bleich_Sandler	
 const double CFLFRAC = 0.5;  //original 
 const int dtscale = 1;
-const double BETA = 0.25;   //original 
-const double TTERM = 0.08;    //SIMULATION END TIME 
+const double BETA = 0.0;   //original 
+const double TTERM = 0.03;    //SIMULATION END TIME 
 const int CAV = 1; //1 for cavitation, 0 for non-cavitation 
 const double PSAT = 0.0; //saturated pressure 
 const double pi = 3.141593;
 const double grav = 9.81;
 const double PATM = 101.3e3; //pa 
-const double stdoff = 10; //ft
-const double depth = 30; //ft
-//const double stdoff = 0; //ft
-//const double depth = 60; //ft
-//const double x_loc = 74.22;//m for DDG case
-const double x_loc = 0.0;//m for FSP case
+//const double stdoff = 10; //ft
+//const double depth = 30; //ft
+const double stdoff = 0; //ft
+const double depth = 60; //ft
+const double x_loc = 74.22;//m for DDG case
+//const double x_loc = 0.0;//m for FSP case
 const double W = 60; //charge weight (lb)
 
 //standoff point in spherical wave case 
@@ -347,4 +349,4 @@ const double xo = SY;
 const int Bleich = 0; 
 const int improvednrb = 0;
 const int element_type = 0; //0 for hexahedral element; 1 for tetrahedral element; 
-const int nodeadj = 0; //If the node coordinate needs to be adjusted. 
+const int nodeadj = 1; //If the node coordinate needs to be adjusted. 

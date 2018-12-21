@@ -239,7 +239,6 @@ void FSILINK(int*** LNA) {
 		}
 	}
 
-
 	std::cout << " " << std::endl;
 	return;
 }
