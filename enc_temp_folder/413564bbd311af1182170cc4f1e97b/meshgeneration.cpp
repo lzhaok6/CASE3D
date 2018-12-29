@@ -386,7 +386,6 @@ struct meshgenerationstruct meshgeneration() {
 		}
 
 		//define FP, FP_2D, DP, DP_2D
-		//What is the difference between FP and FP_2D? 
 		for (int z = 0; z < owsfnumber; z++) {
 			ol[z].FP = new int*[ol[z].FSNEL];
 			for (int i = 0; i < ol[z].FSNEL; i++) {

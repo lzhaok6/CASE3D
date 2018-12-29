@@ -98,9 +98,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 
 	//First bring in the structural wetted surface mesh into the code
 	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
-	//std::ifstream infile_algo5("C:/Users/lzhaok6/OneDrive/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp");
+	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp");
 	if (!infile_algo5) {
-		std::cout << "can not open the mesh file" << std::endl;
+		std::cout << "can not open the structure input file" << std::endl;
 		system("PAUSE ");
 	}
 	//read the file 
@@ -1008,7 +1008,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 								ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][0] = xi; //xi
 								ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][1] = eta; //eta
 								ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][2] = zeta; //zeta
-								orphannodehd << xi << " " << eta << " " << zeta << std::endl; 
+								//orphannodehd << xi << " " << eta << " " << zeta << std::endl; 
 								//store the global coordinate in the fluid mesh of the projected structure gauss node
 								xu_searched = xu; yu_searched = yu; zu_searched = zu;
 								distance[0] = distance[1]; //update the shortest orthogonal distance so far
@@ -1135,21 +1135,23 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		}
 	}
 
-
 	//Create a coordinate array of structure boundary nodes for fast access
 	for (z = 0; z < nrbsurfnumber; z++) {
-		ss[z].GCOORD_stru_fs = new double[NNODE_stru * 3];
+		ss[z].GCOORD_stru_fs = new double*[NNODE_stru];
+		for (k = 0; k < NNODE_stru; k++) {
+			ss[z].GCOORD_stru_fs[k] = new double[3];
+		}
 		ct = 0;
 		for (k = 0; k < ss[z].ELE_stru; k++) { //looping through structure wetted elements
 			for (l = 0; l < ss[z].elenode[k]; l++) {
 				for (i = 0; i < 3; i++) {
-					ss[z].GCOORD_stru_fs[ct + i] = ss[z].GCOORD_stru[ss[z].IEN_stru[l][k] - 1][i];
+					ss[z].GCOORD_stru_fs[ct][i] = ss[z].GCOORD_stru[ss[z].IEN_stru[l][k] - 1][i];
 				}
 				ct += 1;
 			}
 		}
 	}
-
+	
 	//Node projection from fluid to structure (Project the fluid interpolation points to structural elements
 	//Eigen::Matrix2d fdot_f;
 	double fdot_f00, fdot_f01, fdot_f10, fdot_f11; 
@@ -1181,11 +1183,11 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 				double xf = ol[z].GCOORD_flu_gs[i*elenode2D_gs + j][0];
 				double yf = ol[z].GCOORD_flu_gs[i*elenode2D_gs + j][1];
 				double zf = ol[z].GCOORD_flu_gs[i*elenode2D_gs + j][2];
-				//ct = 0;
+				ct = 0;
 				for (k = 0; k < ss[z].ELE_stru; k++) { //looping through structure wetted elements
 					flag = 1;
 					for (l = 0; l < ss[z].elenode[k]; l++) {
-						range[0] = pow(pow(xf - ss[z].GCOORD_stru[ss[z].IEN_stru[l][k] - 1][0], 2) + pow(yf - ss[z].GCOORD_stru[ss[z].IEN_stru[l][k] - 1][1], 2) + pow(zf - ss[z].GCOORD_stru[ss[z].IEN_stru[l][k] - 1][2], 2), 0.5);
+						range[0] = pow(pow(xf - ss[z].GCOORD_stru_fs[ct][0], 2) + pow(yf - ss[z].GCOORD_stru_fs[ct][1], 2) + pow(zf - ss[z].GCOORD_stru_fs[ct][2], 2), 0.5);
 						if (range[0] < range[1]) {
 							flag2 = 1;
 							range[1] = range[0]; //range[1] is used to store the shortest distance so far
@@ -1197,7 +1199,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						if (range[0] > search_range) { //One of the corner nodes in the element is out of the searching range. Jump through this element
 							flag = 0;
 						}
-						//ct += 1;
+						ct += 1;
 					}
 					if (flag == 1) { //the element should be searched (within the searching range)
 						//Find the coordinate of the orthogonally projected fluid interpolation point on the current structure 4-node shell element
@@ -1293,11 +1295,11 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							xi = xi_k; eta = eta_k; //the local coordinate obtained! 
 							if (xi + 1 > -1e-5 && xi - 1 < 1e-5 && eta + 1 > -1e-5 && eta - 1 < 1e-5) {
 								//The point is indeed inside the searched element and we can store the local coordinate in that element
-								orphannodehd << x1 << ", " << x2 << ", " << x3 << ", " << x4 << std::endl;
-								orphannodehd << y1 << ", " << y2 << ", " << y3 << ", " << y4 << std::endl;
-								orphannodehd << z1 << ", " << z2 << ", " << z3 << ", " << z4 << std::endl;
-								orphannodehd << xu << ", " << yu << ", " << zu << std::endl;
-								orphannodehd << xi << ", " << eta << std::endl;
+								//orphannodehd << x1 << ", " << x2 << ", " << x3 << ", " << x4 << std::endl;
+								//orphannodehd << y1 << ", " << y2 << ", " << y3 << ", " << y4 << std::endl;
+								//orphannodehd << z1 << ", " << z2 << ", " << z3 << ", " << z4 << std::endl;
+								//orphannodehd << xu << ", " << yu << ", " << zu << std::endl;
+								//orphannodehd << xi << ", " << eta << std::endl;
 								orphan = 0; //turn off the orphan flag
 								inelement = 1;
 							}

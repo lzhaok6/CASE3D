@@ -119,7 +119,7 @@ typedef struct stru_wet_surf {
 	int gs_num; 
 	int** FP_flu; //store the interface node for mapping algorithm 4
 	int* elenode; //the number of node of the element (3 means triangular element; 4 means quad element)
-	double* GCOORD_stru_fs;
+	double** GCOORD_stru_fs;
 }STRU_WET_SURF;
 
 //Store the properties on NRB surface (currently just one)
@@ -286,7 +286,7 @@ const int refine = 1; //The refinement rate of fluid mesh against base fluid mes
 const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
 //const int hprefg = 1;
-const int mappingalgo = 5; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
+const int mappingalgo = 2; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
 const double RHO = 1025.0; //original
 //const double RHO = 989.0; //Bleich-Sandler
 const int WAVE = 2; //1 for plane wave; 2 for spherical wave 
@@ -349,4 +349,4 @@ const double xo = SY;
 const int Bleich = 0; 
 const int improvednrb = 0;
 const int element_type = 0; //0 for hexahedral element; 1 for tetrahedral element; 
-const int nodeadj = 1; //If the node coordinate needs to be adjusted. 
+const int nodeadj = 0; //If the node coordinate needs to be adjusted. 
