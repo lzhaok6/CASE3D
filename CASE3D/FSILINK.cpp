@@ -146,7 +146,7 @@ void FSILINK(int*** LNA) {
 											//(ls.SHOD[0][l][i] * ls.SHOD[0][o][j]) is used to map the pressure on interpolation nodes to the integration nodes (GLL nodes)
 										}
 									}
-									ol[z].FPMASTER_2D[e][ol[z].LNA_algo2[m][n] - 1][ol[z].LNA_2D[l][o] - 1] += FUNC;
+									ol[z].FPMASTER_2D[e][ol[z].LNA_algo2[e][m][n] - 1][ol[z].LNA_2D[e][l][o] - 1] += FUNC;
 								}
 							}
 						}
@@ -162,7 +162,7 @@ void FSILINK(int*** LNA) {
 					for (n = 0; n < 2; n++) {
 						for (l = 0; l < NINT; l++) { //Interpolation points on the original fluid mesh
 							for (o = 0; o < NINT; o++) {
-								ol[0].dimension_hex[e] += ol[0].FPMASTER_2D[e][ol[0].LNA_algo2[m][n] - 1][ol[0].LNA_2D[l][o] - 1];
+								ol[0].dimension_hex[e] += ol[0].FPMASTER_2D[e][ol[0].LNA_algo2[e][m][n] - 1][ol[0].LNA_2D[e][l][o] - 1];
 							}
 						}
 					}

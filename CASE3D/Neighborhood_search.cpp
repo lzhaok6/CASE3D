@@ -66,7 +66,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			for (i = 0; i < ol[z].FSNEL; i++) {
 				for (j = 0; j < 4; j++) {
 					//ol[z].IEN_flu_2D[j][i] = IEN_flu[ol[z].LNA_norm[j] - 1][ol[z].GIDF[i] - 1];
-					ol[z].IEN_flu_2D[j][i] = ol[z].IEN_gb[ol[z].LNA_norm[j] - 1][i];
+					ol[z].IEN_flu_2D[j][i] = ol[z].IEN_gb[ol[z].LNA_norm[i][j] - 1][i];
 				}
 			}
 		}
@@ -97,8 +97,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	}
 
 	//First bring in the structural wetted surface mesh into the code
-	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
-	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp");
+	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
+	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp");
 	if (!infile_algo5) {
 		std::cout << "can not open the structure input file" << std::endl;
 		system("PAUSE ");
@@ -204,12 +204,12 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			ss[z].GCOORD_stru[i] = new double[3];
 		}
 		for (i = nodestart; i < nodeend + 1; i++) {
-			ss[z].GCOORD_stru[i - nodestart][0] = 144.220001 - stod(output[i][1]);
-			ss[z].GCOORD_stru[i - nodestart][1] = stod(output[i][2]) - 6.0;
-			ss[z].GCOORD_stru[i - nodestart][2] = -stod(output[i][3]);
-			//ss[z].GCOORD_stru[i - nodestart][0] = stod(output[i][1]);
-			//ss[z].GCOORD_stru[i - nodestart][1] = stod(output[i][2]) - 0.3048;
-			//ss[z].GCOORD_stru[i - nodestart][2] = stod(output[i][3]);
+			//ss[z].GCOORD_stru[i - nodestart][0] = 144.220001 - stod(output[i][1]);
+			//ss[z].GCOORD_stru[i - nodestart][1] = stod(output[i][2]) - 6.0;
+			//ss[z].GCOORD_stru[i - nodestart][2] = -stod(output[i][3]);
+			ss[z].GCOORD_stru[i - nodestart][0] = stod(output[i][1]);
+			ss[z].GCOORD_stru[i - nodestart][1] = stod(output[i][2]) - 0.3048;
+			ss[z].GCOORD_stru[i - nodestart][2] = stod(output[i][3]);
 		}
 	}
 
@@ -1086,8 +1086,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 				ol[z].GCOORD_flu_gs[i] = new double[3];
 			}
 			int LNA_2D[2][2];
-			LNA_2D[0][0] = ol[z].LNA_2D[0][0]; LNA_2D[1][0] = ol[z].LNA_2D[N][0]; LNA_2D[0][1] = ol[z].LNA_2D[0][N]; LNA_2D[1][1] = ol[z].LNA_2D[N][N];
+			//LNA_2D[0][0] = ol[z].LNA_2D[0][0]; LNA_2D[1][0] = ol[z].LNA_2D[N][0]; LNA_2D[0][1] = ol[z].LNA_2D[0][N]; LNA_2D[1][1] = ol[z].LNA_2D[N][N];
 			for (i = 0; i < ol[z].FSNEL; i++) { //loop through all the elements
+				LNA_2D[0][0] = ol[z].LNA_2D[i][0][0]; LNA_2D[1][0] = ol[z].LNA_2D[i][N][0]; LNA_2D[0][1] = ol[z].LNA_2D[i][0][N]; LNA_2D[1][1] = ol[z].LNA_2D[i][N][N];
 				for (m = 0; m < (hprefg_flu + 1); m++) { //m, n, o stands for internal nodes in one element (all but except for corner nodes)
 					for (n = 0; n < (hprefg_flu + 1); n++) {
 						ol[z].GCOORD_flu_gs[i*(hprefg_flu + 1)*(hprefg_flu + 1) + m*(hprefg_flu + 1) + n][0] = 0.0; //m and n equivalent to LNA[m][n]
@@ -1107,7 +1108,6 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 				}
 			}
 		}
-		std::cout << " " << std::endl; 
 	}
 	if (element_type == 1) {
 		//Derive the 3-point quadrature node location on the interface triangle elements 

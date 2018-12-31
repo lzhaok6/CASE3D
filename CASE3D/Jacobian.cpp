@@ -20,7 +20,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 
 	if (element_type == 0) { //hex element
 		//Since storing JACOB is too memory expansive, we decide to define 1D JACOB (for single element) array on the fly 
-		/*				 
+		/*
 		//initialize t.XS
 		double** XS; //define XS to be a local variable which will be cleaned at the end of function
 		XS = new double*[9];
@@ -29,7 +29,7 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 		}
 		for (i = 0; i < 9; i++) {
 			for (j = 0; j < NINT*NINT*NINT; j++) {
-				XS[i][j] = 0.0; 
+				XS[i][j] = 0.0;
 			}
 		}
 		t.JACOB = new double*[NEL];
@@ -62,24 +62,24 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 			for (i = 0; i < NINT; i++) {
 				for (j = 0; j < NINT; j++) {
 					for (k = 0; k < NINT; k++) {
-						XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] = 0; 
-						XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] = 0; 
-						XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] = 0; 
+						XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] = 0;
+						XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] = 0;
+						XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] = 0;
 						XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] = 0;
-						XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] = 0; 
-						XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] = 0; 
-						XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] = 0; 
-						XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] = 0; 
-						XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] = 0; 
+						XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] = 0;
+						XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] = 0;
+						XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] = 0;
+						XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] = 0;
+						XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] = 0;
 						for (l = 0; l < 8; l++) {
 							XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dxi
-							XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/deta 
-							XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dzeta  
-							XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dxi 
+							XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/deta
+							XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][0]; //dx/dzeta
+							XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dxi
 							XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/deta
-							XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dzeta 
-							XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dxi 
-							XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/deta 
+							XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][1]; //dy/dzeta
+							XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dxi
+							XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/deta
 							XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][m] - 1][2]; //dz/dzeta
 						}
 						//The determinant of jacobian matrix for each node in the element
@@ -94,8 +94,8 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 		for (i = 0; i < 9; i++) {
 			delete[] XS[i];
 		}
-		delete[] XS; 
-		delete[] cn; 
+		delete[] XS;
+		delete[] cn;
 		*/
 
 		if (mappingalgo == 2) {
@@ -105,25 +105,31 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 			lg = LOCAL_GSHAPE(gq.S, LNA, NqINT);
 			for (z = 0; z < owsfnumber; z++) {
 				//GSHL_2D is the 2D shape function and its derivative with respect to 2D local coordinate 
-				ol[z].GSHL_2D = new double***[3];
-				for (i = 0; i < 3; i++) {
-					ol[z].GSHL_2D[i] = new double**[4]; //4 points
-					for (j = 0; j < 4; j++) {
-						ol[z].GSHL_2D[i][j] = new double*[NqINT];
-						for (k = 0; k < NqINT; k++) {
-							ol[z].GSHL_2D[i][j][k] = new double[NqINT];
+				ol[z].GSHL_2D = new double****[ol[z].FSNEL];
+				for (l = 0; l < ol[z].FSNEL; l++) {
+					ol[z].GSHL_2D[l] = new double***[3];
+					for (i = 0; i < 3; i++) {
+						ol[z].GSHL_2D[l][i] = new double**[4]; //4 points
+						for (j = 0; j < 4; j++) {
+							ol[z].GSHL_2D[l][i][j] = new double*[NqINT];
+							for (k = 0; k < NqINT; k++) {
+								ol[z].GSHL_2D[l][i][j][k] = new double[NqINT];
+							}
 						}
 					}
 				}
-				for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
-					for (j = 0; j < NqINT; j++) { // j k l are integration point where discrete value of shape function is derived
-						for (k = 0; k < NqINT; k++) {
-							ol[z].GSHL_2D[2][i][j][k] = (1.0 / 4.0)*(1 + lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[0]] * gq.S[j])*(1 + lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[1]] * gq.S[k]);
-							//not derivative
-							ol[z].GSHL_2D[0][i][j][k] = (1.0 / 4.0)*lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[0]] * (1 + lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[1]] * gq.S[k]);
-							//X direction derivative
-							ol[z].GSHL_2D[1][i][j][k] = (1.0 / 4.0)*lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[1]] * (1 + lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[0]] * gq.S[j]);
-							//Z direction derivative
+
+				for (l = 0; l < ol[z].FSNEL; l++) {
+					for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
+						for (j = 0; j < NqINT; j++) { // j k l are integration point where discrete value of shape function is derived
+							for (k = 0; k < NqINT; k++) {
+								ol[z].GSHL_2D[l][2][i][j][k] = (1.0 / 4.0)*(1 + lg.MCOORD[ol[z].LNA_JB2D[l][i] - 1][ol[z].Jacob_face[l][0]] * gq.S[j])*(1 + lg.MCOORD[ol[z].LNA_JB2D[l][i] - 1][ol[z].Jacob_face[l][1]] * gq.S[k]);
+								//not derivative
+								ol[z].GSHL_2D[l][0][i][j][k] = (1.0 / 4.0)*lg.MCOORD[ol[z].LNA_JB2D[l][i] - 1][ol[z].Jacob_face[l][0]] * (1 + lg.MCOORD[ol[z].LNA_JB2D[l][i] - 1][ol[z].Jacob_face[l][1]] * gq.S[k]);
+								//X direction derivative
+								ol[z].GSHL_2D[l][1][i][j][k] = (1.0 / 4.0)*lg.MCOORD[ol[z].LNA_JB2D[l][i] - 1][ol[z].Jacob_face[l][1]] * (1 + lg.MCOORD[ol[z].LNA_JB2D[l][i] - 1][ol[z].Jacob_face[l][0]] * gq.S[j]);
+								//Z direction derivative
+							}
 						}
 					}
 				}
@@ -159,12 +165,12 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 						for (j = 0; j < NqINT; j++) {
 							for (l = 0; l < 4; l++) { //4 nodes on the linear element
 								//Is the l in ol[z].GSHL_2D[0][l][i][j] and in ol[z].LNA_norm[l] must be consistent (the same surface). 
-								ol[z].xs_2D[m][0][0][i * NqINT + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dnu
-								ol[z].xs_2D[m][1][0][i * NqINT + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dnu
-								ol[z].xs_2D[m][2][0][i * NqINT + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dnu
-								ol[z].xs_2D[m][0][1][i * NqINT + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dmu
-								ol[z].xs_2D[m][1][1][i * NqINT + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dmu
-								ol[z].xs_2D[m][2][1][i * NqINT + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dmu
+								ol[z].xs_2D[m][0][0][i * NqINT + j] += ol[z].GSHL_2D[m][0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[m][l] - 1][m] - 1][0]; //dx/dnu
+								ol[z].xs_2D[m][1][0][i * NqINT + j] += ol[z].GSHL_2D[m][0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[m][l] - 1][m] - 1][1]; //dy/dnu
+								ol[z].xs_2D[m][2][0][i * NqINT + j] += ol[z].GSHL_2D[m][0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[m][l] - 1][m] - 1][2]; //dz/dnu
+								ol[z].xs_2D[m][0][1][i * NqINT + j] += ol[z].GSHL_2D[m][1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[m][l] - 1][m] - 1][0]; //dx/dmu
+								ol[z].xs_2D[m][1][1][i * NqINT + j] += ol[z].GSHL_2D[m][1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[m][l] - 1][m] - 1][1]; //dy/dmu
+								ol[z].xs_2D[m][2][1][i * NqINT + j] += ol[z].GSHL_2D[m][1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[m][l] - 1][m] - 1][2]; //dz/dmu
 							}
 							ol[z].Jacob_2D[m][i * NqINT + j] = pow(pow((ol[z].xs_2D[m][0][0][i * NqINT + j] * ol[z].xs_2D[m][1][1][i * NqINT + j] - ol[z].xs_2D[m][0][1][i * NqINT + j] * ol[z].xs_2D[m][1][0][i * NqINT + j]), 2) +
 								pow((ol[z].xs_2D[m][0][0][i * NqINT + j] * ol[z].xs_2D[m][2][1][i * NqINT + j] - ol[z].xs_2D[m][0][1][i * NqINT + j] * ol[z].xs_2D[m][2][0][i * NqINT + j]), 2) +
@@ -174,19 +180,34 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				}
 				//check if the value is positive and check if i and j is exchanged, would the value of FPMASTER_2D be changed!!!
 			}
-
 			//clean ol[z].xs_2D
 			for (z = 0; z < owsfnumber; z++) {
 				for (i = 0; i < ol[z].FSNEL; i++) {
 					for (j = 0; j < 3; j++) {
 						for (k = 0; k < 2; k++) {
-							delete[] ol[z].xs_2D[i][j][k]; 
+							delete[] ol[z].xs_2D[i][j][k];
 						}
-						delete[] ol[z].xs_2D[i][j]; 
+						delete[] ol[z].xs_2D[i][j];
 					}
-					delete[] ol[z].xs_2D[i]; 
+					delete[] ol[z].xs_2D[i];
 				}
-				delete[] ol[z].xs_2D; 
+				delete[] ol[z].xs_2D;
+			}
+			//clean GSHL_2D
+			for (z = 0; z < owsfnumber; z++) {
+				for (l = 0; l < ol[z].FSNEL; l++) {
+					for (i = 0; i < 3; i++) {
+						for (j = 0; j < 4; j++) {
+							for (k = 0; k < NqINT; k++) {
+								delete[] ol[z].GSHL_2D[l][i][j][k];
+							}
+							delete[] ol[z].GSHL_2D[l][i][j];
+						}
+						delete[] ol[z].GSHL_2D[l][i];
+					}
+					delete[] ol[z].GSHL_2D[l];
+				}
+				delete[] ol[z].GSHL_2D;
 			}
 		}
 		if (mappingalgo == 5 || mappingalgo == 4) {
@@ -196,25 +217,30 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 			lg = LOCAL_GSHAPE(gq.S, LNA, hprefg_flu);
 			for (z = 0; z < owsfnumber; z++) {
 				//GSHL_2D is the 2D shape function and its derivative with respect to 2D local coordinate. 
-				ol[z].GSHL_2D = new double***[3];
-				for (i = 0; i < 3; i++) {
-					ol[z].GSHL_2D[i] = new double**[4]; //4 points
-					for (j = 0; j < 4; j++) {
-						ol[z].GSHL_2D[i][j] = new double*[hprefg_flu + 1];
-						for (k = 0; k < hprefg_flu + 1; k++) {
-							ol[z].GSHL_2D[i][j][k] = new double[hprefg_flu + 1];
+				ol[z].GSHL_2D = new double****[ol[z].FSNEL];
+				for (l = 0; l < ol[z].FSNEL; l++) {
+					ol[z].GSHL_2D[l] = new double***[3];
+					for (i = 0; i < 3; i++) {
+						ol[z].GSHL_2D[l][i] = new double**[4]; //4 points
+						for (j = 0; j < 4; j++) {
+							ol[z].GSHL_2D[l][i][j] = new double*[hprefg_flu + 1];
+							for (k = 0; k < hprefg_flu + 1; k++) {
+								ol[z].GSHL_2D[l][i][j][k] = new double[hprefg_flu + 1];
+							}
 						}
 					}
 				}
-				for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
-					for (j = 0; j < hprefg_flu + 1; j++) { // j k l are integration point where discrete value of shape function is derived
-						for (k = 0; k < hprefg_flu + 1; k++) {
-							ol[z].GSHL_2D[2][i][j][k] = (1.0 / 4.0)*(1 + lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[0]] * gq.S[j])*(1 + lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[1]] * gq.S[k]);
-							//not derivative
-							ol[z].GSHL_2D[0][i][j][k] = (1.0 / 4.0)*lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[0]] * (1 + lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[1]] * gq.S[k]);
-							//X direction derivative
-							ol[z].GSHL_2D[1][i][j][k] = (1.0 / 4.0)*lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[1]] * (1 + lg.MCOORD[ol[z].LNA_JB2D[i] - 1][ol[z].Jacob_face[0]] * gq.S[j]);
-							//Z direction derivative
+				for (l = 0; l < ol[z].FSNEL; l++) {
+					for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
+						for (j = 0; j < hprefg_flu + 1; j++) { // j k l are integration point where discrete value of shape function is derived
+							for (k = 0; k < hprefg_flu + 1; k++) {
+								ol[z].GSHL_2D[l][2][i][j][k] = (1.0 / 4.0)*(1 + lg.MCOORD[ol[z].LNA_JB2D[l][i] - 1][ol[z].Jacob_face[l][0]] * gq.S[j])*(1 + lg.MCOORD[ol[z].LNA_JB2D[l][i] - 1][ol[z].Jacob_face[l][1]] * gq.S[k]);
+								//not derivative
+								ol[z].GSHL_2D[l][0][i][j][k] = (1.0 / 4.0)*lg.MCOORD[ol[z].LNA_JB2D[l][i] - 1][ol[z].Jacob_face[l][0]] * (1 + lg.MCOORD[ol[z].LNA_JB2D[l][i] - 1][ol[z].Jacob_face[l][1]] * gq.S[k]);
+								//X direction derivative
+								ol[z].GSHL_2D[l][1][i][j][k] = (1.0 / 4.0)*lg.MCOORD[ol[z].LNA_JB2D[l][i] - 1][ol[z].Jacob_face[l][1]] * (1 + lg.MCOORD[ol[z].LNA_JB2D[l][i] - 1][ol[z].Jacob_face[l][0]] * gq.S[j]);
+								//Z direction derivative
+							}
 						}
 					}
 				}
@@ -250,12 +276,12 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 						for (j = 0; j < hprefg_flu + 1; j++) {
 							for (l = 0; l < 4; l++) { //4 nodes on the linear element
 								//Is the l in ol[z].GSHL_2D[0][l][i][j] and in ol[z].LNA_norm[l] must be consistent (the same surface). 
-								ol[z].xs_2D[m][0][0][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dnu
-								ol[z].xs_2D[m][1][0][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dnu
-								ol[z].xs_2D[m][2][0][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dnu
-								ol[z].xs_2D[m][0][1][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dmu
-								ol[z].xs_2D[m][1][1][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dmu
-								ol[z].xs_2D[m][2][1][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dmu
+								ol[z].xs_2D[m][0][0][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[m][0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[m][l] - 1][m] - 1][0]; //dx/dnu
+								ol[z].xs_2D[m][1][0][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[m][0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[m][l] - 1][m] - 1][1]; //dy/dnu
+								ol[z].xs_2D[m][2][0][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[m][0][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[m][l] - 1][m] - 1][2]; //dz/dnu
+								ol[z].xs_2D[m][0][1][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[m][1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[m][l] - 1][m] - 1][0]; //dx/dmu
+								ol[z].xs_2D[m][1][1][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[m][1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[m][l] - 1][m] - 1][1]; //dy/dmu
+								ol[z].xs_2D[m][2][1][i * (hprefg_flu + 1) + j] += ol[z].GSHL_2D[m][1][l][i][j] * GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[m][l] - 1][m] - 1][2]; //dz/dmu
 							}
 							ol[z].Jacob_2D[m][i * (hprefg_flu + 1) + j] = pow(pow((ol[z].xs_2D[m][0][0][i * (hprefg_flu + 1) + j] * ol[z].xs_2D[m][1][1][i * (hprefg_flu + 1) + j] - ol[z].xs_2D[m][0][1][i * (hprefg_flu + 1) + j] * ol[z].xs_2D[m][1][0][i * (hprefg_flu + 1) + j]), 2) +
 								pow((ol[z].xs_2D[m][0][0][i * (hprefg_flu + 1) + j] * ol[z].xs_2D[m][2][1][i * (hprefg_flu + 1) + j] - ol[z].xs_2D[m][0][1][i * (hprefg_flu + 1) + j] * ol[z].xs_2D[m][2][0][i * (hprefg_flu + 1) + j]), 2) +
@@ -278,6 +304,22 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 				}
 				delete[] ol[z].xs_2D;
 			}
+			//clean GSHL_2D
+			for (z = 0; z < owsfnumber; z++) {
+				for (l = 0; l < ol[z].FSNEL; l++) {
+					for (i = 0; i < 3; i++) {
+						for (j = 0; j < 4; j++) {
+							for (k = 0; k < hprefg_flu + 1; k++) {
+								delete[] ol[z].GSHL_2D[l][i][j][k];
+							}
+							delete[] ol[z].GSHL_2D[l][i][j];
+						}
+						delete[] ol[z].GSHL_2D[l][i];
+					}
+					delete[] ol[z].GSHL_2D[l];
+				}
+				delete[] ol[z].GSHL_2D;
+			}
 		}
 
 		//For NRB boundary force integration, we still use the approach in algorithm 2 (insert one more quadrature point)
@@ -285,25 +327,30 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 		gq = GLLQUAD(bq.Z, bq.WL, Nq, !FEM);
 		lg = LOCAL_GSHAPE(gq.S, LNA, NqINT);
 		for (z = 0; z < nrbsurfnumber; z++) {
-			nr[z].GSHL_2D = new double***[3];
-			for (i = 0; i < 3; i++) {
-				nr[z].GSHL_2D[i] = new double**[4]; //4 points
-				for (j = 0; j < 4; j++) {
-					nr[z].GSHL_2D[i][j] = new double*[NqINT];
-					for (k = 0; k < NqINT; k++) {
-						nr[z].GSHL_2D[i][j][k] = new double[NqINT];
+			nr[z].GSHL_2D = new double****[nr[z].NEL_nrb];
+			for (l = 0; l < nr[z].NEL_nrb; l++) {
+				nr[z].GSHL_2D[l] = new double***[3];
+				for (i = 0; i < 3; i++) {
+					nr[z].GSHL_2D[l][i] = new double**[4]; //4 points
+					for (j = 0; j < 4; j++) {
+						nr[z].GSHL_2D[l][i][j] = new double*[NqINT];
+						for (k = 0; k < NqINT; k++) {
+							nr[z].GSHL_2D[l][i][j][k] = new double[NqINT];
+						}
 					}
 				}
 			}
-			for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
-				for (j = 0; j < NqINT; j++) { // j k l are integration point where discrete value of shape function is derived
-					for (k = 0; k < NqINT; k++) {
-						nr[z].GSHL_2D[2][i][j][k] = (1.0 / 4.0)*(1 + lg.MCOORD[nr[z].LNA_JB2D[i] - 1][nr[z].Jacob_face[0]] * gq.S[j])*(1 + lg.MCOORD[nr[z].LNA_JB2D[i] - 1][nr[z].Jacob_face[1]] * gq.S[k]);
-						//not derivative
-						nr[z].GSHL_2D[0][i][j][k] = (1.0 / 4.0)*lg.MCOORD[nr[z].LNA_JB2D[i] - 1][nr[z].Jacob_face[0]] * (1 + lg.MCOORD[nr[z].LNA_JB2D[i] - 1][nr[z].Jacob_face[1]] * gq.S[k]);
-						//X direction derivative
-						nr[z].GSHL_2D[1][i][j][k] = (1.0 / 4.0)*lg.MCOORD[nr[z].LNA_JB2D[i] - 1][nr[z].Jacob_face[1]] * (1 + lg.MCOORD[nr[z].LNA_JB2D[i] - 1][nr[z].Jacob_face[0]] * gq.S[j]);
-						//Z direction derivative
+			for (l = 0; l < nr[z].NEL_nrb; l++) {
+				for (i = 0; i < 4; i++) { //ref: Pozrikidis IFSM P666 //i is the point where shape functions were derived (linear shape function for geometry discretization)
+					for (j = 0; j < NqINT; j++) { // j k l are integration point where discrete value of shape function is derived
+						for (k = 0; k < NqINT; k++) {
+							nr[z].GSHL_2D[l][2][i][j][k] = (1.0 / 4.0)*(1 + lg.MCOORD[nr[z].LNA_JB2D[l][i] - 1][nr[z].Jacob_face[l][0]] * gq.S[j])*(1 + lg.MCOORD[nr[z].LNA_JB2D[l][i] - 1][nr[z].Jacob_face[l][1]] * gq.S[k]);
+							//not derivative
+							nr[z].GSHL_2D[l][0][i][j][k] = (1.0 / 4.0)*lg.MCOORD[nr[z].LNA_JB2D[l][i] - 1][nr[z].Jacob_face[l][0]] * (1 + lg.MCOORD[nr[z].LNA_JB2D[l][i] - 1][nr[z].Jacob_face[l][1]] * gq.S[k]);
+							//X direction derivative
+							nr[z].GSHL_2D[l][1][i][j][k] = (1.0 / 4.0)*lg.MCOORD[nr[z].LNA_JB2D[l][i] - 1][nr[z].Jacob_face[l][1]] * (1 + lg.MCOORD[nr[z].LNA_JB2D[l][i] - 1][nr[z].Jacob_face[l][0]] * gq.S[j]);
+							//Z direction derivative
+						}
 					}
 				}
 			}
@@ -335,12 +382,12 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 					for (j = 0; j < NqINT; j++) {
 						for (l = 0; l < 4; l++) { //4 nodes on the linear element
 							//Is the l in nr[z].GSHL_2D[0][l][i][j] and in nr[z].LNA_norm[l] must be consistent (the same surface). 
-							nr[z].xs_2D[m][0][0][i * NqINT + j] += nr[z].GSHL_2D[0][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dnu
-							nr[z].xs_2D[m][1][0][i * NqINT + j] += nr[z].GSHL_2D[0][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dnu
-							nr[z].xs_2D[m][2][0][i * NqINT + j] += nr[z].GSHL_2D[0][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dnu
-							nr[z].xs_2D[m][0][1][i * NqINT + j] += nr[z].GSHL_2D[1][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[l] - 1][m] - 1][0]; //dx/dmu
-							nr[z].xs_2D[m][1][1][i * NqINT + j] += nr[z].GSHL_2D[1][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[l] - 1][m] - 1][1]; //dy/dmu
-							nr[z].xs_2D[m][2][1][i * NqINT + j] += nr[z].GSHL_2D[1][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[l] - 1][m] - 1][2]; //dz/dmu
+							nr[z].xs_2D[m][0][0][i * NqINT + j] += nr[z].GSHL_2D[m][0][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[m][l] - 1][m] - 1][0]; //dx/dnu
+							nr[z].xs_2D[m][1][0][i * NqINT + j] += nr[z].GSHL_2D[m][0][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[m][l] - 1][m] - 1][1]; //dy/dnu
+							nr[z].xs_2D[m][2][0][i * NqINT + j] += nr[z].GSHL_2D[m][0][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[m][l] - 1][m] - 1][2]; //dz/dnu
+							nr[z].xs_2D[m][0][1][i * NqINT + j] += nr[z].GSHL_2D[m][1][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[m][l] - 1][m] - 1][0]; //dx/dmu
+							nr[z].xs_2D[m][1][1][i * NqINT + j] += nr[z].GSHL_2D[m][1][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[m][l] - 1][m] - 1][1]; //dy/dmu
+							nr[z].xs_2D[m][2][1][i * NqINT + j] += nr[z].GSHL_2D[m][1][l][i][j] * GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[m][l] - 1][m] - 1][2]; //dz/dmu
 						}
 						nr[z].Jacob_2D[m][i * NqINT + j] = pow(pow((nr[z].xs_2D[m][0][0][i * NqINT + j] * nr[z].xs_2D[m][1][1][i * NqINT + j] - nr[z].xs_2D[m][0][1][i * NqINT + j] * nr[z].xs_2D[m][1][0][i * NqINT + j]), 2) +
 							pow((nr[z].xs_2D[m][0][0][i * NqINT + j] * nr[z].xs_2D[m][2][1][i * NqINT + j] - nr[z].xs_2D[m][0][1][i * NqINT + j] * nr[z].xs_2D[m][2][0][i * NqINT + j]), 2) +
@@ -363,6 +410,22 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 			delete[] nr[z].xs_2D;
 		}
 		//Finish the definition for hexahedral element 
+		//clean GSHL_2D
+		for (z = 0; z < nrbsurfnumber; z++) {
+			for (l = 0; l < nr[z].NEL_nrb; l++) {
+				for (i = 0; i < 3; i++) {
+					for (j = 0; j < 4; j++) {
+						for (k = 0; k < NqINT; k++) {
+							delete[] nr[z].GSHL_2D[l][i][j][k];
+						}
+						delete[] nr[z].GSHL_2D[l][i][j];
+					}
+					delete[] nr[z].GSHL_2D[l][i];
+				}
+				delete[] nr[z].GSHL_2D[l];
+			}
+			delete[] nr[z].GSHL_2D;
+		}
 	}
 
 	if (element_type == 1) {

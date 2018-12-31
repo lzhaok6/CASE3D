@@ -579,11 +579,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			for (z = 0; z < nrbsurfnumber; z++) {
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
 					for (k = 0; k < elenode2D; k++) {
-						if (-(2 * xo - 2 * abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) + C*DT) / (2 * C) >= 0.0) {
-							nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j] = -(PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
+						if (-(2 * xo - 2 * abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]) + C*DT) / (2 * C) >= 0.0) {
+							nr[z].XNRBORG[nr[z].DP_2D[j][k] - 1][j] = -(PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
 						}
 						else {
-							nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j] = -(PPEAK*TAU*0.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
+							nr[z].XNRBORG[nr[z].DP_2D[j][k] - 1][j] = -(PPEAK*TAU*0.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
 						}
 					}
 				}
@@ -614,21 +614,21 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			for (z = 0; z < nrbsurfnumber; z++) {
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
 					for (k = 0; k < elenode2D; k++) {
-						nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][0] = FEEDOT[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
+						nr[z].FEEDOT_inc[nr[z].DP_2D[j][k] - 1][j][0] = FEEDOT[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0];
 					}
 				}
 			}
 			for (z = 0; z < nrbsurfnumber; z++) {
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
 					for (k = 0; k < elenode2D; k++) {
-						rd = pow((pow((GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] - XC), 2) + pow((GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1] - YC), 2) + pow((GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][2] - ZC), 2)), 0.5);
+						rd = pow((pow((GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] - XC), 2) + pow((GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1] - YC), 2) + pow((GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][2] - ZC), 2)), 0.5);
 						ro = pow((pow((XC - XO), 2) + pow((YC - YO), 2) + pow((ZC - ZO), 2)), 0.5);
 						//initialize to 0 
 						if (-(rd - ro) / C >= 0) {
-							nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j] = -(PPEAK*TAU*ro*1.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*1.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
+							nr[z].XNRBORG[nr[z].DP_2D[j][k] - 1][j] = -(PPEAK*TAU*ro*1.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*1.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
 						}
 						else {
-							nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j] = -(PPEAK*TAU*ro*0.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*0.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
+							nr[z].XNRBORG[nr[z].DP_2D[j][k] - 1][j] = -(PPEAK*TAU*ro*0.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*RHO*pow(rd, 2)) - (PPEAK*TAU*ro*0.0*(exp((rd - ro) / (C*TAU)) - 1)) / (C*RHO*rd);
 						}
 						// - (PPEAK*TAU*ro*heaviside(-(rd - ro)/C)*(rd - ro + C*TAU - C*TAU*exp(rd/(C*TAU) - ro/(C*TAU))))/(C*RHO*rd^2) - (PPEAK*TAU*ro*heaviside(-(rd - ro)/C)*(exp((rd - ro)/(C*TAU)) - 1))/(C*RHO*rd)
 					}
@@ -994,23 +994,23 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					for (k = 0; k < elenode2D; k++) {
 						if (WAVE == 1) { //plane wave
 							angle = ol[z].norm[j][0] * wavdirc[0] + ol[z].norm[j][1] * wavdirc[1] + ol[z].norm[j][2] * wavdirc[2];
-							ol[z].PSI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1]
-								= (DT / 2.0)*(WPIN[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1]); //INCIDENT DISP. PREDICTOR by time integration	
-							ol[z].DI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1]
-								= ol[z].PSI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1] / (RHO*C);     //trapezoidal integration of the double integrator
-							ol[z].DISPI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][1]
-								= ol[z].DISPI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][0] + angle*ol[z].DI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1];
+							ol[z].PSI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1]
+								= (DT / 2.0)*(WPIN[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1]); //INCIDENT DISP. PREDICTOR by time integration	
+							ol[z].DI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1]
+								= ol[z].PSI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1] / (RHO*C);     //trapezoidal integration of the double integrator
+							ol[z].DISPI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1][1]
+								= ol[z].DISPI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1][0] + angle*ol[z].DI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1];
 						}
 						else { //Spherical wave 
-							r = sqrt(pow((GCOORD[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1][0] - XC), 2) + pow((GCOORD[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1][1] - YC), 2) + pow((GCOORD[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1][2] - ZC), 2));
-							ol[z].PSI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1]
-								= (DT / 2.0)*(WPIN[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1]); //INCIDENT DISP. PREDICTOR by time integration	
-							PSI_inc[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1][1] = ol[z].PSI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1];
-							angle = (ol[z].norm[j][0] * (GCOORD[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1][0] - XC) / r + ol[z].norm[j][1] * (GCOORD[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1][1] - YC) / r + ol[z].norm[j][2] * (GCOORD[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1][2] - ZC) / r);
-							ol[z].DI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1]
-								= ol[z].PSI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1] / (RHO*C) + (PSI_inc[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1][0] + PSI_inc[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1][1]) * (DT / 2) / (RHO * r);  //trapezoidal integration of the double integrator
-							ol[z].DISPI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][1]
-								= ol[z].DISPI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][0] + angle*ol[z].DI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1]; //UPDATED INCIDENT STRUCUTRE DISPLACEMENT 
+							r = sqrt(pow((GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1][0] - XC), 2) + pow((GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1][1] - YC), 2) + pow((GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1][2] - ZC), 2));
+							ol[z].PSI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1]
+								= (DT / 2.0)*(WPIN[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1]); //INCIDENT DISP. PREDICTOR by time integration	
+							PSI_inc[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1][1] = ol[z].PSI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1];
+							angle = (ol[z].norm[j][0] * (GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1][0] - XC) / r + ol[z].norm[j][1] * (GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1][1] - YC) / r + ol[z].norm[j][2] * (GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1][2] - ZC) / r);
+							ol[z].DI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1]
+								= ol[z].PSI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1] / (RHO*C) + (PSI_inc[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1][0] + PSI_inc[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1][1]) * (DT / 2) / (RHO * r);  //trapezoidal integration of the double integrator
+							ol[z].DISPI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1][1]
+								= ol[z].DISPI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1][0] + angle*ol[z].DI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1]; //UPDATED INCIDENT STRUCUTRE DISPLACEMENT 
 						}
 					}
 				}
@@ -1044,13 +1044,13 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[j*elenode2D_gs + k][0] + ol[z].norm[j][1] * ol[z].DISP_gs[j*elenode2D_gs + k][1] + ol[z].norm[j][2] * ol[z].DISP_gs[j*elenode2D_gs + k][2];
 							}
 							else {
-								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[k] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[k] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[k] - 1][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[j][k] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[j][k] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[j][k] - 1][2];
 							}
 							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D_gs + k][1] + (ol[z].DISP_norm[j*elenode2D_gs + k][1] - ol[z].DISP_norm[j*elenode2D_gs + k][0]));
 						}
 					}
 					for (k = 0; k < elenode2D; k++) {
-						WBS[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1] += WBSTEMP[k];
+						WBS[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1] += WBSTEMP[k];
 					}
 				}
 			}
@@ -1066,16 +1066,16 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 							}
 							else {
 								//ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][2];
-								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[k] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[k] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[k] - 1][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[j][k] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[j][k] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[j][k] - 1][2];
 							}
 							std::cout << "We need to derive the DISPI on gauss point!!! (not done yet)" << std::endl;
 							system("PAUSE ");
-							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D_gs + k][1] + (ol[z].DISP_norm[j*elenode2D_gs + k][1] - ol[z].DISP_norm[j*elenode2D_gs + k][0]) - ol[z].DISPI[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][1]);
+							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D_gs + k][1] + (ol[z].DISP_norm[j*elenode2D_gs + k][1] - ol[z].DISP_norm[j*elenode2D_gs + k][0]) - ol[z].DISPI[ol[z].IEN_lc[ol[z].FP_2D[j][k] - 1][j] - 1][1]);
 						}
 					}
 					for (k = 0; k < elenode2D; k++) {
 						//ol[z].WBS[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1] += WBSTEMP[k];
-						WBS[ol[z].IEN_gb[ol[z].FP_2D[k] - 1][j] - 1] += WBSTEMP[k];
+						WBS[ol[z].IEN_gb[ol[z].FP_2D[j][k] - 1][j] - 1] += WBSTEMP[k];
 					}
 				}
 			}
@@ -1141,51 +1141,51 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						for (k = 0; k < elenode2D; k++) {
 							if (improvednrb == 1) {
 								//modify the value base on the angle between normal displacement direction and normal surface direction
-								if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5) != 0) {
+								if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5) != 0) {
 									if (debug == 0) {
-										nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+										nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
 									}
 									else {
 										//nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-										nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (nr[z].norm[j][0]) + (nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (nr[z].norm[j][1]) + (nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+										nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] = ((nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0]) * (nr[z].norm[j][0]) + (nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1]) * (nr[z].norm[j][1]) + (nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2]) * (nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
 									}
 									//std::cout << " " << std::endl;
 								}
 								else {
-									nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = 1.0;
+									nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] = 1.0;
 								}
 							}
 							if (debug == 0) {
-								nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1])
-									- (0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
+								nr[z].XEST_kn[nr[z].DP_2D[j][k] - 1][j] = angle*(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1])
+									- (0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]);
 							}
 							else {
 								//nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) 
 									//- (angle) * (0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
-								nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
+								nr[z].XEST_kn[nr[z].DP_2D[j][k] - 1][j] = angle*(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]);
 							}
 							if (debug == 0) {
-								nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
+								nr[z].XEST_ukn[nr[z].DP_2D[j][k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0];
 							}
 							else {
 								//nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] 
 									//- nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
 								//nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*(P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] - PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0]);
 								//std::cout << " " << std::endl;
-								nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][0] = pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-								nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][0]; //plane wave approximation (PWA)
+								nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][0] = pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
+								nr[z].XEST_ukn[nr[z].DP_2D[j][k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][0]; //plane wave approximation (PWA)
 							}
 						}
 					}
 					for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 						for (k = 0; k < elenode2D; k++) {
-							nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][0] + nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j];
-							nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] + nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j];
+							nr[z].XNRB_kn[nr[z].DP_2D[j][k] - 1][j][1] = nr[z].XNRB_kn[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].XEST_kn[nr[z].DP_2D[j][k] - 1][j];
+							nr[z].XNRB_ukn[nr[z].DP_2D[j][k] - 1][j][1] = nr[z].XNRB_ukn[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].XEST_ukn[nr[z].DP_2D[j][k] - 1][j];
 						}
 					}
 					for (j = 0; j < nr[z].NEL_nrb; j++) {
 						for (k = 0; k < elenode2D; k++) {
-							NRBDISPTEMP[k] = -RHO* (nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j]);
+							NRBDISPTEMP[k] = -RHO* (nr[z].XNRB_kn[nr[z].DP_2D[j][k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[j][k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[j][k] - 1][j]);
 						}
 						for (h = 0; h < elenode2D; h++) {
 							BNRBTEMP[h] = 0.0;
@@ -1194,7 +1194,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 							}
 						}
 						for (k = 0; k < elenode2D; k++) {
-							BNRB[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1] += BNRBTEMP[k];
+							BNRB[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1] += BNRBTEMP[k];
 						}
 					}
 				}
@@ -1203,7 +1203,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				for (z = 0; z < nrbsurfnumber; z++) { //from bottom to front surface (k=0 means all node case) 
 					for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 						for (k = 0; k < elenode2D; k++) {
-							nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][1] = nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][0] + (0.5 * DT)*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
+							nr[z].FEEDOT_inc[nr[z].DP_2D[j][k] - 1][j][1] = nr[z].FEEDOT_inc[nr[z].DP_2D[j][k] - 1][j][0] + (0.5 * DT)*(PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]);
 							//prototype: FEEDOT_inc[nr[z].NRBA[j][0] - 1][1] = (PPEAK*TAU - PPEAK*TAU*exp(pow((pow(XC, 2) - 2 * XC*d.GCOORD[nr[z].NRBA[j][0] - 1][0] + pow(YC, 2) - 2 * YC*d.GCOORD[nr[z].NRBA[j][0] - 1][1] + pow(ZC, 2) - 2 * ZC*d.GCOORD[nr[z].NRBA[j][0] - 1][2] + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][0], 2) + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][1], 2) + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][2], 2)), 0.5) / (C*TAU))*exp(-(DT*i) / TAU)*exp(-pow((pow(XC, 2) - 2 * XC*XO + pow(XO, 2) + pow(YC, 2) - 2 * YC*YO + pow(YO, 2) + pow(ZC, 2) - 2 * ZC*ZO + pow(ZO, 2)), 0.5) / (C*TAU))*exp(-DT / TAU))*(sign((C*DT - pow((pow(XC, 2) - 2 * XC*d.GCOORD[nr[z].NRBA[j][0] - 1][0] + pow(YC, 2) - 2 * YC*d.GCOORD[nr[z].NRBA[j][0] - 1][1] + pow(ZC, 2) - 2 * ZC*d.GCOORD[nr[z].NRBA[j][0] - 1][2] + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][0], 2) + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][1], 2) + pow(d.GCOORD[nr[z].NRBA[j][0] - 1][2], 2)), 0.5) + pow((pow(XC, 2) - 2 * XC*XO + pow(XO, 2) + pow(YC, 2) - 2 * YC*YO + pow(YO, 2) + pow(ZC, 2) - 2 * ZC*ZO + pow(ZO, 2)), 0.5) + C*DT*i) / C) / 2.0 + 0.5);
 						}
 					}
@@ -1211,50 +1211,50 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						for (k = 0; k < elenode2D; k++) {
 							if (improvednrb == 1) {
 								//modify the value base on the angle between normal displacement direction and normal surface direction
-								if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5) != 0) {
+								if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5) != 0) {
 									if (debug == 0) {
-										nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+										nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
 									}
 									else {
-										nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+										nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
 									}
 									//std::cout << " " << std::endl;
 								}
 								else {
-									nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = 1.0;
+									nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] = 1.0;
 								}
 							}
-							R = pow(pow(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] - XC, 2) + pow(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1] - YC, 2) + pow(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][2] - ZC, 2), 0.5);
-							angle = (nr[z].norm[j][0] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] - XC) + nr[z].norm[j][1] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1] - YC) + nr[z].norm[j][2] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][2] - ZC)) / R;
+							R = pow(pow(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] - XC, 2) + pow(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1] - YC, 2) + pow(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][2] - ZC, 2), 0.5);
+							angle = (nr[z].norm[j][0] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] - XC) + nr[z].norm[j][1] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1] - YC) + nr[z].norm[j][2] * (GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][2] - ZC)) / R;
 							if (debug == 0) {
-								nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*((0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) +
-									(0.5 * DT / (RHO*R))*(nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][0] + nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][1])) -
-									(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
+								nr[z].XEST_kn[nr[z].DP_2D[j][k] - 1][j] = angle*((0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]) +
+									(0.5 * DT / (RHO*R))*(nr[z].FEEDOT_inc[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].FEEDOT_inc[nr[z].DP_2D[j][k] - 1][j][1])) -
+									(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]);
 							}
 							else {
 								//nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*((0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) +
 									//(0.5 * DT / (RHO*R))*(FEEDOT_inc[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + FEEDOT_inc[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]))
 									//- (angle) * (0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
-								nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*((0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) +
-									(0.5 * DT / (RHO*R))*(nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][0] + nr[z].FEEDOT_inc[nr[z].DP_2D[k] - 1][j][1]));
+								nr[z].XEST_kn[nr[z].DP_2D[j][k] - 1][j] = angle*((0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]) +
+									(0.5 * DT / (RHO*R))*(nr[z].FEEDOT_inc[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].FEEDOT_inc[nr[z].DP_2D[j][k] - 1][j][1]));
 							}
 							if (debug == 0) {
-								nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0]; //plane wave approximation (PWA)
+								nr[z].XEST_ukn[nr[z].DP_2D[j][k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0]; //plane wave approximation (PWA)
 							}
 							else {
 								//nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0]
 									//- nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]);
-								nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
+								nr[z].XEST_ukn[nr[z].DP_2D[j][k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0];
 								//nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][0] = pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
 								//nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][0]; //plane wave approximation (PWA)
 							}
-							nr[z].XNRBORG2[nr[z].DP_2D[k] - 1][j] = angle*nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j];
+							nr[z].XNRBORG2[nr[z].DP_2D[j][k] - 1][j] = angle*nr[z].XNRBORG[nr[z].DP_2D[j][k] - 1][j];
 						}
 					}
 					for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 						for (k = 0; k < elenode2D; k++) {
-							nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][0] + nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j];
-							nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] + nr[z].XEST_ukn[nr[z].DP_2D[k] - 1][j];
+							nr[z].XNRB_kn[nr[z].DP_2D[j][k] - 1][j][1] = nr[z].XNRB_kn[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].XEST_kn[nr[z].DP_2D[j][k] - 1][j];
+							nr[z].XNRB_ukn[nr[z].DP_2D[j][k] - 1][j][1] = nr[z].XNRB_ukn[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].XEST_ukn[nr[z].DP_2D[j][k] - 1][j];
 						}
 					}
 					for (j = 0; j < nr[z].NEL_nrb; j++) { //IEN_gb needs to be changed (NINT*N)
@@ -1262,7 +1262,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 							BNRBTEMP[h] = 0.0;
 							for (k = 0; k < elenode2D; k++) {
 								if (debug_algo5 == 0) {
-									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] + nr[z].XNRBORG2[nr[z].DP_2D[k] - 1][j]);
+									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB_kn[nr[z].DP_2D[j][k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[j][k] - 1][j][1] + nr[z].XNRBORG2[nr[z].DP_2D[j][k] - 1][j]);
 								}
 								else {
 									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (0);
@@ -1270,7 +1270,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 							}
 						}
 						for (k = 0; k < elenode2D; k++) {
-							BNRB[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1] += BNRBTEMP[k];
+							BNRB[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1] += BNRBTEMP[k];
 						}
 					}
 				}
@@ -1282,38 +1282,38 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					for (k = 0; k < elenode2D; k++) {
 						if (improvednrb == 1) {
 							//modify the value base on the angle between normal displacement direction and normal surface direction
-							if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5) != 0) {
+							if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5) != 0) {
 								if (debug == 0) {
-									nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+									nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
 								}
 								else {
-									nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-									//nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+									nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0]) * (nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1]) * (nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2]) * (nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
+									//nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
 								}
 							}
 							else {
-								nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] = 1.0;
+								nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] = 1.0;
 							}
 						}
 						if (debug == 0) {
-							nr[z].XEST[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
+							nr[z].XEST[nr[z].DP_2D[j][k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0];
 						}
 						else {
-							//nr[z].XEST[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*abs(P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0]);
-							nr[z].XEST[nr[z].DP_2D[k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0];
+							//nr[z].XEST[nr[z].DP_2D[j][k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * (DT / (RHO*C))*abs(P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0]);
+							nr[z].XEST[nr[z].DP_2D[j][k] - 1][j] = nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * (DT / (RHO*C))*P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0];
 						}
 					}
 				}
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
 					for (k = 0; k < elenode2D; k++) {
 						if (debug == 0) {
-							nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][0] + nr[z].XEST[nr[z].DP_2D[k] - 1][j]; //0 IS BEFORE MODIFICATION, 1 IS AFTER MODIFICATION
+							nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].XEST[nr[z].DP_2D[j][k] - 1][j]; //0 IS BEFORE MODIFICATION, 1 IS AFTER MODIFICATION
 						}
 						else {
-							//nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][0] + nr[z].XEST[nr[z].DP_2D[k] - 1][j]; //0 IS BEFORE MODIFICATION, 1 IS AFTER MODIFICATION
-							nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][0] = pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-							nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][0] + DT * nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][0];
-							//nr[z].XNRB[nr[z].DP_2D[k] - 1][j][2] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] + (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - nr[z].XNRB[nr[z].DP_2D[k] - 1][j][0]); //0 IS BEFORE MODIFICATION, 1 IS AFTER MODIFICATION
+							//nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].XEST[nr[z].DP_2D[j][k] - 1][j]; //0 IS BEFORE MODIFICATION, 1 IS AFTER MODIFICATION
+							nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][0] = pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
+							nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][0] + DT * nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][0];
+							//nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][2] = nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][1] + (nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][1] - nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][0]); //0 IS BEFORE MODIFICATION, 1 IS AFTER MODIFICATION
 						}
 					}
 				}
@@ -1323,10 +1323,10 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					for (j = 0; j < nr[z].NEL_nrb; j++) {
 						for (k = 0; k < elenode2D; k++) {
 							if (debug == 0) {
-								NRBDISPTEMP[k] = -RHO* (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j]);
+								NRBDISPTEMP[k] = -RHO* (nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[j][k] - 1][j]);
 							}
 							else {
-								NRBDISPTEMP[k] = -RHO* (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j]);
+								NRBDISPTEMP[k] = -RHO* (nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[j][k] - 1][j]);
 							}
 						}
 						for (h = 0; h < elenode2D; h++) {
@@ -1336,20 +1336,20 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 							}
 						}
 						for (k = 0; k < elenode2D; k++) {
-							BNRB[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1] += BNRBTEMP[k];
+							BNRB[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1] += BNRBTEMP[k];
 						}
 					}
 				}
 			}
 			else { //Spherical wave
 				for (z = 0; z < nrbsurfnumber; z++) { //from bottom to front surface (k=0 means all node case)
-					//XNRB is the predicted displacement normal to the structure (since P is normal to the surface)
+													  //XNRB is the predicted displacement normal to the structure (since P is normal to the surface)
 					for (j = 0; j < nr[z].NEL_nrb; j++) {
 						for (h = 0; h < elenode2D; h++) {
 							BNRBTEMP[h] = 0.0;
 							for (k = 0; k < elenode2D; k++) {
 								if (debug_algo5 == 0) {
-									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[k] - 1][j]);
+									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (-RHO) * (nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[j][k] - 1][j]);
 								}
 								else {
 									BNRBTEMP[h] += nr[z].ADMASTER[j][h][k] * (1);
@@ -1357,7 +1357,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 							}
 						}
 						for (k = 0; k < elenode2D; k++) {
-							BNRB[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1] += BNRBTEMP[k];
+							BNRB[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1] += BNRBTEMP[k];
 						}
 					}
 				}
@@ -1623,50 +1623,50 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				/*
 				//XNRB corrector
 				for (j = 0; j < nr[z].NRBNODE; j++) {
-					DPS_ukn[nr[z].NRBA[j] - 1] = 0.5*DT*(P[nr[z].NRBA[j] - 1][1] + P[nr[z].NRBA[j] - 1][0]);
-					XCOR_ukn[nr[z].NRBA[j] - 1] = DPS_ukn[nr[z].NRBA[j] - 1] / (RHO*C);
+				DPS_ukn[nr[z].NRBA[j] - 1] = 0.5*DT*(P[nr[z].NRBA[j] - 1][1] + P[nr[z].NRBA[j] - 1][0]);
+				XCOR_ukn[nr[z].NRBA[j] - 1] = DPS_ukn[nr[z].NRBA[j] - 1] / (RHO*C);
 				}
 				*/
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
 					for (k = 0; k < elenode2D; k++) {
 						if (improvednrb == 1) {
 							//modify the value base on the angle between normal displacement direction and normal surface direction
-							if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5) != 0) {
+							if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5) != 0) {
 								if (debug == 0) {
-									nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+									nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
 								}
 								else {
-									nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+									nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
 								}
 								//std::cout << " " << std::endl;
 							}
 							else {
-								nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = 1.0;
+								nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] = 1.0;
 							}
 						}
 						if (debug == 0) {
-							nr[z].XCOR_ukn[nr[z].DP_2D[k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) / (RHO*C);
+							nr[z].XCOR_ukn[nr[z].DP_2D[j][k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]) / (RHO*C);
 						}
 						else {
-							//nr[z].XCOR_ukn[nr[z].DP_2D[k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) / (RHO*C)
-								//- 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] * PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) / (RHO*C);
-							//nr[z].XCOR_ukn[nr[z].DP_2D[k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) / (RHO*C);
-							nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][1] = pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-							//nr[z].XCOR_ukn[nr[z].DP_2D[k] - 1][j] = 0.5 * (nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][0] + nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][1]);
-							nr[z].XCOR_ukn[nr[z].DP_2D[k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][0] + nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][1]);
+							//nr[z].XCOR_ukn[nr[z].DP_2D[j][k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]) / (RHO*C)
+							//- 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] * PIN[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]) / (RHO*C);
+							//nr[z].XCOR_ukn[nr[z].DP_2D[j][k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]) / (RHO*C);
+							nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][1] = pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
+							//nr[z].XCOR_ukn[nr[z].DP_2D[j][k] - 1][j] = 0.5 * (nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][1]);
+							nr[z].XCOR_ukn[nr[z].DP_2D[j][k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][1]);
 						}
 					}
 				}
 				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 					for (k = 0; k < elenode2D; k++) {
-						//nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] + XCOR_ukn[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1];
-						nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] + nr[z].XCOR_ukn[nr[z].DP_2D[k] - 1][j];
+						//nr[z].XNRB_ukn[nr[z].DP_2D[j][k] - 1][j][1] = nr[z].XNRB_ukn[nr[z].DP_2D[j][k] - 1][j][0] + XCOR_ukn[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1];
+						nr[z].XNRB_ukn[nr[z].DP_2D[j][k] - 1][j][1] = nr[z].XNRB_ukn[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].XCOR_ukn[nr[z].DP_2D[j][k] - 1][j];
 					}
 				}
 				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 					for (k = 0; k < elenode2D; k++) {
-						nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][0] = nr[z].XNRB_kn[nr[z].DP_2D[k] - 1][j][1];
-						nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][0] = nr[z].XNRB_ukn[nr[z].DP_2D[k] - 1][j][1];
+						nr[z].XNRB_kn[nr[z].DP_2D[j][k] - 1][j][0] = nr[z].XNRB_kn[nr[z].DP_2D[j][k] - 1][j][1];
+						nr[z].XNRB_ukn[nr[z].DP_2D[j][k] - 1][j][0] = nr[z].XNRB_ukn[nr[z].DP_2D[j][k] - 1][j][1];
 					}
 				}
 			}
@@ -1675,51 +1675,51 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 			for (z = 0; z < nrbsurfnumber; z++) {
 				/*
 				for (j = 0; j < nr[z].NRBNODE; j++) {
-					DPS[nr[z].NRBA[j] - 1] = 0.5*DT*(P[nr[z].NRBA[j] - 1][1] + P[nr[z].NRBA[j] - 1][0]); // PRESSURE CORRECTOR FOR NRB
+				DPS[nr[z].NRBA[j] - 1] = 0.5*DT*(P[nr[z].NRBA[j] - 1][1] + P[nr[z].NRBA[j] - 1][0]); // PRESSURE CORRECTOR FOR NRB
 				}
 				*/
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
 					for (k = 0; k < elenode2D; k++) {
 						if (improvednrb == 1) {
 							//modify the value base on the angle between normal displacement direction and normal surface direction
-							if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5) != 0) {
+							if (pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5) != 0) {
 								if (debug == 0) {
-									nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+									nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
 								}
 								else {
-									nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-									//nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
+									nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0]) * (nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1]) * (nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2]) * (nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
+									//nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] = ((-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0]) * (-nr[z].norm[j][0]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1]) * (-nr[z].norm[j][1]) + (-nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2]) * (-nr[z].norm[j][2])) / pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
 								}
 							}
 							else {
-								nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] = 1.0;
+								nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] = 1.0;
 							}
 						}
 						if (debug == 0) {
-							nr[z].XCOR[nr[z].DP_2D[k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) / (RHO*C);
+							nr[z].XCOR[nr[z].DP_2D[j][k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]) / (RHO*C);
 						}
 						else {
-							//nr[z].XCOR[nr[z].DP_2D[k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * abs(P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0]) + nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] * abs(P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1])) / (RHO*C);
-							//nr[z].XCOR[nr[z].DP_2D[k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) / (RHO*C);
-							nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][1] = pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-							nr[z].XCOR[nr[z].DP_2D[k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][0] + nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][1]);
+							//nr[z].XCOR[nr[z].DP_2D[j][k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * abs(P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0]) + nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] * abs(P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1])) / (RHO*C);
+							//nr[z].XCOR[nr[z].DP_2D[j][k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][0] + nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] * P[nr[z].IEN_gb[nr[z].DP_2D[j][k] - 1][j] - 1][1]) / (RHO*C);
+							nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][1] = pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
+							nr[z].XCOR[nr[z].DP_2D[j][k] - 1][j] = 0.5 * DT * (nr[z].angle_disp1[nr[z].DP_2D[j][k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][1]);
 						}
 					}
 				}
 				/*
 				for (j = 0; j < nr[z].NRBNODE; j++) {
-					XCOR[nr[z].NRBA[j] - 1] = DPS[nr[z].NRBA[j] - 1] / (RHO*C);  //DISPLACEMENT CORRECTOR
+				XCOR[nr[z].NRBA[j] - 1] = DPS[nr[z].NRBA[j] - 1] / (RHO*C);  //DISPLACEMENT CORRECTOR
 				}
 				*/
 				for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 					for (k = 0; k < elenode2D; k++) {
 						if (debug == 0) {
-							nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][0] + nr[z].XCOR[nr[z].DP_2D[k] - 1][j];
+							nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].XCOR[nr[z].DP_2D[j][k] - 1][j];
 						}
 						else {
-							nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][0] + nr[z].XCOR[nr[z].DP_2D[k] - 1][j];
-							//nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][1] = pow(pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[k] - 1][2], 2), 0.5);
-							//nr[z].XNRB[nr[z].DP_2D[k] - 1][j][2] = nr[z].angle_disp2[nr[z].DP_2D[k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[k] - 1][j][1];
+							nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][0] + nr[z].XCOR[nr[z].DP_2D[j][k] - 1][j];
+							//nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][1] = pow(pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][0], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][1], 2) + pow(nr[z].P_dev[j][nr[z].DP_2D[j][k] - 1][2], 2), 0.5);
+							//nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][2] = nr[z].angle_disp2[nr[z].DP_2D[j][k] - 1][j] * nr[z].disp_mag[nr[z].DP_2D[j][k] - 1][j][1];
 						}
 					}
 				}
@@ -1777,10 +1777,10 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				for (j = 0; j < nr[z].NEL_nrb; j++) {
 					for (k = 0; k < elenode2D; k++) {
 						if (debug == 0) {
-							nr[z].XNRB[nr[z].DP_2D[k] - 1][j][0] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1];
+							nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][0] = nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][1];
 						}
 						else {
-							nr[z].XNRB[nr[z].DP_2D[k] - 1][j][0] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1];
+							nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][0] = nr[z].XNRB[nr[z].DP_2D[j][k] - 1][j][1];
 							//nr[z].XNRB[nr[z].DP_2D[k] - 1][j][0] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1]; //U(n-1)=U(n)
 							//nr[z].XNRB[nr[z].DP_2D[k] - 1][j][1] = nr[z].XNRB[nr[z].DP_2D[k] - 1][j][2]; //U(n)=U(n+1)
 						}
