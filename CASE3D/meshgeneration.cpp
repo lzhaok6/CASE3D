@@ -33,14 +33,17 @@ struct meshgenerationstruct meshgeneration() {
 
 	int elenode3D = 0;
 	int elenode2D = 0;
+	int elenode2D_ln = 0; //linear surface element node number 
 	if (element_type == 0) { //hex element
 		elenode3D = NINT*NINT*NINT;
 		elenode2D = NINT*NINT;
+		elenode2D_ln = 4; 
 	}
 	if (element_type == 1) { //tet element
 		if (N == 1) {
 			elenode3D = 4;
 			elenode2D = 3;
+			elenode2D_ln = 3; 
 		}
 		else {
 			std::cout << "High-order tet element is not supported yet" << std::endl;
@@ -50,8 +53,9 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
-	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1ftstructuredhex_fs_150m_10m_24m_mirror.inp";
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_075ftstructuredhex_fs_150m_10m_24m_mirror.inp";
+	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1ftbasemesh_fs_150m_10m_24m.msh";
+	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
@@ -389,7 +393,6 @@ struct meshgenerationstruct meshgeneration() {
 		}
 
 		//define FP, FP_2D, DP, DP_2D
-		//What is the difference between FP and FP_2D? 
 		for (int z = 0; z < owsfnumber; z++) {
 			ol[z].FP = new int*[ol[z].FSNEL];
 			for (int i = 0; i < ol[z].FSNEL; i++) {
@@ -453,7 +456,11 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 		else if (element_type == 1) {
-			ct = 0; 
+			//Define FP_2D 
+			for (z = 0; z < owsfnumber; z++) {
+				ol[z].FP_2D = new int[ol[z].FSNEL*elenode2D];
+			}
+			ct = 0;
 			for (int z = 0; z < wt_py.size(); z++) {
 				for (int i = 0; i < ien_py[wt_py[z]].size(); i++) {
 					if (surface[wt_py[z]] == "S1") {
@@ -468,16 +475,20 @@ struct meshgenerationstruct meshgeneration() {
 					else if (surface[wt_py[z]] == "S4") {
 						ol[0].FP[ct][0] = 1; ol[0].FP[ct][1] = 4; ol[0].FP[ct][2] = 3;
 					}
-					ol[0].FP_2D[ct][0] = 1;
-					ol[0].FP_2D[ct][1] = 2;
-					ol[0].FP_2D[ct][2] = 3;
-					ct += 1; 
+					ol[0].FP_2D[ct*elenode2D + 0] = 1;
+					ol[0].FP_2D[ct*elenode2D + 1] = 2;
+					ol[0].FP_2D[ct*elenode2D + 2] = 3;
+					ct += 1;
 				}
 			}
-			ct = 0; 
+			//Define DP_2D
+			for (z = 0; z < nrbsurfnumber; z++) {
+				nr[z].DP_2D = new int[nr[z].NEL_nrb*elenode2D];
+			}
+			ct = 0;
 			for (int z = 0; z < nrb_py.size(); z++) {
 				for (int i = 0; i < ien_py[nrb_py[z]].size(); i++) {
-					if (surface[nrb_py[z]]== "S1") {
+					if (surface[nrb_py[z]] == "S1") {
 						nr[0].DP[ct][0] = 1; nr[0].DP[ct][1] = 3; nr[0].DP[ct][2] = 2;
 					}
 					else if (surface[nrb_py[z]] == "S2") {
@@ -489,9 +500,9 @@ struct meshgenerationstruct meshgeneration() {
 					else if (surface[nrb_py[z]] == "S4") {
 						nr[0].DP[ct][0] = 1; nr[0].DP[ct][1] = 4; nr[0].DP[ct][2] = 3;
 					}
-					nr[0].DP_2D[ct][0] = 1;
-					nr[0].DP_2D[ct][1] = 2;
-					nr[0].DP_2D[ct][2] = 3;
+					nr[0].DP_2D[ct*elenode2D + 0] = 1;
+					nr[0].DP_2D[ct*elenode2D + 1] = 2;
+					nr[0].DP_2D[ct*elenode2D + 2] = 3;
 					ct += 1;
 				}
 			}
@@ -677,95 +688,51 @@ struct meshgenerationstruct meshgeneration() {
 
 	if (element_type == 1) {
 		for (z = 0; z < owsfnumber; z++) {
-			ol[z].LNA_norm = new int*[ol[z].FSNEL];
-			for (i = 0; i < ol[z].FSNEL; i++) {
-				ol[z].LNA_norm[i] = new int[elenode2D];
-			}
+			ol[z].LNA_norm = new int[ol[z].FSNEL*elenode2D];
 		}
 		for (z = 0; z < nrbsurfnumber; z++) {
-			nr[z].LNA_norm = new int*[nr[z].NEL_nrb];
-			for (i = 0; i < nr[z].NEL_nrb; i++) {
-				nr[z].LNA_norm[i] = new int[elenode2D];
-			}
+			nr[z].LNA_norm = new int[nr[z].NEL_nrb*elenode2D];
 		}
 		for (z = 0; z < owsfnumber; z++) {
 			for (i = 0; i < ol[z].FSNEL; i++) {
-				ol[z].LNA_norm[i][0] = 1;
-				ol[z].LNA_norm[i][1] = 2;
-				ol[z].LNA_norm[i][2] = 3;
+				ol[z].LNA_norm[i*elenode2D + 0] = 1;
+				ol[z].LNA_norm[i*elenode2D + 1] = 2;
+				ol[z].LNA_norm[i*elenode2D + 2] = 3;
 			}
 		}
 		for (z = 0; z < nrbsurfnumber; z++) {
 			for (i = 0; i < nr[z].NEL_nrb; i++) {
-				nr[z].LNA_norm[i][0] = 1;
-				nr[z].LNA_norm[i][1] = 2;
-				nr[z].LNA_norm[i][2] = 3;
+				nr[z].LNA_norm[i*elenode2D + 0] = 1;
+				nr[z].LNA_norm[i*elenode2D + 1] = 2;
+				nr[z].LNA_norm[i*elenode2D + 2] = 3;
 			}
 		}
 	}
 
-	//Distribute the memory for FP_2D 
-	for (z = 0; z < owsfnumber; z++) {
-		ol[z].FP_2D = new int*[ol[z].FSNEL];
-		for (i = 0; i < ol[z].FSNEL; i++) {
-			ol[z].FP_2D[i] = new int[elenode2D];
-		}
-	}
-	//Distribute the memory for DP_2D 
-	for (z = 0; z < nrbsurfnumber; z++) {
-		nr[z].DP_2D = new int*[nr[z].NEL_nrb];
-		for (i = 0; i < nr[z].NEL_nrb; i++) {
-			nr[z].DP_2D[i] = new int[elenode2D];
-		}
-	}
-
-	int LNA_2D_dummy[NINT][NINT];
 	if (element_type == 0) {
+		//Distribute the memory for FP_2D 
+		for (z = 0; z < owsfnumber; z++) {
+			ol[z].FP_2D = new int[ol[z].FSNEL*elenode2D];
+		}
+		//Distribute the memory for DP_2D 
+		for (z = 0; z < nrbsurfnumber; z++) {
+			nr[z].DP_2D = new int[nr[z].NEL_nrb*elenode2D];
+		}
 		//Distribute the memory
 		for (z = 0; z < owsfnumber; z++) {
-			ol[z].LNA_2D = new int**[ol[z].FSNEL];
-			for (i = 0; i < ol[z].FSNEL; i++) {
-				ol[z].LNA_2D[i] = new int*[NINT];
-				for (j = 0; j < NINT; j++) {
-					ol[z].LNA_2D[i][j] = new int[NINT];
-				}
-			}
-			ol[z].LNA_norm = new int*[ol[z].FSNEL];
-			for (i = 0; i < ol[z].FSNEL; i++) {
-				ol[z].LNA_norm[i] = new int[4];
-			}
-			ol[z].LNA_JB2D = new int*[ol[z].FSNEL];
-			for (i = 0; i < ol[z].FSNEL; i++) {
-				ol[z].LNA_JB2D[i] = new int[4];
-			}
+			ol[z].LNA_2D = new int[ol[z].FSNEL*NINT*NINT];
+			ol[z].LNA_norm = new int[ol[z].FSNEL * 4];
+			ol[z].LNA_JB2D = new int[ol[z].FSNEL * 4];
 			ol[z].Jacob_face = new int*[ol[z].FSNEL];
 			for (i = 0; i < ol[z].FSNEL; i++) {
 				ol[z].Jacob_face[i] = new int[2];
 			}
-			ol[z].LNA_algo2 = new int**[ol[z].FSNEL];
-			for (i = 0; i < ol[z].FSNEL; i++) {
-				ol[z].LNA_algo2[i] = new int*[2];
-				for (j = 0; j < 2; j++) {
-					ol[z].LNA_algo2[i][j] = new int[2];
-				}
-			}
+			ol[z].LNA_algo2 = new int[ol[z].FSNEL * 2 * 2];
 		}
 		for (z = 0; z < nrbsurfnumber; z++) {
-			nr[z].LNA_2D = new int**[nr[z].NEL_nrb];
-			for (i = 0; i < nr[z].NEL_nrb; i++) {
-				nr[z].LNA_2D[i] = new int*[NINT];
-				for (j = 0; j < NINT; j++) {
-					nr[z].LNA_2D[i][j] = new int[NINT];
-				}
-			}
-			nr[z].LNA_norm = new int*[nr[z].NEL_nrb];
-			for (i = 0; i < nr[z].NEL_nrb; i++) {
-				nr[z].LNA_norm[i] = new int[4];
-			}
-			nr[z].LNA_JB2D = new int*[nr[z].NEL_nrb];
-			for (i = 0; i < nr[z].NEL_nrb; i++) {
-				nr[z].LNA_JB2D[i] = new int[4];
-			}
+			nr[z].LNA_2D = new int[nr[z].NEL_nrb*NINT*NINT];
+			nr[z].LNA_norm = new int[nr[z].NEL_nrb * 4];
+			nr[z].LNA_JB2D = new int[nr[z].NEL_nrb * 4];
 			nr[z].Jacob_face = new int*[nr[z].NEL_nrb];
 			for (i = 0; i < nr[z].NEL_nrb; i++) {
 				nr[z].Jacob_face[i] = new int[2];
@@ -777,6 +744,7 @@ struct meshgenerationstruct meshgeneration() {
 		int total_subsets; //total number of subsets to be scanned 
 		int ct_wt = 0; //count how many wetted surface elements have already been defined
 		int ct_nrb = 0; //count how many nrb surface elements have already been defined
+		int LNA_2D_dummy[NINT][NINT];
 		int* FP_DP_2D_dummy = new int[elenode2D];
 		if (input_type == "Gmsh") {
 			total_subsets = owsfnumber + nrbsurfnumber;
@@ -843,21 +811,21 @@ struct meshgenerationstruct meshgeneration() {
 				if (nrb == 1) {
 					for (i = 0; i < numele_py[z]; i++) {
 						for (j = 0; j < elenode2D; j++) {
-							nr[nrb_ct].DP_2D[ct_nrb][j] = FP_DP_2D_dummy[j];
+							nr[nrb_ct].DP_2D[ct_nrb*elenode2D + j] = FP_DP_2D_dummy[j];
 						}
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								nr[nrb_ct].LNA_2D[ct_nrb][j][k] = LNA_2D_dummy[j][k];
+								nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + j*NINT + k] = LNA_2D_dummy[j][k];
 							}
 						}
-						nr[nrb_ct].LNA_norm[ct_nrb][0] = nr[nrb_ct].LNA_2D[ct_nrb][0][0]; //make sure the orientation is counter clockwise
-						nr[nrb_ct].LNA_norm[ct_nrb][1] = nr[nrb_ct].LNA_2D[ct_nrb][0][N];
-						nr[nrb_ct].LNA_norm[ct_nrb][2] = nr[nrb_ct].LNA_2D[ct_nrb][N][N];
-						nr[nrb_ct].LNA_norm[ct_nrb][3] = nr[nrb_ct].LNA_2D[ct_nrb][N][0];
-						nr[nrb_ct].LNA_JB2D[ct_nrb][0] = 1;  //Take a look at the header file for more information of LNA_JB2D
-						nr[nrb_ct].LNA_JB2D[ct_nrb][1] = 5;
-						nr[nrb_ct].LNA_JB2D[ct_nrb][2] = 8;
-						nr[nrb_ct].LNA_JB2D[ct_nrb][3] = 4;
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 0] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + 0 * NINT + 0]; //make sure the orientation is counter clockwise
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 1] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + 0 * NINT + N];
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 2] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + N];
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 3] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + 0];
+						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 0] = 1;  //Take a look at the header file for more information of LNA_JB2D
+						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 1] = 5;
+						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 2] = 8;
+						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 3] = 4;
 						nr[nrb_ct].Jacob_face[ct_nrb][0] = 1; //y coordinate
 						nr[nrb_ct].Jacob_face[ct_nrb][1] = 2;
 						ct_nrb += 1;
@@ -871,25 +839,25 @@ struct meshgenerationstruct meshgeneration() {
 					//first defined the rest of FP_2D in the current element group 
 					for (i = 0; i < numele_py[z]; i++) {
 						for (j = 0; j < elenode2D; j++) {
-							ol[wet_ct].FP_2D[ct_wt][j] = FP_DP_2D_dummy[j];
+							ol[wet_ct].FP_2D[ct_wt*elenode2D + j] = FP_DP_2D_dummy[j];
 						}
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								ol[wet_ct].LNA_2D[ct_wt][j][k] = LNA_2D_dummy[j][k];
+								ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + j*NINT + k] = LNA_2D_dummy[j][k];
 							}
 						}
-						ol[wet_ct].LNA_norm[ct_wt][0] = ol[wet_ct].LNA_2D[ct_wt][0][0]; //make sure the orientation is counter clockwise
-						ol[wet_ct].LNA_norm[ct_wt][1] = ol[wet_ct].LNA_2D[ct_wt][0][N];
-						ol[wet_ct].LNA_norm[ct_wt][2] = ol[wet_ct].LNA_2D[ct_wt][N][N];
-						ol[wet_ct].LNA_norm[ct_wt][3] = ol[wet_ct].LNA_2D[ct_wt][N][0];
-						ol[wet_ct].LNA_JB2D[ct_wt][0] = 1;
-						ol[wet_ct].LNA_JB2D[ct_wt][1] = 5;
-						ol[wet_ct].LNA_JB2D[ct_wt][2] = 8;
-						ol[wet_ct].LNA_JB2D[ct_wt][3] = 4;
-						ol[wet_ct].LNA_algo2[ct_wt][0][0] = 1;
-						ol[wet_ct].LNA_algo2[ct_wt][0][1] = 2;
-						ol[wet_ct].LNA_algo2[ct_wt][1][1] = 3;
-						ol[wet_ct].LNA_algo2[ct_wt][1][0] = 4;
+						ol[wet_ct].LNA_norm[ct_wt*4 + 0] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + 0 * NINT + 0]; //make sure the orientation is counter clockwise
+						ol[wet_ct].LNA_norm[ct_wt*4 + 1] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + 0 * NINT + N];
+						ol[wet_ct].LNA_norm[ct_wt*4 + 2] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + N];
+						ol[wet_ct].LNA_norm[ct_wt*4 + 3] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + 0];
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 0] = 1;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 1] = 5;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 2] = 8;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 3] = 4;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 0 * 2 + 0] = 1;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 0 * 2 + 1] = 2;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 1 * 2 + 1] = 3;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 1 * 2 + 0] = 4;
 						ol[wet_ct].Jacob_face[ct_wt][0] = 1; //y coordinate
 						ol[wet_ct].Jacob_face[ct_wt][1] = 2; //z coordinate
 						ct_wt += 1;
@@ -925,21 +893,21 @@ struct meshgenerationstruct meshgeneration() {
 				if (nrb == 1) {
 					for (i = 0; i < numele_py[z]; i++) {
 						for (j = 0; j < elenode2D; j++) {
-							nr[nrb_ct].DP_2D[ct_nrb][j] = FP_DP_2D_dummy[j];
+							nr[nrb_ct].DP_2D[ct_nrb*elenode2D + j] = FP_DP_2D_dummy[j];
 						}
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								nr[nrb_ct].LNA_2D[ct_nrb][j][k] = LNA_2D_dummy[j][k];
+								nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + j*NINT + k] = LNA_2D_dummy[j][k];
 							}
 						}
-						nr[nrb_ct].LNA_norm[ct_nrb][0] = nr[nrb_ct].LNA_2D[ct_nrb][0][0]; //make sure the orientation is counter clockwise
-						nr[nrb_ct].LNA_norm[ct_nrb][1] = nr[nrb_ct].LNA_2D[ct_nrb][N][0];
-						nr[nrb_ct].LNA_norm[ct_nrb][2] = nr[nrb_ct].LNA_2D[ct_nrb][N][N];
-						nr[nrb_ct].LNA_norm[ct_nrb][3] = nr[nrb_ct].LNA_2D[ct_nrb][0][N];
-						nr[nrb_ct].LNA_JB2D[ct_nrb][0] = 2;  //Take a look at the header file for more information of LNA_JB2D
-						nr[nrb_ct].LNA_JB2D[ct_nrb][1] = 3;
-						nr[nrb_ct].LNA_JB2D[ct_nrb][2] = 7;
-						nr[nrb_ct].LNA_JB2D[ct_nrb][3] = 6;
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 0] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + 0 * NINT + 0]; //make sure the orientation is counter clockwise
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 1] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + 0];
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 2] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + N];
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 3] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + 0 * NINT + N];
+						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 0] = 2;  //Take a look at the header file for more information of LNA_JB2D
+						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 1] = 3;
+						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 2] = 7;
+						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 3] = 6;
 						nr[nrb_ct].Jacob_face[ct_nrb][0] = 1; //y coordinate
 						nr[nrb_ct].Jacob_face[ct_nrb][1] = 2;
 						ct_nrb += 1;
@@ -953,25 +921,25 @@ struct meshgenerationstruct meshgeneration() {
 					//first defined the rest of FP_2D in the current element group 
 					for (i = 0; i < numele_py[z]; i++) {
 						for (j = 0; j < elenode2D; j++) {
-							ol[wet_ct].FP_2D[ct_wt][j] = FP_DP_2D_dummy[j];
+							ol[wet_ct].FP_2D[ct_wt*elenode2D + j] = FP_DP_2D_dummy[j];
 						}
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								ol[wet_ct].LNA_2D[ct_wt][j][k] = LNA_2D_dummy[j][k];
+								ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + j*NINT + k] = LNA_2D_dummy[j][k];
 							}
 						}
-						ol[wet_ct].LNA_norm[ct_wt][0] = ol[wet_ct].LNA_2D[ct_wt][0][0]; //make sure the orientation is counter clockwise
-						ol[wet_ct].LNA_norm[ct_wt][1] = ol[wet_ct].LNA_2D[ct_wt][N][0];
-						ol[wet_ct].LNA_norm[ct_wt][2] = ol[wet_ct].LNA_2D[ct_wt][N][N];
-						ol[wet_ct].LNA_norm[ct_wt][3] = ol[wet_ct].LNA_2D[ct_wt][0][N];
-						ol[wet_ct].LNA_JB2D[ct_wt][0] = 2;
-						ol[wet_ct].LNA_JB2D[ct_wt][1] = 3;
-						ol[wet_ct].LNA_JB2D[ct_wt][2] = 7;
-						ol[wet_ct].LNA_JB2D[ct_wt][3] = 6;
-						ol[wet_ct].LNA_algo2[ct_wt][0][0] = 1;
-						ol[wet_ct].LNA_algo2[ct_wt][0][1] = 2;
-						ol[wet_ct].LNA_algo2[ct_wt][1][1] = 3;
-						ol[wet_ct].LNA_algo2[ct_wt][1][0] = 4;
+						ol[wet_ct].LNA_norm[ct_wt*4 + 0] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + 0 * NINT + 0]; //make sure the orientation is counter clockwise
+						ol[wet_ct].LNA_norm[ct_wt*4 + 1] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + 0];
+						ol[wet_ct].LNA_norm[ct_wt*4 + 2] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + N];
+						ol[wet_ct].LNA_norm[ct_wt*4 + 3] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + 0 * NINT + N];
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 0] = 2;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 1] = 3;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 2] = 7;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 3] = 6;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 0 * 2 + 0] = 1;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 1 * 2 + 0] = 2;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 1 * 2 + 1] = 3;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 0 * 2 + 1] = 4;
 						ol[wet_ct].Jacob_face[ct_wt][0] = 1; //y coordinate
 						ol[wet_ct].Jacob_face[ct_wt][1] = 2; //z coordinate
 						ct_wt += 1;
@@ -1007,21 +975,21 @@ struct meshgenerationstruct meshgeneration() {
 				if (nrb == 1) {
 					for (i = 0; i < numele_py[z]; i++) {
 						for (j = 0; j < elenode2D; j++) {
-							nr[nrb_ct].DP_2D[ct_nrb][j] = FP_DP_2D_dummy[j];
+							nr[nrb_ct].DP_2D[ct_nrb*elenode2D + j] = FP_DP_2D_dummy[j];
 						}
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								nr[nrb_ct].LNA_2D[ct_nrb][j][k] = LNA_2D_dummy[j][k];
+								nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + j*NINT + k] = LNA_2D_dummy[j][k];
 							}
 						}
-						nr[nrb_ct].LNA_norm[ct_nrb][0] = nr[nrb_ct].LNA_2D[ct_nrb][0][0]; //make sure the orientation is counter clockwise
-						nr[nrb_ct].LNA_norm[ct_nrb][1] = nr[nrb_ct].LNA_2D[ct_nrb][0][N];
-						nr[nrb_ct].LNA_norm[ct_nrb][2] = nr[nrb_ct].LNA_2D[ct_nrb][N][N];
-						nr[nrb_ct].LNA_norm[ct_nrb][3] = nr[nrb_ct].LNA_2D[ct_nrb][N][0];
-						nr[nrb_ct].LNA_JB2D[ct_nrb][0] = 1;  //Take a look at the header file for more information of LNA_JB2D
-						nr[nrb_ct].LNA_JB2D[ct_nrb][1] = 4;
-						nr[nrb_ct].LNA_JB2D[ct_nrb][2] = 3;
-						nr[nrb_ct].LNA_JB2D[ct_nrb][3] = 2;
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 0] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + 0 * NINT + 0]; //make sure the orientation is counter clockwise
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 1] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + 0 * NINT + N];
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 2] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + N];
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 3] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + 0];
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 0] = 1;  //Take a look at the header file for more information of LNA_JB2D
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 1] = 4;
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 2] = 3;
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 3] = 2;
 						nr[nrb_ct].Jacob_face[ct_nrb][0] = 0; //x coordinate
 						nr[nrb_ct].Jacob_face[ct_nrb][1] = 1; //y coordinate
 						ct_nrb += 1;
@@ -1035,25 +1003,25 @@ struct meshgenerationstruct meshgeneration() {
 					//first defined the rest of FP_2D in the current element group 
 					for (i = 0; i < numele_py[z]; i++) {
 						for (j = 0; j < elenode2D; j++) {
-							ol[wet_ct].FP_2D[ct_wt][j] = FP_DP_2D_dummy[j];
+							ol[wet_ct].FP_2D[ct_wt*elenode2D + j] = FP_DP_2D_dummy[j];
 						}
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								ol[wet_ct].LNA_2D[ct_wt][j][k] = LNA_2D_dummy[j][k];
+								ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + j*NINT + k] = LNA_2D_dummy[j][k];
 							}
 						}
-						ol[wet_ct].LNA_norm[ct_wt][0] = ol[wet_ct].LNA_2D[ct_wt][0][0]; //make sure the orientation is counter clockwise
-						ol[wet_ct].LNA_norm[ct_wt][1] = ol[wet_ct].LNA_2D[ct_wt][0][N];
-						ol[wet_ct].LNA_norm[ct_wt][2] = ol[wet_ct].LNA_2D[ct_wt][N][N];
-						ol[wet_ct].LNA_norm[ct_wt][3] = ol[wet_ct].LNA_2D[ct_wt][N][0];
-						ol[wet_ct].LNA_JB2D[ct_wt][0] = 1;
-						ol[wet_ct].LNA_JB2D[ct_wt][1] = 4;
-						ol[wet_ct].LNA_JB2D[ct_wt][2] = 3;
-						ol[wet_ct].LNA_JB2D[ct_wt][3] = 2;
-						ol[wet_ct].LNA_algo2[ct_wt][0][0] = 1;
-						ol[wet_ct].LNA_algo2[ct_wt][0][1] = 2;
-						ol[wet_ct].LNA_algo2[ct_wt][1][1] = 3;
-						ol[wet_ct].LNA_algo2[ct_wt][1][0] = 4;
+						ol[wet_ct].LNA_norm[ct_wt*4 + 0] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + 0 * NINT + 0]; //make sure the orientation is counter clockwise
+						ol[wet_ct].LNA_norm[ct_wt*4 + 1] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + 0 * NINT + N];
+						ol[wet_ct].LNA_norm[ct_wt*4 + 2] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + N];
+						ol[wet_ct].LNA_norm[ct_wt*4 + 3] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + 0];
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 0] = 1;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 1] = 4;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 2] = 3;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 3] = 2;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 0 * 2 + 0] = 1;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 0 * 2 + 1] = 2;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 1 * 2 + 1] = 3;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 1 * 2 + 0] = 4;
 						ol[wet_ct].Jacob_face[ct_wt][0] = 0; //x coordinate
 						ol[wet_ct].Jacob_face[ct_wt][1] = 1; //y coordinate
 						ct_wt += 1;
@@ -1089,21 +1057,21 @@ struct meshgenerationstruct meshgeneration() {
 				if (nrb == 1) {
 					for (i = 0; i < numele_py[z]; i++) {
 						for (j = 0; j < elenode2D; j++) {
-							nr[nrb_ct].DP_2D[ct_nrb][j] = FP_DP_2D_dummy[j];
+							nr[nrb_ct].DP_2D[ct_nrb*elenode2D + j] = FP_DP_2D_dummy[j];
 						}
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								nr[nrb_ct].LNA_2D[ct_nrb][j][k] = LNA_2D_dummy[j][k];
+								nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + j*NINT + k] = LNA_2D_dummy[j][k];
 							}
 						}
-						nr[nrb_ct].LNA_norm[ct_nrb][0] = nr[nrb_ct].LNA_2D[ct_nrb][0][0]; //make sure the orientation is counter clockwise
-						nr[nrb_ct].LNA_norm[ct_nrb][1] = nr[nrb_ct].LNA_2D[ct_nrb][N][0];
-						nr[nrb_ct].LNA_norm[ct_nrb][2] = nr[nrb_ct].LNA_2D[ct_nrb][N][N];
-						nr[nrb_ct].LNA_norm[ct_nrb][3] = nr[nrb_ct].LNA_2D[ct_nrb][0][N];
-						nr[nrb_ct].LNA_JB2D[ct_nrb][0] = 5;  //Take a look at the header file for more information of LNA_JB2D
-						nr[nrb_ct].LNA_JB2D[ct_nrb][1] = 6;
-						nr[nrb_ct].LNA_JB2D[ct_nrb][2] = 7;
-						nr[nrb_ct].LNA_JB2D[ct_nrb][3] = 8;
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 0] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + 0 * NINT + 0]; //make sure the orientation is counter clockwise
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 1] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + 0];
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 2] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + N];
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 3] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + 0 * NINT + N];
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 0] = 5;  //Take a look at the header file for more information of LNA_JB2D
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 1] = 6;
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 2] = 7;
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 3] = 8;
 						nr[nrb_ct].Jacob_face[ct_nrb][0] = 0; //x coordinate
 						nr[nrb_ct].Jacob_face[ct_nrb][1] = 1; //y coordinate
 						ct_nrb += 1;
@@ -1117,25 +1085,25 @@ struct meshgenerationstruct meshgeneration() {
 					//first defined the rest of FP_2D in the current element group 
 					for (i = 0; i < numele_py[z]; i++) {
 						for (j = 0; j < elenode2D; j++) {
-							ol[wet_ct].FP_2D[ct_wt][j] = FP_DP_2D_dummy[j];
+							ol[wet_ct].FP_2D[ct_wt*elenode2D + j] = FP_DP_2D_dummy[j];
 						}
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								ol[wet_ct].LNA_2D[ct_wt][j][k] = LNA_2D_dummy[j][k];
+								ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + j*NINT + k] = LNA_2D_dummy[j][k];
 							}
 						}
-						ol[wet_ct].LNA_norm[ct_wt][0] = ol[wet_ct].LNA_2D[ct_wt][0][0]; //make sure the orientation is counter clockwise
-						ol[wet_ct].LNA_norm[ct_wt][1] = ol[wet_ct].LNA_2D[ct_wt][N][0];
-						ol[wet_ct].LNA_norm[ct_wt][2] = ol[wet_ct].LNA_2D[ct_wt][N][N];
-						ol[wet_ct].LNA_norm[ct_wt][3] = ol[wet_ct].LNA_2D[ct_wt][0][N];
-						ol[wet_ct].LNA_JB2D[ct_wt][0] = 5;
-						ol[wet_ct].LNA_JB2D[ct_wt][1] = 6;
-						ol[wet_ct].LNA_JB2D[ct_wt][2] = 7;
-						ol[wet_ct].LNA_JB2D[ct_wt][3] = 8;
-						ol[wet_ct].LNA_algo2[ct_wt][0][0] = 1;
-						ol[wet_ct].LNA_algo2[ct_wt][0][1] = 2;
-						ol[wet_ct].LNA_algo2[ct_wt][1][1] = 3;
-						ol[wet_ct].LNA_algo2[ct_wt][1][0] = 4;
+						ol[wet_ct].LNA_norm[ct_wt*4 + 0] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + 0 * NINT + 0]; //make sure the orientation is counter clockwise
+						ol[wet_ct].LNA_norm[ct_wt*4 + 1] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + 0];
+						ol[wet_ct].LNA_norm[ct_wt*4 + 2] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + N];
+						ol[wet_ct].LNA_norm[ct_wt*4 + 3] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + 0 * NINT + N];
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 0] = 5;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 1] = 6;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 2] = 7;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 3] = 8;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 0 * 2 + 0] = 1;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 1 * 2 + 0] = 2;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 1 * 2 + 1] = 3;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 0 * 2 + 1] = 4;
 						ol[wet_ct].Jacob_face[ct_wt][0] = 0; //x coordinate
 						ol[wet_ct].Jacob_face[ct_wt][1] = 1; //y coordinate
 						ct_wt += 1;
@@ -1171,21 +1139,21 @@ struct meshgenerationstruct meshgeneration() {
 				if (nrb == 1) {
 					for (i = 0; i < numele_py[z]; i++) {
 						for (j = 0; j < elenode2D; j++) {
-							nr[nrb_ct].DP_2D[ct_nrb][j] = FP_DP_2D_dummy[j];
+							nr[nrb_ct].DP_2D[ct_nrb*elenode2D + j] = FP_DP_2D_dummy[j];
 						}
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								nr[nrb_ct].LNA_2D[ct_nrb][j][k] = LNA_2D_dummy[j][k];
+								nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + j*NINT + k] = LNA_2D_dummy[j][k];
 							}
 						}
-						nr[nrb_ct].LNA_norm[ct_nrb][0] = nr[nrb_ct].LNA_2D[ct_nrb][0][0]; //make sure the orientation is counter clockwise
-						nr[nrb_ct].LNA_norm[ct_nrb][1] = nr[nrb_ct].LNA_2D[ct_nrb][N][0];
-						nr[nrb_ct].LNA_norm[ct_nrb][2] = nr[nrb_ct].LNA_2D[ct_nrb][N][N];
-						nr[nrb_ct].LNA_norm[ct_nrb][3] = nr[nrb_ct].LNA_2D[ct_nrb][0][N];
-						nr[nrb_ct].LNA_JB2D[ct_nrb][0] = 1;  //Take a look at the header file for more information of LNA_JB2D
-						nr[nrb_ct].LNA_JB2D[ct_nrb][1] = 2;
-						nr[nrb_ct].LNA_JB2D[ct_nrb][2] = 6;
-						nr[nrb_ct].LNA_JB2D[ct_nrb][3] = 5;
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 0] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+0*NINT+0]; //make sure the orientation is counter clockwise
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 1] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+N*NINT+0];
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 2] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+N*NINT+N];
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 3] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+0*NINT+N];
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 0] = 1;  //Take a look at the header file for more information of LNA_JB2D
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 1] = 2;
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 2] = 6;
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 3] = 5;
 						nr[nrb_ct].Jacob_face[ct_nrb][0] = 0; //x coordinate
 						nr[nrb_ct].Jacob_face[ct_nrb][1] = 2; //z coordinate
 						ct_nrb += 1;
@@ -1199,25 +1167,25 @@ struct meshgenerationstruct meshgeneration() {
 					//first defined the rest of FP_2D in the current element group 
 					for (i = 0; i < numele_py[z]; i++) {
 						for (j = 0; j < elenode2D; j++) {
-							ol[wet_ct].FP_2D[ct_wt][j] = FP_DP_2D_dummy[j];
+							ol[wet_ct].FP_2D[ct_wt*elenode2D + j] = FP_DP_2D_dummy[j];
 						}
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								ol[wet_ct].LNA_2D[ct_wt][j][k] = LNA_2D_dummy[j][k];
+								ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + j*NINT + k] = LNA_2D_dummy[j][k];
 							}
 						}
-						ol[wet_ct].LNA_norm[ct_wt][0] = ol[wet_ct].LNA_2D[ct_wt][0][0]; //make sure the orientation is counter clockwise
-						ol[wet_ct].LNA_norm[ct_wt][1] = ol[wet_ct].LNA_2D[ct_wt][N][0];
-						ol[wet_ct].LNA_norm[ct_wt][2] = ol[wet_ct].LNA_2D[ct_wt][N][N];
-						ol[wet_ct].LNA_norm[ct_wt][3] = ol[wet_ct].LNA_2D[ct_wt][0][N];
-						ol[wet_ct].LNA_JB2D[ct_wt][0] = 1;
-						ol[wet_ct].LNA_JB2D[ct_wt][1] = 2;
-						ol[wet_ct].LNA_JB2D[ct_wt][2] = 6;
-						ol[wet_ct].LNA_JB2D[ct_wt][3] = 5;
-						ol[wet_ct].LNA_algo2[ct_wt][0][0] = 1;
-						ol[wet_ct].LNA_algo2[ct_wt][0][1] = 2;
-						ol[wet_ct].LNA_algo2[ct_wt][1][1] = 3;
-						ol[wet_ct].LNA_algo2[ct_wt][1][0] = 4;
+						ol[wet_ct].LNA_norm[ct_wt*4 + 0] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+0*NINT+0]; //make sure the orientation is counter clockwise
+						ol[wet_ct].LNA_norm[ct_wt*4 + 1] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+N*NINT+0];
+						ol[wet_ct].LNA_norm[ct_wt*4 + 2] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+N*NINT+N];
+						ol[wet_ct].LNA_norm[ct_wt*4 + 3] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+0*NINT+N];
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 0] = 1;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 1] = 2;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 2] = 6;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 3] = 5;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 0 * 2 + 0] = 1;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 1 * 2 + 0] = 2;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 1 * 2 + 1] = 3;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 0 * 2 + 1] = 4;
 						ol[wet_ct].Jacob_face[ct_wt][0] = 0; //x coordinate
 						ol[wet_ct].Jacob_face[ct_wt][1] = 2; //z coordinate
 						ct_wt += 1;
@@ -1253,21 +1221,21 @@ struct meshgenerationstruct meshgeneration() {
 				if (nrb == 1) {
 					for (i = 0; i < numele_py[z]; i++) {
 						for (j = 0; j < elenode2D; j++) {
-							nr[nrb_ct].DP_2D[ct_nrb][j] = FP_DP_2D_dummy[j];
+							nr[nrb_ct].DP_2D[ct_nrb*elenode2D + j] = FP_DP_2D_dummy[j];
 						}
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								nr[nrb_ct].LNA_2D[ct_nrb][j][k] = LNA_2D_dummy[j][k];
+								nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + j*NINT + k] = LNA_2D_dummy[j][k];
 							}
 						}
-						nr[nrb_ct].LNA_norm[ct_nrb][0] = nr[nrb_ct].LNA_2D[ct_nrb][0][0]; //make sure the orientation is counter clockwise
-						nr[nrb_ct].LNA_norm[ct_nrb][1] = nr[nrb_ct].LNA_2D[ct_nrb][0][N];
-						nr[nrb_ct].LNA_norm[ct_nrb][2] = nr[nrb_ct].LNA_2D[ct_nrb][N][N];
-						nr[nrb_ct].LNA_norm[ct_nrb][3] = nr[nrb_ct].LNA_2D[ct_nrb][N][0];
-						nr[nrb_ct].LNA_JB2D[ct_nrb][0] = 4;  //Take a look at the header file for more information of LNA_JB2D
-						nr[nrb_ct].LNA_JB2D[ct_nrb][1] = 8;
-						nr[nrb_ct].LNA_JB2D[ct_nrb][2] = 7;
-						nr[nrb_ct].LNA_JB2D[ct_nrb][3] = 3;
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 0] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+0*NINT+0]; //make sure the orientation is counter clockwise
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 1] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+0*NINT+N];
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 2] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+N*NINT+N];
+						nr[nrb_ct].LNA_norm[ct_nrb*4 + 3] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+N*NINT+0];
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 0] = 4;  //Take a look at the header file for more information of LNA_JB2D
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 1] = 8;
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 2] = 7;
+						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 3] = 3;
 						nr[nrb_ct].Jacob_face[ct_nrb][0] = 0; //x coordinate
 						nr[nrb_ct].Jacob_face[ct_nrb][1] = 2; //z coordinate
 						ct_nrb += 1;
@@ -1281,25 +1249,25 @@ struct meshgenerationstruct meshgeneration() {
 					//first defined the rest of FP_2D in the current element group 
 					for (i = 0; i < numele_py[z]; i++) {
 						for (j = 0; j < elenode2D; j++) {
-							ol[wet_ct].FP_2D[ct_wt][j] = FP_DP_2D_dummy[j];
+							ol[wet_ct].FP_2D[ct_wt*elenode2D + j] = FP_DP_2D_dummy[j];
 						}
 						for (j = 0; j < NINT; j++) {
 							for (k = 0; k < NINT; k++) {
-								ol[wet_ct].LNA_2D[ct_wt][j][k] = LNA_2D_dummy[j][k];
+								ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + j*NINT + k] = LNA_2D_dummy[j][k];
 							}
 						}
-						ol[wet_ct].LNA_norm[ct_wt][0] = ol[wet_ct].LNA_2D[ct_wt][0][0]; //make sure the orientation is counter clockwise
-						ol[wet_ct].LNA_norm[ct_wt][1] = ol[wet_ct].LNA_2D[ct_wt][0][N];
-						ol[wet_ct].LNA_norm[ct_wt][2] = ol[wet_ct].LNA_2D[ct_wt][N][N];
-						ol[wet_ct].LNA_norm[ct_wt][3] = ol[wet_ct].LNA_2D[ct_wt][N][0];
-						ol[wet_ct].LNA_JB2D[ct_wt][0] = 4;
-						ol[wet_ct].LNA_JB2D[ct_wt][1] = 8;
-						ol[wet_ct].LNA_JB2D[ct_wt][2] = 7;
-						ol[wet_ct].LNA_JB2D[ct_wt][3] = 3;
-						ol[wet_ct].LNA_algo2[ct_wt][0][0] = 1;
-						ol[wet_ct].LNA_algo2[ct_wt][0][1] = 2;
-						ol[wet_ct].LNA_algo2[ct_wt][1][1] = 3;
-						ol[wet_ct].LNA_algo2[ct_wt][1][0] = 4;
+						ol[wet_ct].LNA_norm[ct_wt*4 + 0] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+0*NINT+0]; //make sure the orientation is counter clockwise
+						ol[wet_ct].LNA_norm[ct_wt*4 + 1] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+0*NINT+N];
+						ol[wet_ct].LNA_norm[ct_wt*4 + 2] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+N*NINT+N];
+						ol[wet_ct].LNA_norm[ct_wt*4 + 3] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+N*NINT+0];
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 0] = 4;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 1] = 8;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 2] = 7;
+						ol[wet_ct].LNA_JB2D[ct_wt*4 + 3] = 3;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 0 * 2 + 0] = 1;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 0 * 2 + 1] = 2;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 1 * 2 + 1] = 3;
+						ol[wet_ct].LNA_algo2[ct_wt * 4 + 1 * 2 + 0] = 4;
 						ol[wet_ct].Jacob_face[ct_wt][0] = 0; //x coordinate
 						ol[wet_ct].Jacob_face[ct_wt][1] = 2; //z coordinate
 						ct_wt += 1;
@@ -1350,10 +1318,10 @@ struct meshgenerationstruct meshgeneration() {
 			//Thus, we changed our plan to use the linear element contructed by the four corner nodes of the high-order element
 			ct = 0;
 			for (e = 0; e < elenum; e++) {
-				ol[z].IEN_py[0][ct] = t.BCIEN[wt_pys_num[z]][e][ol[z].LNA_norm[e][0] - 1];
-				ol[z].IEN_py[1][ct] = t.BCIEN[wt_pys_num[z]][e][ol[z].LNA_norm[e][1] - 1];
-				ol[z].IEN_py[2][ct] = t.BCIEN[wt_pys_num[z]][e][ol[z].LNA_norm[e][2] - 1];
-				ol[z].IEN_py[3][ct] = t.BCIEN[wt_pys_num[z]][e][ol[z].LNA_norm[e][3] - 1];
+				ol[z].IEN_py[0][ct] = t.BCIEN[wt_pys_num[z]][e][ol[z].LNA_norm[e * 4 + 0] - 1];
+				ol[z].IEN_py[1][ct] = t.BCIEN[wt_pys_num[z]][e][ol[z].LNA_norm[e * 4 + 1] - 1];
+				ol[z].IEN_py[2][ct] = t.BCIEN[wt_pys_num[z]][e][ol[z].LNA_norm[e * 4 + 2] - 1];
+				ol[z].IEN_py[3][ct] = t.BCIEN[wt_pys_num[z]][e][ol[z].LNA_norm[e * 4 + 3] - 1];
 				ct += 1;
 			}
 			if (ct != elenum) {
@@ -1417,41 +1385,42 @@ struct meshgenerationstruct meshgeneration() {
 					}
 				}
 			}
-		}
-		
-
-		//Define FP for tetrahedral element
-		//Extract the local node pattern for tetrahedral element
-		if (element_type == 1 && input_type == "Gmsh" && (mappingalgo == 4 || mappingalgo == 5)) {
-			int node[3];
-			ol[z].GIDF = new int[ol[z].FSNEL];
-			for (l = 0; l < ol[z].FSNEL; l++) {
-				if (l % 1000 == 0) {
-					std::cout << l << std::endl; //output which line is being read
+			if (element_type == 1 && (mappingalgo == 4 || mappingalgo == 5)) {
+				//Define FP and FP_2D for tetrahedral element 
+				//Extract the local node pattern for tetrahedral element
+				for (z = 0; z < owsfnumber; z++) {
+					ol[z].FP_2D = new int[ol[z].FSNEL*elenode2D];
 				}
-				node[0] = t.BCIEN[wt_pys_num[z]][l][0]; node[1] = t.BCIEN[wt_pys_num[z]][l][1]; node[2] = t.BCIEN[wt_pys_num[z]][l][2];
-				for (i = 0; i < t.NEL; i++) { //loop through all the fluid element
-					ct = 0;
-					for (k = 0; k < elenode2D; k++) { //loop through 2D local nodes
-						for (j = 0; j < elenode3D; j++) { //loop through local 3D nodes
-							if (node[k] == IEN_1D[i*elenode3D + j]) {
-								ol[z].FP[l][k] = j + 1;
-								ol[z].FP_2D[l][ct] = ct + 1;
-								ct = ct + 1;
-								if (ct == 3) { //found all local nodes in one global element (ready to move on to the next element)
-									ol[z].GIDF[l] = i + 1;
-									i = t.NEL; //Forcedly exit the i=0;i<t.NEL;i++ loop above 
+				int node[3];
+				ol[z].GIDF = new int[ol[z].FSNEL];
+				for (l = 0; l < ol[z].FSNEL; l++) {
+					if (l % 1000 == 0) {
+						std::cout << l << std::endl; //output which line is being read
+					}
+					node[0] = t.BCIEN[wt_pys_num[z]][l][0]; node[1] = t.BCIEN[wt_pys_num[z]][l][1]; node[2] = t.BCIEN[wt_pys_num[z]][l][2];
+					for (i = 0; i < t.NEL; i++) { //loop through all the fluid element
+						ct = 0;
+						for (k = 0; k < elenode2D; k++) { //loop through 2D local nodes
+							for (j = 0; j < elenode3D; j++) { //loop through local 3D nodes
+								if (node[k] == IEN_1D[i*elenode3D + j]) {
+									ol[z].FP[l][k] = j + 1;
+									ol[z].FP_2D[l*elenode2D + ct] = ct + 1;
+									ct = ct + 1;
+									if (ct == 3) { //found all local nodes in one global element (ready to move on to the next element)
+										ol[z].GIDF[l] = i + 1;
+										i = t.NEL; //Forcedly exit the i=0;i<t.NEL;i++ loop above 
+									}
 								}
 							}
-						}
-						if (ct == 0) { //if the first 2D local node does not have a corresponding node in the current gloabl element being searched, the search would move forward to the next gloabl element
-							k = 3;
+							if (ct == 0) { //if the first 2D local node does not have a corresponding node in the current gloabl element being searched, the search would move forward to the next gloabl element
+								k = 3;
+							}
 						}
 					}
 				}
 			}
 		}
-
+		
 		if (element_type == 0) { //hex element
 			ol[z].IEN_algo2 = new int*[4]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
 			for (i = 0; i < 4; i++) {
@@ -1604,7 +1573,7 @@ struct meshgenerationstruct meshgeneration() {
 				for (j = 0; j < t.NEL; j++) {
 					ct = 0;
 					for (k = 0; k < elenode2D; k++) {
-						if (t.IEN[ol[z].FP[i][k] - 1][j] == ol[z].IEN_gb[ol[z].FP_2D[i][k] - 1][i]) {
+						if (t.IEN[ol[z].FP[i][k] - 1][j] == ol[z].IEN_gb[ol[z].FP_2D[i*elenode2D + k] - 1][i]) {
 							ct += 1;
 						}
 					}
@@ -1630,12 +1599,12 @@ struct meshgenerationstruct meshgeneration() {
 		double n1, n2, n3; double absn;
 		ol[z].dimension = new double[ol[z].FSNEL]; //the dimension of the triangle formed by two vectors
 		for (i = 0; i < ol[z].FSNEL; i++) {
-			ax = t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i][1] - 1][i] - 1][0] - t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i][0] - 1][i] - 1][0];
-			ay = t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i][1] - 1][i] - 1][1] - t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i][0] - 1][i] - 1][1];
-			az = t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i][1] - 1][i] - 1][2] - t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i][0] - 1][i] - 1][2];
-			bx = t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i][2] - 1][i] - 1][0] - t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i][1] - 1][i] - 1][0];
-			by = t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i][2] - 1][i] - 1][1] - t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i][1] - 1][i] - 1][1];
-			bz = t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i][2] - 1][i] - 1][2] - t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i][1] - 1][i] - 1][2];
+			ax = t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i*elenode2D_ln + 1] - 1][i] - 1][0] - t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i*elenode2D_ln + 0] - 1][i] - 1][0];
+			ay = t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i*elenode2D_ln + 1] - 1][i] - 1][1] - t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i*elenode2D_ln + 0] - 1][i] - 1][1];
+			az = t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i*elenode2D_ln + 1] - 1][i] - 1][2] - t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i*elenode2D_ln + 0] - 1][i] - 1][2];
+			bx = t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i*elenode2D_ln + 2] - 1][i] - 1][0] - t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i*elenode2D_ln + 1] - 1][i] - 1][0];
+			by = t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i*elenode2D_ln + 2] - 1][i] - 1][1] - t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i*elenode2D_ln + 1] - 1][i] - 1][1];
+			bz = t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i*elenode2D_ln + 2] - 1][i] - 1][2] - t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i*elenode2D_ln + 1] - 1][i] - 1][2];
 			n1 = ay*bz - az*by; n2 = az*bx - ax*bz; n3 = ax*by - ay*bx;
 			absn = sqrt(pow(n1, 2) + pow(n2, 2) + pow(n3, 2));
 			ol[z].norm[i][0] = n1 / absn; ol[z].norm[i][1] = n2 / absn; ol[z].norm[i][2] = n3 / absn;
@@ -1733,7 +1702,7 @@ struct meshgenerationstruct meshgeneration() {
 						for (j = 0; j < elenode3D; j++) { //loop through local nodes
 							if (node[k] == IEN_1D[i*elenode3D + j]) { //found a corresponding node
 								nr[z].DP[l][k] = j + 1;
-								nr[z].DP_2D[l][ct] = ct + 1;
+								nr[z].DP_2D[l*elenode2D + ct] = ct + 1;
 								ct = ct + 1;
 								if (ct == 3) { //found all local nodes in one global element (ready to move on to the next element)
 									nr[z].NRBELE_ARR[l] = i + 1;
@@ -1803,7 +1772,7 @@ struct meshgenerationstruct meshgeneration() {
 					for (j = 0; j < t.NEL; j++) {
 						ct = 0;
 						for (k = 0; k < elenode2D; k++) {
-							if (t.IEN[nr[z].DP[i][k] - 1][j] == nr[z].IEN_gb[nr[z].DP_2D[i][k] - 1][i]) {
+							if (t.IEN[nr[z].DP[i][k] - 1][j] == nr[z].IEN_gb[nr[z].DP_2D[i*elenode2D + k] - 1][i]) {
 								ct += 1;
 							}
 						}
@@ -1830,12 +1799,12 @@ struct meshgenerationstruct meshgeneration() {
 		double n1, n2, n3; double absn;
 		nr[z].dimension = new double[nr[z].NEL_nrb];
 		for (i = 0; i < nr[z].NEL_nrb; i++) {
-			ax = t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i][1] - 1][i] - 1][0] - t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i][0] - 1][i] - 1][0];
-			ay = t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i][1] - 1][i] - 1][1] - t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i][0] - 1][i] - 1][1];
-			az = t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i][1] - 1][i] - 1][2] - t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i][0] - 1][i] - 1][2];
-			bx = t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i][2] - 1][i] - 1][0] - t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i][1] - 1][i] - 1][0];
-			by = t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i][2] - 1][i] - 1][1] - t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i][1] - 1][i] - 1][1];
-			bz = t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i][2] - 1][i] - 1][2] - t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i][1] - 1][i] - 1][2];
+			ax = t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i*elenode2D_ln + 1] - 1][i] - 1][0] - t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i*elenode2D_ln + 0] - 1][i] - 1][0];
+			ay = t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i*elenode2D_ln + 1] - 1][i] - 1][1] - t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i*elenode2D_ln + 0] - 1][i] - 1][1];
+			az = t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i*elenode2D_ln + 1] - 1][i] - 1][2] - t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i*elenode2D_ln + 0] - 1][i] - 1][2];
+			bx = t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i*elenode2D_ln + 2] - 1][i] - 1][0] - t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i*elenode2D_ln + 1] - 1][i] - 1][0];
+			by = t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i*elenode2D_ln + 2] - 1][i] - 1][1] - t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i*elenode2D_ln + 1] - 1][i] - 1][1];
+			bz = t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i*elenode2D_ln + 2] - 1][i] - 1][2] - t.GCOORD[nr[z].IEN_gb[nr[z].LNA_norm[i*elenode2D_ln + 1] - 1][i] - 1][2];
 			n1 = ay*bz - az*by; n2 = az*bx - ax*bz; n3 = ax*by - ay*bx;
 			absn = sqrt(pow(n1, 2) + pow(n2, 2) + pow(n3, 2));
 			nr[z].norm[i][0] = n1 / absn; nr[z].norm[i][1] = n2 / absn; nr[z].norm[i][2] = n3 / absn;

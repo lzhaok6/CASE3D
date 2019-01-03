@@ -45,9 +45,9 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						for (l = 0; l < ol[z].FSNEL; l++) { //loop through each element
 							for (i = 0; i < 2; i++) {
 								for (j = 0; j < 2; j++) {
-									wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[l][i][j] - 1][l] - 1) + 0] = 0.0;
-									wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[l][i][j] - 1][l] - 1) + 1] = 0.0;
-									wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[l][i][j] - 1][l] - 1) + 2] = 0.0;
+									wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[l * 4 + i * 2 + j] - 1][l] - 1) + 0] = 0.0;
+									wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[l * 4 + i * 2 + j] - 1][l] - 1) + 1] = 0.0;
+									wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[l * 4 + i * 2 + j] - 1][l] - 1) + 2] = 0.0;
 								}
 							}
 						}
@@ -64,8 +64,8 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 									for (u = 0; u < NINT; u++) { //u v stands for y x
 										for (v = 0; v < NINT; v++) {
 											for (n = 0; n < 3; n++) {
-												wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[l][i][j] - 1][l] - 1) + n] //force in z direction
-													+= ol[z].norm[l][n] * WP[ol[z].IEN_gb[ol[z].LNA_2D[l][u][v] - 1][l] - 1] * ol[z].FPMASTER_2D[l][ol[z].LNA_algo2[l][i][j] - 1][ol[z].LNA_2D[l][u][v] - 1];
+												wsflist[ct]->nodeforce[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[l * 4 + i * 2 + j] - 1][l] - 1) + n] //force in z direction
+													+= ol[z].norm[l][n] * WP[ol[z].IEN_gb[ol[z].LNA_2D[l*NINT*NINT + u*NINT + v] - 1][l] - 1] * ol[z].FPMASTER_2D[l][ol[z].LNA_algo2[l * 4 + i * 2 + j] - 1][ol[z].LNA_2D[l*NINT*NINT + u*NINT + v] - 1];
 											}
 										}
 									}
@@ -543,14 +543,14 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
 							for (i = 0; i < NINT; i++) { //loop through each point on element surface 
 								for (j = 0; j < NINT; j++) {
-									ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[l][i][j] - 1][0] = 0.0;
-									ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[l][i][j] - 1][1] = 0.0;
-									ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[l][i][j] - 1][2] = 0.0;
+									ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[l*NINT*NINT + i*NINT + j] - 1][0] = 0.0;
+									ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[l*NINT*NINT + i*NINT + j] - 1][1] = 0.0;
+									ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[l*NINT*NINT + i*NINT + j] - 1][2] = 0.0;
 									for (u = 0; u < 2; u++) {
 										for (v = 0; v < 2; v++) {
 											for (n = 0; n < 3; n++) {
-												DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[l][u][v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l][ol[z].LNA_algo2[l][u][v] - 1] - 1][l] - 1][n];
-												ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[l][i][j] - 1][n] += DISPTEMP * ol[z].phi_fem[l][ol[z].LNA_algo2[l][u][v] - 1][i][j];
+												DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[l * 4 + u * 2 + v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l * 4 + ol[z].LNA_algo2[l * 4 + u * 2 + v] - 1] - 1][l] - 1][n];
+												ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[l*NINT*NINT + i*NINT + j] - 1][n] += DISPTEMP * ol[z].phi_fem[u * 2 + v][i][j];
 											}
 										}
 									}

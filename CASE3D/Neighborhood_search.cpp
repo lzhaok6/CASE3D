@@ -66,7 +66,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			for (i = 0; i < ol[z].FSNEL; i++) {
 				for (j = 0; j < 4; j++) {
 					//ol[z].IEN_flu_2D[j][i] = IEN_flu[ol[z].LNA_norm[j] - 1][ol[z].GIDF[i] - 1];
-					ol[z].IEN_flu_2D[j][i] = ol[z].IEN_gb[ol[z].LNA_norm[i][j] - 1][i];
+					ol[z].IEN_flu_2D[j][i] = ol[z].IEN_gb[ol[z].LNA_norm[i * 4 + j] - 1][i];
 				}
 			}
 		}
@@ -1088,7 +1088,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			int LNA_2D[2][2];
 			//LNA_2D[0][0] = ol[z].LNA_2D[0][0]; LNA_2D[1][0] = ol[z].LNA_2D[N][0]; LNA_2D[0][1] = ol[z].LNA_2D[0][N]; LNA_2D[1][1] = ol[z].LNA_2D[N][N];
 			for (i = 0; i < ol[z].FSNEL; i++) { //loop through all the elements
-				LNA_2D[0][0] = ol[z].LNA_2D[i][0][0]; LNA_2D[1][0] = ol[z].LNA_2D[i][N][0]; LNA_2D[0][1] = ol[z].LNA_2D[i][0][N]; LNA_2D[1][1] = ol[z].LNA_2D[i][N][N];
+				LNA_2D[0][0] = ol[z].LNA_2D[i*NINT*NINT + 0 * NINT + 0]; LNA_2D[1][0] = ol[z].LNA_2D[i*NINT*NINT + N * NINT + 0]; LNA_2D[0][1] = ol[z].LNA_2D[i*NINT*NINT + 0 * NINT + N]; LNA_2D[1][1] = ol[z].LNA_2D[i*NINT*NINT + N * NINT + N];
 				for (m = 0; m < (hprefg_flu + 1); m++) { //m, n, o stands for internal nodes in one element (all but except for corner nodes)
 					for (n = 0; n < (hprefg_flu + 1); n++) {
 						ol[z].GCOORD_flu_gs[i*(hprefg_flu + 1)*(hprefg_flu + 1) + m*(hprefg_flu + 1) + n][0] = 0.0; //m and n equivalent to LNA[m][n]

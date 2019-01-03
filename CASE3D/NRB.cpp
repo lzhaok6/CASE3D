@@ -75,7 +75,7 @@ struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA) {
 			for (e = 0; e < nr[z].NEL_nrb; e++) {
 				for (j = 0; j < NINT*NINT; j++) {
 					for (k = 0; k < NINT*NINT; k++) {
-						t.ADMASTERG[nr[z].IEN_gb[nr[z].DP_2D[e][k] - 1][e] - 1] += nr[z].ADMASTER[e][j][k];
+						t.ADMASTERG[nr[z].IEN_gb[nr[z].DP_2D[e*NINT*NINT + k] - 1][e] - 1] += nr[z].ADMASTER[e][j][k];
 					}
 				}
 			}

@@ -207,45 +207,39 @@ int main()
 		}
 
 		for (z = 0; z < owsfnumber; z++) {
-			ol[z].phi_fem = new double***[ol[z].FSNEL];
-			for (q = 0; q < ol[z].FSNEL; q++) {
-				ol[z].phi_fem[q] = new double**[4];
-				for (i = 0; i < 4; i++) { //for all the points in that element
-					ol[z].phi_fem[q][i] = new double*[NINT];
-					for (j = 0; j < NINT; j++) {
-						ol[z].phi_fem[q][i][j] = new double[NINT];
+			ol[z].phi_fem = new double**[4];
+			for (i = 0; i < 4; i++) { //for all the points in that element
+				ol[z].phi_fem[i] = new double*[NINT];
+				for (j = 0; j < NINT; j++) {
+					ol[z].phi_fem[i][j] = new double[NINT];
+				}
+			}
+			for (i = 0; i < 4; i++) {
+				for (j = 0; j < NINT; j++) {
+					for (k = 0; k < NINT; k++) {
+						ol[z].phi_fem[i][j][k] = 0.0;
 					}
 				}
 			}
-			for (q = 0; q < ol[z].FSNEL; q++) {
-				for (i = 0; i < 4; i++) {
-					for (j = 0; j < NINT; j++) {
-						for (k = 0; k < NINT; k++) {
-							ol[z].phi_fem[q][i][j][k] = 0.0;
-						}
-					}
-				}
-			}
-			for (q = 0; q < ol[z].FSNEL; q++) {
-				for (h = 0; h < 2; h++) { //stands for every fem point, LNA[u][v][w](shape function is based on those points)
-					for (k = 0; k < 2; k++) {
-						for (i = 0; i < NINT; i++) {  //i j k are the independent variable in basis function(sem points)
-							for (j = 0; j < NINT; j++) {
-								nomx = 1.0; nomy = 1.0; //multiplier initialization
-								denomx = 1.0; denomy = 1.0; //multiplier initialization
-								for (e = 0; e < 2; e++) { //loop through nominator and denominator in basis function expression
-									if (e != h) {
-										nomx *= (origp[i] - basep[e]);
-										denomx *= (basep[h] - basep[e]);
-									}
-									if (e != k) {
-										nomy *= (origp[j] - basep[e]);
-										denomy *= (basep[k] - basep[e]);
-									}
+			for (h = 0; h < 2; h++) { //stands for every fem point, LNA[u][v][w](shape function is based on those points)
+				for (k = 0; k < 2; k++) {
+					for (i = 0; i < NINT; i++) {  //i j k are the independent variable in basis function(sem points)
+						for (j = 0; j < NINT; j++) {
+							nomx = 1.0; nomy = 1.0; //multiplier initialization
+							denomx = 1.0; denomy = 1.0; //multiplier initialization
+							for (e = 0; e < 2; e++) { //loop through nominator and denominator in basis function expression
+								if (e != h) {
+									nomx *= (origp[i] - basep[e]);
+									denomx *= (basep[h] - basep[e]);
 								}
-								ol[z].phi_fem[q][ol[z].LNA_algo2[q][h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
-								//the coordinate definition dof u,v is the same with i,j
+								if (e != k) {
+									nomy *= (origp[j] - basep[e]);
+									denomy *= (basep[k] - basep[e]);
+								}
 							}
+							//ol[z].phi_fem[q][ol[z].LNA_algo2[q][h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
+							ol[z].phi_fem[h * 2 + k][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
+							//the coordinate definition dof u,v is the same with i,j
 						}
 					}
 				}
