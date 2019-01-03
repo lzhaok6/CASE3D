@@ -53,9 +53,9 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_075ftstructuredhex_fs_150m_10m_24m_mirror.inp";
+	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_075ftstructuredhex_fs_150m_10m_24m_mirror.inp";
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1ftbasemesh_fs_150m_10m_24m.msh";
-	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
@@ -1464,16 +1464,43 @@ struct meshgenerationstruct meshgeneration() {
 
 					}
 				}
+				//ol[z].GIDNct_MpCCI = dummy.size();
+				ol[z].GIDNct_MpCCI = ct;
+				if (ct != dummy.size()) {
+					std::cout << "There is a problem with ol[z].GIDNct_MpCCI" << std::endl;
+					system("PAUSE ");
+				}
+				ol[z].GIDN_MpCCI = new int[ol[z].GIDNct_MpCCI];
+				for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
+					ol[z].GIDN_MpCCI[i] = dummy[i];
+				}
 			}
-			//ol[z].GIDNct_MpCCI = dummy.size();
-			ol[z].GIDNct_MpCCI = ct;
-			if (ct != dummy.size()) {
-				std::cout << "There is a problem with ol[z].GIDNct_MpCCI" << std::endl;
-				system("PAUSE ");
-			}
-			ol[z].GIDN_MpCCI = new int[ol[z].GIDNct_MpCCI];
-			for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
-				ol[z].GIDN_MpCCI[i] = dummy[i];
+			else { //a new method
+				std::vector<int> all2dnodes; //used to store all the global numbering of the boundary nodes
+				for (i = 0; i < ol[z].FSNEL; i++) {
+					for (j = 0; j < 4; j++) {
+						all2dnodes.push_back(ol[z].IEN_algo2[j][i]);
+					}
+				}
+				std::sort(all2dnodes.begin(), all2dnodes.end()); //the boundary nodes are sorted
+				//Erase the repeated nodes 
+				all2dnodes.erase(unique(all2dnodes.begin(), all2dnodes.end()), all2dnodes.end());
+				//give each gloabl node a corresponding local numbering
+				int*localno = new int[all2dnodes.back()]; //not sure if this would corrupt the memory
+				for (i = 0; i < all2dnodes.size(); i++) {
+					localno[all2dnodes[i] - 1] = i;
+				}
+				for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
+					for (j = 0; j < 4; j++) { //the nodes in current element
+						ol[z].IEN_2D[j][i] = localno[ol[z].IEN_algo2[j][i] - 1] + 1;
+					}
+				}
+				ol[z].GIDNct_MpCCI = all2dnodes.size();
+				ol[z].GIDN_MpCCI = new int[ol[z].GIDNct_MpCCI];
+				for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
+					ol[z].GIDN_MpCCI[i] = all2dnodes[i];
+				}
+				delete[] localno;
 			}
 		}
 		if (element_type == 1) {
