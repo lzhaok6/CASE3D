@@ -53,9 +53,9 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
-	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_075ftstructuredhex_fs_150m_10m_24m_mirror.inp";
-	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1ftbasemesh_fs_150m_10m_24m.msh";
+	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_0.5ftbasemesh_fs_150m_10m_24m.inp";
 	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
+	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_2ftftbasemesh_fs_150m_10m_24m.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
@@ -548,10 +548,10 @@ struct meshgenerationstruct meshgeneration() {
 		//adjust the node location if necessary
 		if (nodeadj == 1) {
 			for (int i = 0; i < t.NNODE; i++) {
-				//t.GCOORD[i][0] = VX[i];
-				//t.GCOORD[i][1] = VZ[i] + fs_offset;
-				//t.GCOORD[i][2] = -VY[i];
-				t.GCOORD[i][1] = VY[i] + fs_offset;
+				t.GCOORD[i][0] = VX[i];
+				t.GCOORD[i][1] = VZ[i] + fs_offset;
+				t.GCOORD[i][2] = -VY[i];
+				//t.GCOORD[i][1] = VY[i] + fs_offset;
 			}
 		}
 	}
@@ -571,7 +571,7 @@ struct meshgenerationstruct meshgeneration() {
 		c_ln = LOCAL_NODE(1);
 		LOCAL_SHAPEstruct ls_ln; //ln means linear
 		ls_ln = LOCAL_SHAPE(c_ln.LNA, 1, N, FEM); //Get the 3D linear shape function value on Nth order SEM nodes
-												  //t.SHL[3][LNA[i][j][k] - 1][l*(NQUAD + 1)*(NQUAD + 1) + m*(NQUAD + 1) + o]
+		//t.SHL[3][LNA[i][j][k] - 1][l*(NQUAD + 1)*(NQUAD + 1) + m*(NQUAD + 1) + o]
 		int LNA_ln[2][2][2];
 		LNA_ln[0][0][0] = c.LNA[0][0][0]; LNA_ln[1][0][0] = c.LNA[N][0][0];
 		LNA_ln[1][1][0] = c.LNA[N][N][0]; LNA_ln[0][1][0] = c.LNA[0][N][0];
@@ -722,6 +722,7 @@ struct meshgenerationstruct meshgeneration() {
 		for (z = 0; z < owsfnumber; z++) {
 			ol[z].LNA_2D = new int[ol[z].FSNEL*NINT*NINT];
 			ol[z].LNA_norm = new int[ol[z].FSNEL * 4];
+			ol[z].LNA_norm_3D = new int[ol[z].FSNEL * 4];
 			ol[z].LNA_JB2D = new int[ol[z].FSNEL * 4];
 			ol[z].Jacob_face = new int*[ol[z].FSNEL];
 			for (i = 0; i < ol[z].FSNEL; i++) {
@@ -732,6 +733,7 @@ struct meshgenerationstruct meshgeneration() {
 		for (z = 0; z < nrbsurfnumber; z++) {
 			nr[z].LNA_2D = new int[nr[z].NEL_nrb*NINT*NINT];
 			nr[z].LNA_norm = new int[nr[z].NEL_nrb * 4];
+			nr[z].LNA_norm_3D = new int[nr[z].NEL_nrb * 4];
 			nr[z].LNA_JB2D = new int[nr[z].NEL_nrb * 4];
 			nr[z].Jacob_face = new int*[nr[z].NEL_nrb];
 			for (i = 0; i < nr[z].NEL_nrb; i++) {
@@ -752,6 +754,7 @@ struct meshgenerationstruct meshgeneration() {
 		else if (input_type == "Abaqus") {
 			total_subsets = wt_py.size() + nrb_py.size(); //the total number of wetted surface and NRB element sets 
 		}
+
 		for (z = 0; z < total_subsets; z++) {
 			//First determine if this is a wetted surface physical group or nrb physical group
 			wet = 0; nrb = 0;
@@ -822,6 +825,10 @@ struct meshgenerationstruct meshgeneration() {
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 1] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + 0 * NINT + N];
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 2] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + N];
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 3] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + 0];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 0] = c.LNA[0][0][0]; //make sure the orientation is counter clockwise
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 1] = c.LNA[0][0][N];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 2] = c.LNA[0][N][N];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 3] = c.LNA[0][N][0];
 						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 0] = 1;  //Take a look at the header file for more information of LNA_JB2D
 						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 1] = 5;
 						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 2] = 8;
@@ -850,6 +857,10 @@ struct meshgenerationstruct meshgeneration() {
 						ol[wet_ct].LNA_norm[ct_wt*4 + 1] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + 0 * NINT + N];
 						ol[wet_ct].LNA_norm[ct_wt*4 + 2] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + N];
 						ol[wet_ct].LNA_norm[ct_wt*4 + 3] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + 0];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 0] = c.LNA[0][0][0]; //make sure the orientation is counter clockwise
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 1] = c.LNA[0][0][N];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 2] = c.LNA[0][N][N];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 3] = c.LNA[0][N][0];
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 0] = 1;
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 1] = 5;
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 2] = 8;
@@ -904,6 +915,10 @@ struct meshgenerationstruct meshgeneration() {
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 1] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + 0];
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 2] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + N];
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 3] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + 0 * NINT + N];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 0] = c.LNA[N][0][0]; //make sure the orientation is counter clockwise
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 1] = c.LNA[N][N][0];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 2] = c.LNA[N][N][N];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 3] = c.LNA[N][0][N];
 						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 0] = 2;  //Take a look at the header file for more information of LNA_JB2D
 						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 1] = 3;
 						nr[nrb_ct].LNA_JB2D[ct_nrb * 4 + 2] = 7;
@@ -932,6 +947,10 @@ struct meshgenerationstruct meshgeneration() {
 						ol[wet_ct].LNA_norm[ct_wt*4 + 1] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + 0];
 						ol[wet_ct].LNA_norm[ct_wt*4 + 2] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + N];
 						ol[wet_ct].LNA_norm[ct_wt*4 + 3] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + 0 * NINT + N];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 0] = c.LNA[N][0][0]; //make sure the orientation is counter clockwise
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 1] = c.LNA[N][N][0];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 2] = c.LNA[N][N][N];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 3] = c.LNA[N][0][N];
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 0] = 2;
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 1] = 3;
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 2] = 7;
@@ -986,6 +1005,10 @@ struct meshgenerationstruct meshgeneration() {
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 1] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + 0 * NINT + N];
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 2] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + N];
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 3] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + 0];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 0] = c.LNA[0][0][0]; //make sure the orientation is counter clockwise
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 1] = c.LNA[0][N][0];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 2] = c.LNA[N][N][0];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 3] = c.LNA[N][0][0];
 						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 0] = 1;  //Take a look at the header file for more information of LNA_JB2D
 						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 1] = 4;
 						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 2] = 3;
@@ -1014,6 +1037,10 @@ struct meshgenerationstruct meshgeneration() {
 						ol[wet_ct].LNA_norm[ct_wt*4 + 1] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + 0 * NINT + N];
 						ol[wet_ct].LNA_norm[ct_wt*4 + 2] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + N];
 						ol[wet_ct].LNA_norm[ct_wt*4 + 3] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + 0];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 0] = c.LNA[0][0][0]; //make sure the orientation is counter clockwise
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 1] = c.LNA[0][N][0];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 2] = c.LNA[N][N][0];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 3] = c.LNA[N][0][0];
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 0] = 1;
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 1] = 4;
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 2] = 3;
@@ -1068,6 +1095,10 @@ struct meshgenerationstruct meshgeneration() {
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 1] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + 0];
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 2] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + N * NINT + N];
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 3] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT + 0 * NINT + N];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 0] = c.LNA[0][0][N]; //make sure the orientation is counter clockwise
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 1] = c.LNA[N][0][N];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 2] = c.LNA[N][N][N];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 3] = c.LNA[0][N][N];
 						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 0] = 5;  //Take a look at the header file for more information of LNA_JB2D
 						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 1] = 6;
 						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 2] = 7;
@@ -1096,6 +1127,10 @@ struct meshgenerationstruct meshgeneration() {
 						ol[wet_ct].LNA_norm[ct_wt*4 + 1] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + 0];
 						ol[wet_ct].LNA_norm[ct_wt*4 + 2] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + N * NINT + N];
 						ol[wet_ct].LNA_norm[ct_wt*4 + 3] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT + 0 * NINT + N];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 0] = c.LNA[0][0][N]; //make sure the orientation is counter clockwise
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 1] = c.LNA[N][0][N];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 2] = c.LNA[N][N][N];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 3] = c.LNA[0][N][N];
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 0] = 5;
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 1] = 6;
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 2] = 7;
@@ -1150,6 +1185,10 @@ struct meshgenerationstruct meshgeneration() {
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 1] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+N*NINT+0];
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 2] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+N*NINT+N];
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 3] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+0*NINT+N];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 0] = c.LNA[0][0][0]; //make sure the orientation is counter clockwise
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 1] = c.LNA[N][0][0];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 2] = c.LNA[N][0][N];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 3] = c.LNA[0][0][N];
 						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 0] = 1;  //Take a look at the header file for more information of LNA_JB2D
 						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 1] = 2;
 						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 2] = 6;
@@ -1178,6 +1217,10 @@ struct meshgenerationstruct meshgeneration() {
 						ol[wet_ct].LNA_norm[ct_wt*4 + 1] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+N*NINT+0];
 						ol[wet_ct].LNA_norm[ct_wt*4 + 2] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+N*NINT+N];
 						ol[wet_ct].LNA_norm[ct_wt*4 + 3] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+0*NINT+N];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 0] = c.LNA[0][0][0]; //make sure the orientation is counter clockwise
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 1] = c.LNA[N][0][0];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 2] = c.LNA[N][0][N];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 3] = c.LNA[0][0][N];
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 0] = 1;
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 1] = 2;
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 2] = 6;
@@ -1232,6 +1275,10 @@ struct meshgenerationstruct meshgeneration() {
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 1] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+0*NINT+N];
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 2] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+N*NINT+N];
 						nr[nrb_ct].LNA_norm[ct_nrb*4 + 3] = nr[nrb_ct].LNA_2D[ct_nrb*NINT*NINT+N*NINT+0];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 0] = c.LNA[0][N][0]; //make sure the orientation is counter clockwise
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 1] = c.LNA[0][N][N];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 2] = c.LNA[N][N][N];
+						nr[nrb_ct].LNA_norm_3D[ct_nrb * 4 + 3] = c.LNA[N][N][0];
 						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 0] = 4;  //Take a look at the header file for more information of LNA_JB2D
 						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 1] = 8;
 						nr[nrb_ct].LNA_JB2D[ct_nrb*4 + 2] = 7;
@@ -1260,6 +1307,10 @@ struct meshgenerationstruct meshgeneration() {
 						ol[wet_ct].LNA_norm[ct_wt*4 + 1] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+0*NINT+N];
 						ol[wet_ct].LNA_norm[ct_wt*4 + 2] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+N*NINT+N];
 						ol[wet_ct].LNA_norm[ct_wt*4 + 3] = ol[wet_ct].LNA_2D[ct_wt*NINT*NINT+N*NINT+0];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 0] = c.LNA[0][N][0]; //make sure the orientation is counter clockwise
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 1] = c.LNA[0][N][N];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 2] = c.LNA[N][N][N];
+						ol[wet_ct].LNA_norm_3D[ct_wt * 4 + 3] = c.LNA[N][N][0];
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 0] = 4;
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 1] = 8;
 						ol[wet_ct].LNA_JB2D[ct_wt*4 + 2] = 7;
@@ -1439,124 +1490,65 @@ struct meshgenerationstruct meshgeneration() {
 			for (i = 0; i < 4; i++) {
 				ol[z].IEN_2D[i] = new int[ol[z].FSNEL];
 			}
-			ct = 0; //count the node number assigned
-			std::vector<int>dummy;
-			if (debug_IEN == 0) {
-				for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
-					for (j = 0; j < 4; j++) { //the nodes in current element
-						flag = 1; //Initiate the flag to 1 
-						for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
-							for (l = 0; l < 4; l++) {
-								if (ol[z].IEN_algo2[l][k] == ol[z].IEN_algo2[j][i]) { //If this node has already been assigned, use the same numbering
-									ol[z].IEN_2D[j][i] = ol[z].IEN_2D[l][k];
-									flag = 0; //turn off the flag to assgin new number
-								}
-								else {
-									//If the number has not assigned yet the flag is still 1, thus a new number could be assigned. 
-								}
-							}
-						}
-						if (flag == 1) {
-							ct += 1;
-							dummy.push_back(ol[z].IEN_algo2[j][i]); //associate the local 2D node with the global node numbering 
-							ol[z].IEN_2D[j][i] = ct; //assign a new number to MpCCI element connectivity
-						}
-
-					}
-				}
-				//ol[z].GIDNct_MpCCI = dummy.size();
-				ol[z].GIDNct_MpCCI = ct;
-				if (ct != dummy.size()) {
-					std::cout << "There is a problem with ol[z].GIDNct_MpCCI" << std::endl;
-					system("PAUSE ");
-				}
-				ol[z].GIDN_MpCCI = new int[ol[z].GIDNct_MpCCI];
-				for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
-					ol[z].GIDN_MpCCI[i] = dummy[i];
+			std::vector<int> all2dnodes; //used to store all the global numbering of the boundary nodes
+			for (i = 0; i < ol[z].FSNEL; i++) {
+				for (j = 0; j < 4; j++) {
+					all2dnodes.push_back(ol[z].IEN_algo2[j][i]);
 				}
 			}
-			else { //a new method
-				std::vector<int> all2dnodes; //used to store all the global numbering of the boundary nodes
-				for (i = 0; i < ol[z].FSNEL; i++) {
-					for (j = 0; j < 4; j++) {
-						all2dnodes.push_back(ol[z].IEN_algo2[j][i]);
-					}
-				}
-				std::sort(all2dnodes.begin(), all2dnodes.end()); //the boundary nodes are sorted
-				//Erase the repeated nodes 
-				all2dnodes.erase(unique(all2dnodes.begin(), all2dnodes.end()), all2dnodes.end());
-				//give each gloabl node a corresponding local numbering
-				int*localno = new int[all2dnodes.back()]; //not sure if this would corrupt the memory
-				for (i = 0; i < all2dnodes.size(); i++) {
-					localno[all2dnodes[i] - 1] = i;
-				}
-				for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
-					for (j = 0; j < 4; j++) { //the nodes in current element
-						ol[z].IEN_2D[j][i] = localno[ol[z].IEN_algo2[j][i] - 1] + 1;
-					}
-				}
-				ol[z].GIDNct_MpCCI = all2dnodes.size();
-				ol[z].GIDN_MpCCI = new int[ol[z].GIDNct_MpCCI];
-				for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
-					ol[z].GIDN_MpCCI[i] = all2dnodes[i];
-				}
-				delete[] localno;
+			std::sort(all2dnodes.begin(), all2dnodes.end()); //the boundary nodes are sorted
+			//Erase the repeated nodes 
+			all2dnodes.erase(unique(all2dnodes.begin(), all2dnodes.end()), all2dnodes.end());
+			//give each gloabl node a corresponding local numbering
+			int*localno = new int[all2dnodes.back()]; //not sure if this would corrupt the memory
+			for (i = 0; i < all2dnodes.size(); i++) {
+				localno[all2dnodes[i] - 1] = i;
 			}
+			for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
+				for (j = 0; j < 4; j++) { //the nodes in current element
+					ol[z].IEN_2D[j][i] = localno[ol[z].IEN_algo2[j][i] - 1] + 1;
+				}
+			}
+			ol[z].GIDNct_MpCCI = all2dnodes.size();
+			ol[z].GIDN_MpCCI = new int[ol[z].GIDNct_MpCCI];
+			for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
+				ol[z].GIDN_MpCCI[i] = all2dnodes[i];
+			}
+			delete[] localno;
 		}
 		if (element_type == 1) {
-			//Derive the IEN_2D to write the MpCCI model file (basically renumbering the node in IEN_algo2 sequentially to be recognized by MpCCI)
+			std::cout << "We have chagne the way IEN_2D is defined. Please check if the model file is correctly written" << std::endl; 
+			system(" PAUSE"); 
+			//Derive the IEN_2D to write the MpCCI model file (basically renumbering the node in IEN_gb sequentially to be recognized by MpCCI)
 			ol[z].IEN_2D = new int*[3]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
 			for (i = 0; i < 3; i++) {
 				ol[z].IEN_2D[i] = new int[ol[z].FSNEL];
 			}
-			ct = 0; //count the node number assigned
-			std::vector<int>dummy;
-			int half; 
+			std::vector<int> all2dnodes; //used to store all the global numbering of the boundary nodes
+			for (i = 0; i < ol[z].FSNEL; i++) {
+				for (j = 0; j < 3; j++) {
+					all2dnodes.push_back(ol[z].IEN_gb[j][i]);
+				}
+			}
+			std::sort(all2dnodes.begin(), all2dnodes.end()); //the boundary nodes are sorted
+			//Erase the repeated nodes 
+			all2dnodes.erase(unique(all2dnodes.begin(), all2dnodes.end()), all2dnodes.end());
+			//give each gloabl node a corresponding local numbering
+			int*localno = new int[all2dnodes.back()]; //not sure if this would corrupt the memory
+			for (i = 0; i < all2dnodes.size(); i++) {
+				localno[all2dnodes[i] - 1] = i;
+			}
 			for (i = 0; i < ol[z].FSNEL; i++) { //loop through each element
-				if (i % 10000 == 0) {
-					std::cout << i << std::endl;
-				}
 				for (j = 0; j < 3; j++) { //the nodes in current element
-					flag = 1; //Initiate the flag to 1 
-					half = round(i / 2.0); //search the second half first
-					//search the second half first 
-					for (k = half; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
-						for (l = 0; l < 3; l++) {
-							if (ol[z].IEN_gb[l][k] == ol[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
-								ol[z].IEN_2D[j][i] = ol[z].IEN_2D[l][k];
-								flag = 0; //turn off the flag used to assgin new number
-								goto endloop2;
-							}
-						}
-					}
-					//search the second half
-					for (k = 0; k < half; k++) {
-						for (l = 0; l < 3; l++) {
-							if (ol[z].IEN_gb[l][k] == ol[z].IEN_gb[j][i]) { //If this node has already been assigned, use the same numbering
-								ol[z].IEN_2D[j][i] = ol[z].IEN_2D[l][k];
-								flag = 0; //turn off the flag used to assgin new number
-								goto endloop2;
-							}
-						}
-					}
-				endloop2:;
-					if (flag == 1) {
-						ct += 1;
-						dummy.push_back(ol[z].IEN_gb[j][i]); //associate the local 2D node with the global node numbering 
-						ol[z].IEN_2D[j][i] = ct; //assign a new number to MpCCI element connectivity
-					}
+					ol[z].IEN_2D[j][i] = localno[ol[z].IEN_gb[j][i] - 1] + 1;
 				}
 			}
-			//ol[z].GIDNct_MpCCI = dummy.size();
-			ol[z].GIDNct_MpCCI = ct;
-			if (ct != dummy.size()) {
-				std::cout << "There is a problem with the ol[z].GIDNct_MpCCI" << std::endl;
-				system("PAUSE ");
-			}
+			ol[z].GIDNct_MpCCI = all2dnodes.size();
 			ol[z].GIDN_MpCCI = new int[ol[z].GIDNct_MpCCI];
 			for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
-				ol[z].GIDN_MpCCI[i] = dummy[i];
+				ol[z].GIDN_MpCCI[i] = all2dnodes[i];
 			}
+			delete[] localno;
 		}
 
 		//define GIDN (the counterpart of NRBA on non-reflecting boundary)
@@ -1594,24 +1586,103 @@ struct meshgenerationstruct meshgeneration() {
 
 		//Obtain GIDF (the global element numbering of each local wetted surface)
 		if (element_type == 0 && input_type == "Gmsh" && (mappingalgo == 4 || mappingalgo == 5)) {
-			ol[z].GIDF = new int[ol[z].FSNEL];
+			//build the bounding box for the wetted surface
+			std::vector<double> bx; std::vector<double> by; std::vector<double> bz;
 			for (i = 0; i < ol[z].FSNEL; i++) {
+				for (k = 0; k < 4; k++) {
+					bx.push_back(t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i * 4 + k] - 1][i] - 1][0]);
+					by.push_back(t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i * 4 + k] - 1][i] - 1][1]);
+					bz.push_back(t.GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[i * 4 + k] - 1][i] - 1][2]);
+				}
+			}
+			std::sort(bx.begin(), bx.end());
+			std::sort(by.begin(), by.end());
+			std::sort(bz.begin(), bz.end());
+			double xlim[2] = { bx.front() - 0.1,bx.back() + 0.1 };
+			double ylim[2] = { by.front() - 0.1,by.back() + 0.1 };
+			double zlim[2] = { bz.front() - 0.1,bz.back() + 0.1 };
+			std::vector<int>ele_bd; //the global element within the bounding box
+			for (j = 0; j < t.NEL; j++) {
 				flag = 0;
-				for (j = 0; j < t.NEL; j++) {
-					ct = 0;
-					for (k = 0; k < elenode2D; k++) {
-						if (t.IEN[ol[z].FP[i][k] - 1][j] == ol[z].IEN_gb[ol[z].FP_2D[i*elenode2D + k] - 1][i]) {
-							ct += 1;
-						}
-					}
-					if (ct == elenode2D) { //find the corresponding 3D element
-						ol[z].GIDF[i] = j + 1;
+				for (k = 0; k < elenode3D; k++) {
+					if (t.GCOORD[t.IEN[k][j] - 1][0] >= xlim[0] && t.GCOORD[t.IEN[k][j] - 1][0] <= xlim[1]
+						&& t.GCOORD[t.IEN[k][j] - 1][1] >= ylim[0] && t.GCOORD[t.IEN[k][j] - 1][1] <= ylim[1]
+						&& t.GCOORD[t.IEN[k][j] - 1][2] >= zlim[0] && t.GCOORD[t.IEN[k][j] - 1][2] <= zlim[1]) {
+						//If any point of the current element is within the bounding box, we will search it later on 
 						flag = 1;
 					}
 				}
-				if (flag == 0) {
-					std::cout << "No corresponding 3D element is found" << std::endl;
-					system("PAUSE ");
+				if (flag == 1) {
+					ele_bd.push_back(j); //starting from 0 
+				}
+			}
+			std::cout << ele_bd.size() << std::endl; 
+			ol[z].GIDF = new int[ol[z].FSNEL];
+			/*
+			for (i = 0; i < ol[z].FSNEL; i++) {
+					flag = 0;
+					for (j = 0; j < t.NEL; j++) {
+						ct = 0;
+						for (k = 0; k < elenode2D; k++) {
+							if (t.IEN[ol[z].FP[i][k] - 1][j] == ol[z].IEN_gb[ol[z].FP_2D[i*elenode2D + k] - 1][i]) {
+								ct += 1;
+							}
+						}
+						if (ct == elenode2D) { //find the corresponding 3D element
+							ol[z].GIDF[i] = j + 1;
+							flag = 1;
+						}
+					}
+					if (flag == 0) {
+						std::cout << "No corresponding 3D element is found" << std::endl;
+						system("PAUSE ");
+					}
+				}
+				*/
+			//If the four corner node is consistent (instead of all the interface 2D nodes as we used to do), the corresponding global node is found
+			if (debug_IEN == 0) {
+				for (i = 0; i < ol[z].FSNEL; i++) {
+					if (i % 1000 == 0) {
+						std::cout << i << " fluid elements have been associated with gloabl element (totally " << ol[z].FSNEL << " surface elements" << std::endl; 
+					}
+					flag = 0;
+					for (j = 0; j < t.NEL; j++) {
+						ct = 0;
+						for (k = 0; k < 4; k++) {
+							if (t.IEN[ol[z].LNA_norm_3D[i * 4 + k] - 1][j] == ol[z].IEN_gb[ol[z].LNA_norm[i * 4 + k] - 1][i]) {
+								ct += 1;
+							}
+						}
+						if (ct == 4) { //find the corresponding 3D element
+							ol[z].GIDF[i] = j + 1;
+							flag = 1;
+						}
+					}
+					if (flag == 0) {
+						std::cout << "No corresponding 3D element is found" << std::endl;
+						system("PAUSE ");
+					}
+				}
+			}
+			else {
+				for (i = 0; i < ol[z].FSNEL; i++) {
+					flag = 0;
+					for (j = 0; j < ele_bd.size(); j++) {
+						ct = 0;
+						for (k = 0; k < 4; k++) {
+							if (t.IEN[ol[z].LNA_norm_3D[i * 4 + k] - 1][ele_bd[j]] == ol[z].IEN_gb[ol[z].LNA_norm[i * 4 + k] - 1][i]) {
+								ct += 1;
+							}
+						}
+						if (ct == 4) { //find the corresponding 3D element
+							ol[z].GIDF[i] = ele_bd[j] + 1;
+							flag = 1;
+						}
+					}
+					if (flag == 0) {
+						std::cout << "No corresponding 3D element is found" << std::endl;
+						system("PAUSE ");
+					}
 				}
 			}
 		}
@@ -1902,6 +1973,29 @@ struct meshgenerationstruct meshgeneration() {
 	//Clean the dynamic allocated arrary
 	if (element_type == 1) {
 		delete[] IEN_1D; 
+	}
+	if (element_type == 0) {
+		for (z = 0; z < owsfnumber; z++) {
+			delete[] ol[z].LNA_norm_3D;
+		}
+		for (z = 0; z < nrbsurfnumber; z++) {
+			delete[] nr[z].LNA_norm_3D;
+		}
+		for (z = 0; z < owsfnumber; z++) {
+			for (j = 0; j < 4; j++) {
+				delete[] ol[z].IEN_py[j];
+			}
+			delete[] ol[z].IEN_py;
+		}
+		for (z = 0; z < owsfnumber; z++) {
+			delete[] ol[z].GIDN_MpCCI;
+		}
+		for (z = 0; z < owsfnumber; z++) {
+			for (i = 0; i < 4; i++) {
+				delete[] ol[z].IEN_algo2[i];
+			}
+			delete[] ol[z].IEN_algo2;
+		}
 	}
 
 	std::cout << " " << std::endl;

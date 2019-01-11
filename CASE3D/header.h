@@ -40,7 +40,8 @@ typedef struct owetsurf {
 	double *PSI; //integrated incident pressure 
 	double *DI;  //displacement predictor 
 	double **DISPI; //incident displacement
-	double **DISP; //total (actual) displacement (the combination of incident displacement and dynamic displacement)
+	//double **DISP; //total (actual) displacement (the combination of incident displacement and dynamic displacement)
+	double *DISP; //total (actual) displacement (the combination of incident displacement and dynamic displacement)
 	double **DISP_norm; //normal displacement out of fluid domain for two concecutive time steps
 	//double *WP; //wet surface pressure, representing AP, CP, DP previously
 	double *WPIN; //wet surface incident pressure, APIN, ...
@@ -74,6 +75,7 @@ typedef struct owetsurf {
 	//int Jacob_face[2]; //Used to identify which coordinate dimension (x,y or z/xi,eta,zeta?) to be used for surface 2D Jacobian matrix calculation.  
 	int** Jacob_face;
 	int* LNA_norm;
+	int* LNA_norm_3D; //Used along with LNA_norm to identify GIDF
 	int** IEN_py; //the linear element connectivity matrix of 2D physical groups (boundaries) separated from the original 2D high-order elements
 	//double**** xs;
 	double****xs_2D; //for the 2D elements on wetted surface
@@ -92,8 +94,10 @@ typedef struct owetsurf {
 	double** flu_stru_global;
 	int** IEN_flu_2D;
 	double** GCOORD_flu_gs; //the gauss point on fluid element 
-	double** DISP_gs; //The displacement on gauss nodes  
+	//double** DISP_gs; //The displacement on gauss nodes  
+	double* DISP_gs; //The displacement on gauss nodes  
 	double* GCOORD_fs; //The array built for fast access
+	int* IEN_flu_3D; //Get the corner point of the fluid elements 
 } OWETSURF;
 
 typedef struct stru_wet_surf {
@@ -103,23 +107,27 @@ typedef struct stru_wet_surf {
 	//std::vector<int>orphan_flag_gs; //the container to store the node numbering of orphan nodes
 	int* orphan_flag_gs; 
 	int ELE_stru; //total number of structural wetted surface elements
-	int** IEN_stru; //Connectivity matrix of the structural wetted surface elements
+	//int** IEN_stru; //Connectivity matrix of the structural wetted surface elements
+	int* IEN_stru; //Connectivity matrix of the structural wetted surface elements
 	double **GCOORD_stru; //the coordinate of structure nodes
-	int** IEN_stru_MpCCI; //Renumber the node on wetted surface to start from 1
+	//int** IEN_stru_MpCCI; //Renumber the node on wetted surface to start from 1
+	int* IEN_stru_MpCCI; //Renumber the node on wetted surface to start from 1
 	int Node_stru; //total node on structural wetted surface
 	int* Node_glob; //Associate the corresponding global node number to the local node in MpCCI model file
 	double** Jacob_stru; //the Jacobian determinant of the structural wetted surface element (the value is on quadrature node)
 	double*** FPMASTER_stru; 
-	int** LNA_stru; 
+	//int** LNA_stru; 
+	int* LNA_stru;
 	int** LNA_gs; 
-	double** P_gs;	
+	//double** P_gs;
+	double* P_gs;
 	double** norm_stru; 
 	double W_stru[hprefg + 1];
 	double*** phi_stru;
 	double**** GSHL_2D; 
 	double****xs_2D; //for the 2D elements on wetted surface
 	int** IEN_stru_norm;
-	double **GCOORD_stru_gs; //the coordinate of structure wetted surface gauss points
+	double* GCOORD_stru_gs; //the coordinate of structure wetted surface gauss points
 	int** IEN_stru_gs;
 	int gs_num; 
 	int** FP_flu; //store the interface node for mapping algorithm 4
@@ -149,6 +157,7 @@ typedef struct nrbsurf {
 	int NRBNODE;
 	double**norm; 
 	int* LNA_norm; 
+	int* LNA_norm_3D; 
 	//double**** xs;
 	double **XEST_kn;
 	double **XEST;
@@ -278,11 +287,11 @@ struct TIMINTstruct {
 //Input values
 //const double fs_offset = -6.02674; //Used to draft the free surface to y=0 position.
 //const double fs_offset = -6.0;
-const double fs_offset = 0.0;
+const double fs_offset = 0.0; //FSP
 //const double SX = 0.1;
 const double SX = 8.5344 / 2; //14ft (FSP)
-const double SY = 1.2192; //4ft (FSP)
-//const double SY = -fs_offset; //for DDG case
+//const double SY = 1.2192; //4ft (FSP)
+const double SY = -fs_offset; //for DDG case
 //const double SY = 3.048; //10ft
 const double SZ = 4.8768; //16ft (FSP)
 //const double SZ = 0.0; //for DDG case (the stand-off is at the keel)
@@ -331,7 +340,7 @@ const int debug3 = 0;
 const int debug4 = 0; 
 const int debug_algo5 = 0; 
 const int debug_PH = 0; 
-const int debug_IEN = 1; 
+const int debug_IEN = 0; 
 const int fsdebug = 0;
 const int tfm = 1; //is total field model used? 
 const int tensorfactorization = 1;

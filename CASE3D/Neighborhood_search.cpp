@@ -39,25 +39,21 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		elenode2D_ln = 3;
 	}
 
-	//Get the corner point of the fluid elements 
-	int** IEN_flu_3D; 
-	//int** IEN_flu_2D; 
+	//Get the corner point of the fluid elements
 	if (element_type == 0) { //hex element
-		IEN_flu_3D = new int*[8];
-		for (i = 0; i < 8; i++) {
-			IEN_flu_3D[i] = new int[NEL_flu];
+		for (z = 0; z < owsfnumber; z++) {
+			ol[z].IEN_flu_3D = new int[ol[z].FSNEL * 8];
+			for (i = 0; i < ol[z].FSNEL; i++) {
+				ol[z].IEN_flu_3D[i * 8 + 0] = IEN_flu[LNA[0][0][0] - 1][ol[z].GIDF[i] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 1] = IEN_flu[LNA[N][0][0] - 1][ol[z].GIDF[i] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 2] = IEN_flu[LNA[N][N][0] - 1][ol[z].GIDF[i] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 3] = IEN_flu[LNA[0][N][0] - 1][ol[z].GIDF[i] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 4] = IEN_flu[LNA[0][0][N] - 1][ol[z].GIDF[i] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 5] = IEN_flu[LNA[N][0][N] - 1][ol[z].GIDF[i] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 6] = IEN_flu[LNA[N][N][N] - 1][ol[z].GIDF[i] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 7] = IEN_flu[LNA[0][N][N] - 1][ol[z].GIDF[i] - 1];
+			}
 		}
-		for (i = 0; i < NEL_flu; i++) {
-			IEN_flu_3D[0][i] = IEN_flu[LNA[0][0][0] - 1][i];
-			IEN_flu_3D[1][i] = IEN_flu[LNA[N][0][0] - 1][i];
-			IEN_flu_3D[2][i] = IEN_flu[LNA[N][N][0] - 1][i];
-			IEN_flu_3D[3][i] = IEN_flu[LNA[0][N][0] - 1][i];
-			IEN_flu_3D[4][i] = IEN_flu[LNA[0][0][N] - 1][i];
-			IEN_flu_3D[5][i] = IEN_flu[LNA[N][0][N] - 1][i];
-			IEN_flu_3D[6][i] = IEN_flu[LNA[N][N][N] - 1][i];
-			IEN_flu_3D[7][i] = IEN_flu[LNA[0][N][N] - 1][i];
-		}
-
 		for (z = 0; z < owsfnumber; z++) {
 			ol[z].IEN_flu_2D = new int*[4];
 			for (i = 0; i < 4; i++) {
@@ -73,15 +69,12 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		
 	}
 	if (element_type == 1) {
-		IEN_flu_3D = new int*[4];
-		for (i = 0; i < 4; i++) {
-			IEN_flu_3D[i] = new int[NEL_flu];
-		}
-		for (i = 0; i < NEL_flu; i++) {
-			IEN_flu_3D[0][i] = IEN_flu[0][i];
-			IEN_flu_3D[1][i] = IEN_flu[1][i];
-			IEN_flu_3D[2][i] = IEN_flu[2][i];
-			IEN_flu_3D[3][i] = IEN_flu[3][i];
+		ol[z].IEN_flu_3D = new int[ol[z].FSNEL * 4];
+		for (i = 0; i < ol[z].FSNEL; i++) {
+			ol[z].IEN_flu_3D[i * 4 + 0] = IEN_flu[0][ol[z].GIDF[i] - 1];
+			ol[z].IEN_flu_3D[i * 4 + 1] = IEN_flu[1][ol[z].GIDF[i] - 1];
+			ol[z].IEN_flu_3D[i * 4 + 2] = IEN_flu[2][ol[z].GIDF[i] - 1];
+			ol[z].IEN_flu_3D[i * 4 + 3] = IEN_flu[3][ol[z].GIDF[i] - 1];
 		}
 		for (z = 0; z < owsfnumber; z++) {
 			ol[z].IEN_flu_2D = new int*[3];
@@ -302,20 +295,17 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		nodesperelem[z] = new int[ele_num_sideset[z]];
 		ss[z].elenode = new int[ele_num_sideset[z]]; 
 		ss[z].ELE_stru = ele_num_sideset[z];
-		ss[z].IEN_stru = new int*[4];
-		for (i = 0; i < 4; i++) {
-			ss[z].IEN_stru[i] = new int[ss[z].ELE_stru];
-		}
+		ss[z].IEN_stru = new int[4 * ss[z].ELE_stru];
 		ss[z].IEN_stru_norm = new int*[4];
 		for (i = 0; i < 4; i++) {
 			ss[z].IEN_stru_norm[i] = new int[ss[z].ELE_stru];
 		}
 		ct = 0;
 		for (j = 0; j < ele_num_sideset[z]; j++) { //loop through all the element in the wetted 
-			ss[z].IEN_stru[0][ct] = IEN[0][ele_num[z][j] - 1 - (ele_start_num - 1)];
-			ss[z].IEN_stru[1][ct] = IEN[1][ele_num[z][j] - 1 - (ele_start_num - 1)];
-			ss[z].IEN_stru[2][ct] = IEN[2][ele_num[z][j] - 1 - (ele_start_num - 1)];
-			ss[z].IEN_stru[3][ct] = IEN[3][ele_num[z][j] - 1 - (ele_start_num - 1)];
+			ss[z].IEN_stru[ct * 4 + 0] = IEN[0][ele_num[z][j] - 1 - (ele_start_num - 1)];
+			ss[z].IEN_stru[ct * 4 + 1] = IEN[1][ele_num[z][j] - 1 - (ele_start_num - 1)];
+			ss[z].IEN_stru[ct * 4 + 2] = IEN[2][ele_num[z][j] - 1 - (ele_start_num - 1)];
+			ss[z].IEN_stru[ct * 4 + 3] = IEN[3][ele_num[z][j] - 1 - (ele_start_num - 1)];
 			ct += 1;
 		}
 		if (ct != ss[z].ELE_stru) {
@@ -360,14 +350,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	//Create the pressure on structure gauss nodes (the pressure to be received) 
 	//Used in interface_mapping.cpp 
 	for (z = 0; z < ssnumber; z++) {
-		ss[z].P_gs = new double*[(hprefg + 1)*(hprefg + 1)];
-		for (i = 0; i < (hprefg + 1)*(hprefg + 1); i++) {
-			ss[z].P_gs[i] = new double[ss[z].ELE_stru];
-		}
-		for (i = 0; i < (hprefg + 1)*(hprefg + 1); i++) {
-			for (j = 0; j < ss[z].ELE_stru; j++) {
-				ss[z].P_gs[i][j] = 0.0;
-			}
+		ss[z].P_gs = new double[ss[z].ELE_stru*(hprefg + 1)*(hprefg + 1)];
+		for (i = 0; i < ss[z].ELE_stru*(hprefg + 1)*(hprefg + 1); i++) {
+			ss[z].P_gs[i] = 0.0;
 		}
 	}
 	
@@ -406,13 +391,10 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	TD_LOCAL_NODEstruct td;
 	td = TD_LOCAL_NODE(1);
 	for (z = 0; z < ssnumber; z++) {
-		ss[z].LNA_stru = new int*[2];
-		for (i = 0; i < 2; i++) {
-			ss[z].LNA_stru[i] = new int[2];
-		}
+		ss[z].LNA_stru = new int[2 * 2];
 		for (i = 0; i < 2; i++) {
 			for (j = 0; j < 2; j++) {
-				ss[z].LNA_stru[i][j] = td.LNA[i][j];
+				ss[z].LNA_stru[i * 2 + j] = td.LNA[i][j];
 			}
 		}
 	}
@@ -487,7 +469,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 								denomy *= (basep[k] - basep[e]);
 							}
 						}
-						ss[z].phi_stru[ss[z].LNA_stru[h][k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
+						ss[z].phi_stru[ss[z].LNA_stru[h * 2 + k] - 1][i][j] = (nomx / denomx)*(nomy / denomy); //tensor product
 					}
 				}
 			}
@@ -497,10 +479,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	TD_LOCAL_NODEstruct ct_gs;
 	//Interpolate the ss.GCOORD_stru to obtain the GCOORD_stru_gs (the coordinate of gauss nodes)
 	for (z = 0; z < ssnumber; z++) {
-		ss[z].GCOORD_stru_gs = new double*[ss[z].ELE_stru*(hprefg + 1)*(hprefg + 1)];
-		for (i = 0; i < ss[z].ELE_stru*(hprefg + 1)*(hprefg + 1); i++) {
-			ss[z].GCOORD_stru_gs[i] = new double[3];
-		}
+		ss[z].GCOORD_stru_gs = new double[ss[z].ELE_stru*(hprefg + 1)*(hprefg + 1) * 3];
 		//Define int**IEN_stru_gs for the later nodal force integration
 		ss[z].IEN_stru_gs = new int*[(hprefg + 1)*(hprefg + 1)];
 		for (i = 0; i < (hprefg + 1)*(hprefg + 1); i++) {
@@ -528,14 +507,14 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			if (ss[z].elenode[i] == 4) {
 				for (m = 0; m < hprefg + 1; m++) { //m, n, o stands for internal nodes in one element (all but except for corner nodes)
 					for (n = 0; n < hprefg + 1; n++) {
-						ss[z].GCOORD_stru_gs[ss[z].IEN_stru_gs[ct_gs.LNA[m][n] - 1][i] - 1][0] = 0.0;
-						ss[z].GCOORD_stru_gs[ss[z].IEN_stru_gs[ct_gs.LNA[m][n] - 1][i] - 1][1] = 0.0;
-						ss[z].GCOORD_stru_gs[ss[z].IEN_stru_gs[ct_gs.LNA[m][n] - 1][i] - 1][2] = 0.0;
+						ss[z].GCOORD_stru_gs[3 * (ss[z].IEN_stru_gs[ct_gs.LNA[m][n] - 1][i] - 1) + 0] = 0.0;
+						ss[z].GCOORD_stru_gs[3 * (ss[z].IEN_stru_gs[ct_gs.LNA[m][n] - 1][i] - 1) + 1] = 0.0;
+						ss[z].GCOORD_stru_gs[3 * (ss[z].IEN_stru_gs[ct_gs.LNA[m][n] - 1][i] - 1) + 2] = 0.0;
 						for (j = 0; j < 2; j++) { //j, k, l stands for corner nodes
 							for (k = 0; k < 2; k++) {
-								ss[z].GCOORD_stru_gs[ss[z].IEN_stru_gs[ct_gs.LNA[m][n] - 1][i] - 1][0] += ss[z].GCOORD_stru[ss[z].IEN_stru[ct_ln.LNA[j][k] - 1][i] - 1][0] * ls_ln.SHL_2D[2][ct_ln.LNA[j][k] - 1][m*(hprefg + 1) + n];
-								ss[z].GCOORD_stru_gs[ss[z].IEN_stru_gs[ct_gs.LNA[m][n] - 1][i] - 1][1] += ss[z].GCOORD_stru[ss[z].IEN_stru[ct_ln.LNA[j][k] - 1][i] - 1][1] * ls_ln.SHL_2D[2][ct_ln.LNA[j][k] - 1][m*(hprefg + 1) + n];
-								ss[z].GCOORD_stru_gs[ss[z].IEN_stru_gs[ct_gs.LNA[m][n] - 1][i] - 1][2] += ss[z].GCOORD_stru[ss[z].IEN_stru[ct_ln.LNA[j][k] - 1][i] - 1][2] * ls_ln.SHL_2D[2][ct_ln.LNA[j][k] - 1][m*(hprefg + 1) + n];
+								ss[z].GCOORD_stru_gs[3 * (ss[z].IEN_stru_gs[ct_gs.LNA[m][n] - 1][i] - 1) + 0] += ss[z].GCOORD_stru[ss[z].IEN_stru[i * 4 + ct_ln.LNA[j][k] - 1] - 1][0] * ls_ln.SHL_2D[2][ct_ln.LNA[j][k] - 1][m*(hprefg + 1) + n];
+								ss[z].GCOORD_stru_gs[3 * (ss[z].IEN_stru_gs[ct_gs.LNA[m][n] - 1][i] - 1) + 1] += ss[z].GCOORD_stru[ss[z].IEN_stru[i * 4 + ct_ln.LNA[j][k] - 1] - 1][1] * ls_ln.SHL_2D[2][ct_ln.LNA[j][k] - 1][m*(hprefg + 1) + n];
+								ss[z].GCOORD_stru_gs[3 * (ss[z].IEN_stru_gs[ct_gs.LNA[m][n] - 1][i] - 1) + 2] += ss[z].GCOORD_stru[ss[z].IEN_stru[i * 4 + ct_ln.LNA[j][k] - 1] - 1][2] * ls_ln.SHL_2D[2][ct_ln.LNA[j][k] - 1][m*(hprefg + 1) + n];
 							}
 						}
 					}
@@ -548,14 +527,14 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 				xi[0] = 1.0 / 6.0; xi[1] = 2.0 / 3.0; xi[2] = 1.0 / 6.0;  //From Ragab FEM course note
 				eta[0] = 1.0 / 6.0; eta[1] = 1.0 / 6.0; eta[2] = 2.0 / 3.0;
 				for (m = 0; m < 3; m++) { //m stands for the gauss point
-					ss[z].GCOORD_stru_gs[ss[z].IEN_stru_gs[m][i] - 1][0] = 0.0;
-					ss[z].GCOORD_stru_gs[ss[z].IEN_stru_gs[m][i] - 1][1] = 0.0;
-					ss[z].GCOORD_stru_gs[ss[z].IEN_stru_gs[m][i] - 1][2] = 0.0;
+					ss[z].GCOORD_stru_gs[3 * (ss[z].IEN_stru_gs[m][i] - 1) + 0] = 0.0;
+					ss[z].GCOORD_stru_gs[3 * (ss[z].IEN_stru_gs[m][i] - 1) + 1] = 0.0;
+					ss[z].GCOORD_stru_gs[3 * (ss[z].IEN_stru_gs[m][i] - 1) + 2] = 0.0;
 					phi[0] = 1 - xi[m] - eta[m]; phi[1] = xi[m]; phi[2] = eta[m];
 					for (j = 0; j < 3; j++) { //j stands for corner nodes
-						ss[z].GCOORD_stru_gs[ss[z].IEN_stru_gs[m][i] - 1][0] += ss[z].GCOORD_stru[ss[z].IEN_stru[j][i] - 1][0] * phi[j];
-						ss[z].GCOORD_stru_gs[ss[z].IEN_stru_gs[m][i] - 1][1] += ss[z].GCOORD_stru[ss[z].IEN_stru[j][i] - 1][1] * phi[j];
-						ss[z].GCOORD_stru_gs[ss[z].IEN_stru_gs[m][i] - 1][2] += ss[z].GCOORD_stru[ss[z].IEN_stru[j][i] - 1][2] * phi[j];
+						ss[z].GCOORD_stru_gs[3 * (ss[z].IEN_stru_gs[m][i] - 1) + 0] += ss[z].GCOORD_stru[ss[z].IEN_stru[i * 4 + j] - 1][0] * phi[j];
+						ss[z].GCOORD_stru_gs[3 * (ss[z].IEN_stru_gs[m][i] - 1) + 1] += ss[z].GCOORD_stru[ss[z].IEN_stru[i * 4 + j] - 1][1] * phi[j];
+						ss[z].GCOORD_stru_gs[3 * (ss[z].IEN_stru_gs[m][i] - 1) + 2] += ss[z].GCOORD_stru[ss[z].IEN_stru[i * 4 + j] - 1][2] * phi[j];
 					}
 				}
 			}
@@ -603,10 +582,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	if (mappingalgo == 4 || mappingalgo == 5) {
 		int flag;
 		for (z = 0; z < owsfnumber; z++) {
-			ss[z].IEN_stru_MpCCI = new int*[4]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
-			for (i = 0; i < 4; i++) {
-				ss[z].IEN_stru_MpCCI[i] = new int[ss[z].ELE_stru];
-			}
+			ss[z].IEN_stru_MpCCI = new int[4 * ss[z].ELE_stru]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
 			ct = 0; //count the node number assigned
 			std::vector<int>dummy;
 			for (i = 0; i < ss[z].ELE_stru; i++) { //loop through each element
@@ -614,8 +590,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 					flag = 1; //Initiate the flag to 1 
 					for (k = 0; k < i; k++) { //see if the number has already been assigned by the nodes in previous elements
 						for (l = 0; l < 4; l++) {
-							if (ss[z].IEN_stru[l][k] == ss[z].IEN_stru[j][i]) { //If this node has already been assigned, use the same numbering
-								ss[z].IEN_stru_MpCCI[j][i] = ss[z].IEN_stru_MpCCI[l][k];
+							if (ss[z].IEN_stru[k * 4 + l] == ss[z].IEN_stru[i * 4 + j]) { //If this node has already been assigned, use the same numbering
+								ss[z].IEN_stru_MpCCI[i * 4 + j] = ss[z].IEN_stru_MpCCI[k * 4 + l];
 								flag = 0; //turn off the flag to assgin new number
 							}
 							else {
@@ -625,8 +601,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 					}
 					if (flag == 1) {
 						ct += 1;
-						dummy.push_back(ss[z].IEN_stru[j][i]); //associate the local 2D node with the global node numbering 
-						ss[z].IEN_stru_MpCCI[j][i] = ct; //assign a new number to MpCCI element connectivity
+						dummy.push_back(ss[z].IEN_stru[i * 4 + j]); //associate the local 2D node with the global node numbering 
+						ss[z].IEN_stru_MpCCI[i * 4 + j] = ct; //assign a new number to MpCCI element connectivity
 					}
 				}
 			}
@@ -660,7 +636,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			for (i = 0; i < ss[z].ELE_stru; i++) {
 				myfile_algo5 << i;
 				for (j = 0; j < ss[z].elenode[i]; j++) {
-					myfile_algo5 << " " << ss[z].IEN_stru_MpCCI[j][i] - 1; //node numbering starts from 0 in model file
+					myfile_algo5 << " " << ss[z].IEN_stru_MpCCI[i * 4 + j] - 1; //node numbering starts from 0 in model file
 				}
 				myfile_algo5 << std::endl;
 			}
@@ -786,6 +762,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	int orphan_ct = 0; //count how many total orphan node there is
 	for (e = 0; e < ssnumber; e++) {
 		for (i = 0; i < ss[e].ELE_stru; i++) {
+			if (i % 1000 == 0) {
+				std::cout << i << " structure elements scanned out of: " << ss[e].ELE_stru << std::endl;
+			}
 			if (ss[e].elenode[i] == 3) { //quad element
 				ele_id = 0; 
 			}
@@ -799,9 +778,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 				//Calculate the distance from the current the structural gauss point to the fluid element in the search range
 				distance[0] = search_range;
 				range[1] = search_range; //initiate the fluid node distance to be equal to the searching range for every gauss node
-				double xs = ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[LNA_seq[ele_id][j]][i] - 1][0]; 
-				double ys = ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[LNA_seq[ele_id][j]][i] - 1][1];
-				double zs = ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[LNA_seq[ele_id][j]][i] - 1][2]; 
+				double xs = ss[e].GCOORD_stru_gs[3 * (ss[e].IEN_stru_gs[LNA_seq[ele_id][j]][i] - 1) + 0];
+				double ys = ss[e].GCOORD_stru_gs[3 * (ss[e].IEN_stru_gs[LNA_seq[ele_id][j]][i] - 1) + 1];
+				double zs = ss[e].GCOORD_stru_gs[3 * (ss[e].IEN_stru_gs[LNA_seq[ele_id][j]][i] - 1) + 2];
 				for (k = 0; k < ol[e].FSNEL; k++) { //looping through all fluid wetted elements
 					flag = 1;
 					//First determine if the fluid element is inside the searching range (If not, we would not project the structural gauss node)
@@ -825,7 +804,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						x1 = ol[e].GCOORD_fs[k*elenode2D_ln * 3 + 0 * 3 + 0]; x2 = ol[e].GCOORD_fs[k*elenode2D_ln * 3 + 1 * 3 + 0]; x3 = ol[e].GCOORD_fs[k*elenode2D_ln * 3 + 2 * 3 + 0];
 						y1 = ol[e].GCOORD_fs[k*elenode2D_ln * 3 + 0 * 3 + 1]; y2 = ol[e].GCOORD_fs[k*elenode2D_ln * 3 + 1 * 3 + 1]; y3 = ol[e].GCOORD_fs[k*elenode2D_ln * 3 + 2 * 3 + 1];
 						z1 = ol[e].GCOORD_fs[k*elenode2D_ln * 3 + 0 * 3 + 2]; z2 = ol[e].GCOORD_fs[k*elenode2D_ln * 3 + 1 * 3 + 2]; z3 = ol[e].GCOORD_fs[k*elenode2D_ln * 3 + 2 * 3 + 2];
-						xn = ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[LNA_seq[ele_id][j]][i] - 1][0]; yn = ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[LNA_seq[ele_id][j]][i] - 1][1]; zn = ss[e].GCOORD_stru_gs[ss[e].IEN_stru_gs[LNA_seq[ele_id][j]][i] - 1][2];
+						xn = ss[e].GCOORD_stru_gs[3 * (ss[e].IEN_stru_gs[LNA_seq[ele_id][j]][i] - 1) + 0]; yn = ss[e].GCOORD_stru_gs[3 * (ss[e].IEN_stru_gs[LNA_seq[ele_id][j]][i] - 1) + 1]; zn = ss[e].GCOORD_stru_gs[3 * (ss[e].IEN_stru_gs[LNA_seq[ele_id][j]][i] - 1) + 2];
 						b0 = -(-(-x1 + x3)*xn - (-y1 + y3)*yn - (-z1 + z3)*zn);
 						b1 = -(-(-x1 + x2)*xn - (-y1 + y2)*yn - (-z1 + z2)*zn);
 						b2 = -(-(x2*y1 - x3*y1 - x1*y2 + x3 *y2 + x1 *y3 - x2 *y3) *z1 -
@@ -855,9 +834,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							//Need to change the name of the matrix and vectors. also need to change the if(){} below 
 							//determine the local coordinate in the tetrahedral element
 							//There is no need to perform iteration like hex element
-							x1 = GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][0]; x2 = GCOORD[IEN_flu_3D[1][ol[e].GIDF[k] - 1] - 1][0]; x3 = GCOORD[IEN_flu_3D[2][ol[e].GIDF[k] - 1] - 1][0]; x4 = GCOORD[IEN_flu_3D[3][ol[e].GIDF[k] - 1] - 1][0];
-							y1 = GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][1]; y2 = GCOORD[IEN_flu_3D[1][ol[e].GIDF[k] - 1] - 1][1]; y3 = GCOORD[IEN_flu_3D[2][ol[e].GIDF[k] - 1] - 1][1]; y4 = GCOORD[IEN_flu_3D[3][ol[e].GIDF[k] - 1] - 1][1];
-							z1 = GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][2]; z2 = GCOORD[IEN_flu_3D[1][ol[e].GIDF[k] - 1] - 1][2]; z3 = GCOORD[IEN_flu_3D[2][ol[e].GIDF[k] - 1] - 1][2]; z4 = GCOORD[IEN_flu_3D[3][ol[e].GIDF[k] - 1] - 1][2];
+							x1 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 0] - 1][0]; x2 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 1] - 1][0]; x3 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 2] - 1][0]; x4 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 3] - 1][0];
+							y1 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 0] - 1][1]; y2 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 1] - 1][1]; y3 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 2] - 1][1]; y4 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 3] - 1][1];
+							z1 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 0] - 1][2]; z2 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 1] - 1][2]; z3 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 2] - 1][2]; z4 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 3] - 1][2];
 							AA00 = x2 - x1; AA00 = x3 - x1; AA02 = x4 - x1;
 							AA10 = y2 - y1; AA11 = y3 - y1; AA12 = y4 - y1;
 							AA20 = z2 - z1; AA21 = z3 - z1; AA22 = z4 - z1;
@@ -890,9 +869,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							//The derivative (fdot) is obtained by Mathematica: /Users/zhaokuanlu/OneDrive/post_processing/Hex_global_to_local_coordinate_Newton_iteration.nb
 							//See the file for theory behind this: /Users/zhaokuanlu/OneDrive/post_processing/Hex_global_to_local_coordinate_Newton_iteration.pdf
 							xi_k = 0.1; eta_k = 0.1; zeta_k = 0.1;
-							x1 = GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][0]; x2 = GCOORD[IEN_flu_3D[1][ol[e].GIDF[k] - 1] - 1][0]; x3 = GCOORD[IEN_flu_3D[2][ol[e].GIDF[k] - 1] - 1][0]; x4 = GCOORD[IEN_flu_3D[3][ol[e].GIDF[k] - 1] - 1][0]; x5 = GCOORD[IEN_flu_3D[4][ol[e].GIDF[k] - 1] - 1][0]; x6 = GCOORD[IEN_flu_3D[5][ol[e].GIDF[k] - 1] - 1][0]; x7 = GCOORD[IEN_flu_3D[6][ol[e].GIDF[k] - 1] - 1][0]; x8 = GCOORD[IEN_flu_3D[7][ol[e].GIDF[k] - 1] - 1][0];
-							y1 = GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][1]; y2 = GCOORD[IEN_flu_3D[1][ol[e].GIDF[k] - 1] - 1][1]; y3 = GCOORD[IEN_flu_3D[2][ol[e].GIDF[k] - 1] - 1][1]; y4 = GCOORD[IEN_flu_3D[3][ol[e].GIDF[k] - 1] - 1][1]; y5 = GCOORD[IEN_flu_3D[4][ol[e].GIDF[k] - 1] - 1][1]; y6 = GCOORD[IEN_flu_3D[5][ol[e].GIDF[k] - 1] - 1][1]; y7 = GCOORD[IEN_flu_3D[6][ol[e].GIDF[k] - 1] - 1][1]; y8 = GCOORD[IEN_flu_3D[7][ol[e].GIDF[k] - 1] - 1][1];
-							z1 = GCOORD[IEN_flu_3D[0][ol[e].GIDF[k] - 1] - 1][2]; z2 = GCOORD[IEN_flu_3D[1][ol[e].GIDF[k] - 1] - 1][2]; z3 = GCOORD[IEN_flu_3D[2][ol[e].GIDF[k] - 1] - 1][2]; z4 = GCOORD[IEN_flu_3D[3][ol[e].GIDF[k] - 1] - 1][2]; z5 = GCOORD[IEN_flu_3D[4][ol[e].GIDF[k] - 1] - 1][2]; z6 = GCOORD[IEN_flu_3D[5][ol[e].GIDF[k] - 1] - 1][2]; z7 = GCOORD[IEN_flu_3D[6][ol[e].GIDF[k] - 1] - 1][2]; z8 = GCOORD[IEN_flu_3D[7][ol[e].GIDF[k] - 1] - 1][2];
+							x1 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 0] - 1][0]; x2 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 1] - 1][0]; x3 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 2] - 1][0]; x4 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 3] - 1][0]; x5 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 4] - 1][0]; x6 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 5] - 1][0]; x7 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 6] - 1][0]; x8 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 7] - 1][0];
+							y1 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 0] - 1][1]; y2 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 1] - 1][1]; y3 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 2] - 1][1]; y4 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 3] - 1][1]; y5 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 4] - 1][1]; y6 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 5] - 1][1]; y7 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 6] - 1][1]; y8 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 7] - 1][1];
+							z1 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 0] - 1][2]; z2 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 1] - 1][2]; z3 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 2] - 1][2]; z4 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 3] - 1][2]; z5 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 4] - 1][2]; z6 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 5] - 1][2]; z7 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 6] - 1][2]; z8 = GCOORD[ol[e].IEN_flu_3D[k * 8 + 7] - 1][2];
 							diff = 1;
 							ite_num = 0; 
 							while (diff > tol) {
@@ -965,7 +944,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 								xi_k = xi_k_1; eta_k = eta_k_1; zeta_k = zeta_k_1; //update the value
 								ite_num += 1;
 								if (ite_num > 1000) {
-									std::cout << "Maximum iteration reached (1000)." << std::endl;
+									//std::cout << "Maximum iteration reached (1000)." << std::endl;
 									//The convergence is not achieved because the point (xu, yu, zu) is too far away from the element. 
 									//orphannodehd << x1 << ", " << x2 << ", " << x3 << ", " << x4 << ", " << x5 << ", " << x6 << ", " << x7 << ", " << x8 << std::endl;
 									//orphannodehd << y1 << ", " << y2 << ", " << y3 << ", " << y4 << ", " << y5 << ", " << y6 << ", " << y7 << ", " << y8 << std::endl;
@@ -1136,7 +1115,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	}
 
 	//Create a coordinate array of structure boundary nodes for fast access
-	for (z = 0; z < nrbsurfnumber; z++) {
+	for (z = 0; z < ssnumber; z++) {
 		ss[z].GCOORD_stru_fs = new double*[NNODE_stru];
 		for (k = 0; k < NNODE_stru; k++) {
 			ss[z].GCOORD_stru_fs[k] = new double[3];
@@ -1145,7 +1124,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		for (k = 0; k < ss[z].ELE_stru; k++) { //looping through structure wetted elements
 			for (l = 0; l < ss[z].elenode[k]; l++) {
 				for (i = 0; i < 3; i++) {
-					ss[z].GCOORD_stru_fs[ct][i] = ss[z].GCOORD_stru[ss[z].IEN_stru[l][k] - 1][i];
+					ss[z].GCOORD_stru_fs[ct][i] = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + l] - 1][i];
 				}
 				ct += 1;
 			}
@@ -1172,6 +1151,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	orphan_ct = 0; 
 	for (z = 0; z < owsfnumber; z++) {
 		for (i = 0; i < ol[z].FSNEL; i++) { //loop through fluid elements
+			if (i % 1000 == 0) {
+				std::cout << i << " fluid elements scanned out of: " << ol[z].FSNEL << std::endl;
+			}
 			for (j = 0; j < elenode2D_gs; j++) { //loop through each (gauss) node on the fluid FSI 
 				flag2 = 0;
 				orphan = 1; //let's first assume the node is an orphan. If the corresponding element is found, the flag is turned to 0 and stays the same for the current node
@@ -1192,7 +1174,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 							flag2 = 1;
 							range[1] = range[0]; //range[1] is used to store the shortest distance so far
 							if (debug_algo5 == 0) {
-								flu_nearest = ss[z].IEN_stru_MpCCI[l][k];
+								flu_nearest = ss[z].IEN_stru_MpCCI[k * 4 + l];
 							}
 						}
 						//At the same time, store the node with the shorted distance to the gauss node under searching. If the node is orphan, we use the value on this fluid node for the structure gauss node
@@ -1205,9 +1187,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						//Find the coordinate of the orthogonally projected fluid interpolation point on the current structure 4-node shell element
 						//Find the mathematica code in /Users/zhaokuanlu/OneDrive/post_processing/Node_projection_method2.nb
 						//Also check out the theory in /Users/zhaokuanlu/OneDrive/post_processing/Node_projection_method2.pdf
-						x1 = ss[z].GCOORD_stru[ss[z].IEN_stru[0][k] - 1][0]; x2 = ss[z].GCOORD_stru[ss[z].IEN_stru[1][k] - 1][0]; x3 = ss[z].GCOORD_stru[ss[z].IEN_stru[2][k] - 1][0];
-						y1 = ss[z].GCOORD_stru[ss[z].IEN_stru[0][k] - 1][1]; y2 = ss[z].GCOORD_stru[ss[z].IEN_stru[1][k] - 1][1]; y3 = ss[z].GCOORD_stru[ss[z].IEN_stru[2][k] - 1][1];
-						z1 = ss[z].GCOORD_stru[ss[z].IEN_stru[0][k] - 1][2]; z2 = ss[z].GCOORD_stru[ss[z].IEN_stru[1][k] - 1][2]; z3 = ss[z].GCOORD_stru[ss[z].IEN_stru[2][k] - 1][2];
+						x1 = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + 0] - 1][0]; x2 = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + 1] - 1][0]; x3 = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + 2] - 1][0];
+						y1 = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + 0] - 1][1]; y2 = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + 1] - 1][1]; y3 = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + 2] - 1][1];
+						z1 = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + 0] - 1][2]; z2 = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + 1] - 1][2]; z3 = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + 2] - 1][2];
 						xn = xf; yn = yf; zn = zf; //the fluid node to be projected
 						b0 = -(-(-x1 + x3)*xn - (-y1 + y3)*yn - (-z1 + z3)*zn);
 						b1 = -(-(-x1 + x2)*xn - (-y1 + y2)*yn - (-z1 + z2)*zn);
@@ -1240,7 +1222,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 						//Since the equation system is nonlinear, we use the Newton iteration and set the initial value to be 0 
 						xi_k = 0.5; eta_k = 0.5; //initialize the iteration
 						if (ss[z].elenode[k] == 4) { //if the structure element is 4 node, then we define the fourth node, otherwise, no need to define it. 
-							x4 = ss[z].GCOORD_stru[ss[z].IEN_stru[3][k] - 1][0]; y4 = ss[z].GCOORD_stru[ss[z].IEN_stru[3][k] - 1][1]; z4 = ss[z].GCOORD_stru[ss[z].IEN_stru[3][k] - 1][2];
+							x4 = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + 3] - 1][0]; y4 = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + 3] - 1][1]; z4 = ss[z].GCOORD_stru[ss[z].IEN_stru[k * 4 + 3] - 1][2];
 						}
 						if (x1 == x2 && x1 == x3 && x2 == x3) { //the element is parallel to yz plane (same x coordinate), use y(xi,eta) and z(xi,eta) to determine xi and eta
 							xp1 = y1; xp2 = y2; xp3 = y3; xp4 = y4;
@@ -1286,7 +1268,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 								xi_k = xi_k_1; eta_k = eta_k_1; //update the value
 								ite_num += 1;
 								if (ite_num > 1000) {
-									std::cout << "Maximum iteration reached (1000)." << std::endl;
+									//std::cout << "Maximum iteration reached (1000)." << std::endl;
 									xi_k = 2; eta_k = 2; //Enfore a large enough value so that it would not pass the orphan test outside the iteration.
 									break;
 								}
@@ -1378,6 +1360,75 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		delete[] IEN[i];
 	}
 	delete[] IEN; 
+	for (z = 0; z < owsfnumber; z++) {
+		delete[] ol[z].IEN_flu_3D;
+	}
+	if (element_type == 0) { //hex element
+		for (z = 0; z < owsfnumber; z++) {
+			for (i = 0; i < 4; i++) {
+				delete[] ol[z].IEN_flu_2D[i];
+			}
+			delete[] ol[z].IEN_flu_2D;
+		}
+	}
+	if (element_type == 1) { //hex element
+		for (z = 0; z < owsfnumber; z++) {
+			for (i = 0; i < 3; i++) {
+				delete[] ol[z].IEN_flu_2D[i];
+			}
+			delete[] ol[z].IEN_flu_2D;
+		}
+	}
+	for (z = 0; z < ssnumber; z++) {
+		for (i = 0; i < 4; i++) {
+			delete[] ss[z].IEN_stru_norm[i];
+		}
+		delete[] ss[z].IEN_stru_norm;
+	}
+	for (z = 0; z < ssnumber; z++) {
+		delete[] ss[z].GCOORD_stru_gs;
+	}
+	if (element_type == 0) {
+		for (z = 0; z < owsfnumber; z++) {
+			for (i = 0; i < ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1); i++) {
+				delete[] ol[z].GCOORD_flu_gs[i];
+			}
+			delete[] ol[z].GCOORD_flu_gs;
+		}
+	}
+	if (element_type == 1) {
+		for (z = 0; z < owsfnumber; z++) {
+			for (i = 0; i < ol[z].FSNEL * 3; i++) {
+				delete[] ol[z].GCOORD_flu_gs[i];
+			}
+			delete[] ol[z].GCOORD_flu_gs;
+		}
+	}
+	for (z = 0; z < ssnumber; z++) {
+		for (k = 0; k < NNODE_stru; k++) {
+			delete[] ss[z].GCOORD_stru_fs[k];
+		}
+		delete[] ss[z].GCOORD_stru_fs;
+	}
+	for (z = 0; z < ssnumber; z++) {
+		for (i = 0; i < ss[z].gs_num; i++) {
+			delete[] ss[z].gs_flu_global[i];
+		}
+		delete[] ss[z].gs_flu_global;
+	}
+	for (z = 0; z < owsfnumber; z++) {
+		for (i = 0; i < ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1); i++) {
+			delete[] ol[z].flu_stru_global[i];
+		}
+		delete[] ol[z].flu_stru_global;
+	}
+	for (z = 0; z < ssnumber; z++) {
+		for (i = 0; i < ss[z].ELE_stru * (hprefg + 1) * (hprefg + 1); i++) {
+			delete[] ss[z].FP_flu[i];
+		}
+		delete[] ss[z].FP_flu;
+	}
+	std::cout << std::endl; 
 
 	return;
 }

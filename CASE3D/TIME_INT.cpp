@@ -463,18 +463,14 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	WBS = new double[NNODE];
 	for (z = 0; z < owsfnumber; z++) { //this memory allocation scheme could have been improved
 		if (mappingalgo == 4 || mappingalgo == 5) {
-			ol[z].DISP_gs = new double*[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
+			ol[z].DISP_gs = new double[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1) * 3];
 			ol[z].DISP_norm = new double*[ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1)];
 			for (j = 0; j < ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1); j++) {
 				ol[z].DISP_norm[j] = new double[2];
-				ol[z].DISP_gs[j] = new double[3];
 			}
 		}
 		else if (mappingalgo == 2) {
-			ol[z].DISP = new double*[ol[z].FSNEL*NINT*NINT];
-			for (j = 0; j < ol[z].FSNEL*NINT*NINT; j++) {
-				ol[z].DISP[j] = new double[3]; //defined in 3 directions 
-			}
+			ol[z].DISP = new double[ol[z].FSNEL*NINT*NINT * 3];
 			ol[z].DISP_norm = new double*[ol[z].FSNEL*elenode2D];
 			for (j = 0; j < ol[z].FSNEL*elenode2D; j++) {
 				ol[z].DISP_norm[j] = new double[2];
@@ -492,14 +488,14 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 					ol[z].DISP_norm[j][k] = 0.0;
 				}
 				for (k = 0; k < 3; k++) {
-					ol[z].DISP_gs[j][k] = 0.0;
+					ol[z].DISP_gs[j * 3 + k] = 0.0;
 				}
 			}
 		}
 		else if (mappingalgo == 2) {
 			for (j = 0; j < ol[z].FSNEL*NINT*NINT; j++) {
 				for (k = 0; k < 3; k++) {
-					ol[z].DISP[j][k] = 0.0;
+					ol[z].DISP[3 * j + k] = 0.0;
 				}
 			}
 			for (j = 0; j < ol[z].FSNEL*elenode2D; j++) {
@@ -1034,10 +1030,10 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						WBSTEMP[h] = 0.0;
 						for (k = 0; k < elenode2D_gs; k++) { //For mappingalgo 5, k stands for the quadrature nodes; For mappingalgo2, k stands for the interpolation nodes
 							if (mappingalgo == 5 || mappingalgo == 4) {
-								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[j*elenode2D_gs + k][0] + ol[z].norm[j][1] * ol[z].DISP_gs[j*elenode2D_gs + k][1] + ol[z].norm[j][2] * ol[z].DISP_gs[j*elenode2D_gs + k][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[3 * (j*elenode2D_gs + k) + 0] + ol[z].norm[j][1] * ol[z].DISP_gs[3 * (j*elenode2D_gs + k) + 1] + ol[z].norm[j][2] * ol[z].DISP_gs[3 * (j*elenode2D_gs + k) + 2];
 							}
 							else {
-								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[j*elenode2D_gs + k] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[j*elenode2D_gs + k] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[j*elenode2D_gs + k] - 1][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[3 * (j*elenode2D_gs + ol[z].FP_2D[j*elenode2D_gs + k] - 1) + 0] + ol[z].norm[j][1] * ol[z].DISP[3 * (j*elenode2D_gs + ol[z].FP_2D[j*elenode2D_gs + k] - 1) + 1] + ol[z].norm[j][2] * ol[z].DISP[3 * (j*elenode2D_gs + ol[z].FP_2D[j*elenode2D_gs + k] - 1) + 2];
 							}
 							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D_gs + k][1] + (ol[z].DISP_norm[j*elenode2D_gs + k][1] - ol[z].DISP_norm[j*elenode2D_gs + k][0]));
 						}
@@ -1055,11 +1051,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 						WBSTEMP[h] = 0.0;
 						for (k = 0; k < elenode2D_gs; k++) {
 							if (mappingalgo == 5 || mappingalgo == 4) {
-								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[j*elenode2D_gs + k][0] + ol[z].norm[j][1] * ol[z].DISP_gs[j*elenode2D_gs + k][1] + ol[z].norm[j][2] * ol[z].DISP_gs[j*elenode2D_gs + k][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP_gs[3 * (j*elenode2D_gs + k) + 0] + ol[z].norm[j][1] * ol[z].DISP_gs[3 * (j*elenode2D_gs + k) + 1] + ol[z].norm[j][2] * ol[z].DISP_gs[3 * (j*elenode2D_gs + k) + 2];
 							}
 							else {
 								//ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[ol[z].IEN_lc[ol[z].FP_2D[k] - 1][j] - 1][2];
-								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[j*elenode2D_gs + k] - 1][0] + ol[z].norm[j][1] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[j*elenode2D_gs + k] - 1][1] + ol[z].norm[j][2] * ol[z].DISP[j*elenode2D_gs + ol[z].FP_2D[j*elenode2D_gs + k] - 1][2];
+								ol[z].DISP_norm[j*elenode2D_gs + k][1] = ol[z].norm[j][0] * ol[z].DISP[3 * (j*elenode2D_gs + ol[z].FP_2D[j*elenode2D_gs + k] - 1) + 0] + ol[z].norm[j][1] * ol[z].DISP[3 * (j*elenode2D_gs + ol[z].FP_2D[j*elenode2D_gs + k] - 1) + 1] + ol[z].norm[j][2] * ol[z].DISP[3 * (j*elenode2D_gs + ol[z].FP_2D[j*elenode2D_gs + k] - 1) + 2];
 							}
 							std::cout << "We need to derive the DISPI on gauss point!!! (not done yet)" << std::endl;
 							system("PAUSE ");

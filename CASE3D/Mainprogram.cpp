@@ -115,6 +115,26 @@ int main()
 		Neighborhood_search(a.GCOORD, c.LNA, a.IEN, a.NEL);
 	}
 
+	//delete FP and DP
+	for (int z = 0; z < owsfnumber; z++) {
+		for (int i = 0; i < ol[z].FSNEL; i++) {
+			delete[] ol[z].FP[i];
+		}
+		delete[] ol[z].FP;
+	}
+	if (improvednrb != 0) {
+		for (int z = 0; z < nrbsurfnumber; z++) {
+			for (int i = 0; i < nr[z].NEL_nrb; i++) {
+				delete[] nr[z].DP[i];
+			}
+			delete[] nr[z].DP;
+		}
+	}
+	//delete GIDF
+	for (int z = 0; z < owsfnumber; z++) {
+		delete[] ol[z].GIDF;
+	}
+
 	//double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu
 	//---------------SHAPE FUNCTION ROUTINE------------------------------//
 	//DETERMINE GLL QUADRATURE POINTS AND WEIGHTS
@@ -133,6 +153,16 @@ int main()
 	JACOBIANstruct m;
 	m = JACOBIAN(a.NEL, a.GCOORD, a.IEN, c.LNA);
 	
+	//Delete the memory of LNA_norm
+	if (mappingalgo != 2) {
+		for (z = 0; z < owsfnumber; z++) {
+			delete[] ol[z].LNA_norm;
+		}
+	}
+	for (z = 0; z < nrbsurfnumber; z++) {
+		delete[] nr[z].LNA_norm;
+	}
+
 	GLOBAL_SHAPEstruct n;
 	n = GLOBAL_SHAPE(a.NEL, g.SHL, a.GCOORD, a.IEN, m.JACOB_tet, c.LNA);
 	//std::cout << "GLOBAL_SHAPE done" << std::endl;

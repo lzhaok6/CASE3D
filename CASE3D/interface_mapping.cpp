@@ -13,14 +13,14 @@
 /*
 There are totally 4 algorithms:
 The first one is the h/p refinement based on Farhat's energy conservation algorithm (1998). The code maps the force from FEM/SEM mesh to the base fluid mesh which is identical with the structural mesh.
-The second one breaks the higher order element into sub-elements and let the MpCCI do the interpolation. 
+The second one breaks the higher order element into sub-elements and let the MpCCI do the interpolation.
 The third one is the algorithm 1 in an average sense. The force is averaged on h/p refined mesh and then given to the base fluid mesh. The force is still conservative.
 The fourth one is the Sprague's pressure averaging approach (also used by Klenow), which can also be comprehended as the consistent mapping algorithm in Farhat's paper (1998)
 The difference from the 8-4 version:
-The algorithm 1 and 3 are combined into algorithm 1 which is capable of dealing with h & p refinement. 
-The algorithm 2 stays the same. 
-The algorithm 4 is now the algorithm 3. 
-A new algorithm 4 is added. 
+The algorithm 1 and 3 are combined into algorithm 1 which is capable of dealing with h & p refinement.
+The algorithm 2 stays the same.
+The algorithm 4 is now the algorithm 3.
+A new algorithm 4 is added.
 */
 
 struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD, double* WP, int** IEN, int***LNA) {
@@ -38,7 +38,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 	case 1:
 		if (mappingalgo == 2) {
 			if (element_type == 0) { //hexahedral element 
-				//In this code, we use the 2nd order GLL integration instead of 1st order GL integration in FSP case since we have to include a 2D Jacobian determinate to accommodate the geometric mapping
+									 //In this code, we use the 2nd order GLL integration instead of 1st order GL integration in FSP case since we have to include a 2D Jacobian determinate to accommodate the geometric mapping
 				ct = 0;
 				for (z = 0; z < owsfnumber; z++) {
 					if (ol[z].FSNEL > 0) {
@@ -132,6 +132,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					system("PAUSE ");
 				}
 			}
+			int gsnum = (hprefg + 1)*(hprefg + 1);
 			double phig = 0.0;
 
 			int localnode[2];
@@ -145,18 +146,18 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			localnode_seq.push_back(localnode_seq_1D);
 			localnode_seq_1D.clear();
 			for (j = 0; j < hprefg + 1; j++) {
-				for (q = 0; q < hprefg + 1; q++) {
-					localnode_seq_1D.push_back(j*(hprefg + 1) + q);
-				}
+			for (q = 0; q < hprefg + 1; q++) {
+			localnode_seq_1D.push_back(j*(hprefg + 1) + q);
+			}
 			}
 			localnode_seq.push_back(localnode_seq_1D);
 			LNA_seq_1D.push_back(0); LNA_seq_1D.push_back(1); LNA_seq_1D.push_back(2);
 			LNA_seq.push_back(LNA_seq_1D);
 			LNA_seq_1D.clear();
 			for (j = 0; j < hprefg + 1; j++) {
-				for (q = 0; q < hprefg + 1; q++) {
-					LNA_seq_1D.push_back(ss[z].LNA_gs[j][q] - 1);
-				}
+			for (q = 0; q < hprefg + 1; q++) {
+			LNA_seq_1D.push_back(ss[z].LNA_gs[j][q] - 1);
+			}
 			}
 			LNA_seq.push_back(LNA_seq_1D);
 			int ele_id;
@@ -170,12 +171,12 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					ct += 1;
 				}
 			}
-			int LNA_seq[2][(hprefg + 1)*(hprefg + 1)];
-			LNA_seq[0][0] = 0; LNA_seq[0][1] = 1; LNA_seq[0][2] = 2;
+			int LNA_seq[2 * (hprefg + 1)*(hprefg + 1)];
+			LNA_seq[0 * gsnum + 0] = 0; LNA_seq[0 * gsnum + 1] = 1; LNA_seq[0 * gsnum + 2] = 2;
 			ct = 0;
 			for (j = 0; j < hprefg + 1; j++) {
 				for (q = 0; q < hprefg + 1; q++) {
-					LNA_seq[1][ct] = ss[0].LNA_gs[j][q] - 1; //LNA_gs is the same for all wetted surface 
+					LNA_seq[1 * gsnum + ct] = ss[0].LNA_gs[j][q] - 1; //LNA_gs is the same for all wetted surface 
 					ct += 1;
 				}
 			}
@@ -186,22 +187,22 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						ele_id = 0;
 					}
 					else { //quad element
-						ele_id = 1; 
+						ele_id = 1;
 					}
 					for (h = 0; h < localnode[ele_id]; h++) {
-						ss[z].P_gs[LNA_seq[ele_id][h]][l] = 0.0; //initialize the value 
-						if (ss[z].orphan_flag_gs[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] == 0) { //the node is not an orphan
+						ss[z].P_gs[l*gsnum + LNA_seq[ele_id*gsnum + h]] = 0.0; //initialize the value 
+						if (ss[z].orphan_flag_gs[l*gsnum + localnode_seq[ele_id][h]] == 0) { //the node is not an orphan
 							for (ii = 0; ii < elenode2D; ii++) {
 								phig = 1.0 / elenode2D;
-								ss[z].P_gs[LNA_seq[ele_id][h]][l] += WP[IEN[ss[z].FP_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]][ii] - 1][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1] - 1] * phig;
+								ss[z].P_gs[l*gsnum + LNA_seq[ele_id*gsnum + h]] += WP[IEN[ss[z].FP_flu[l*gsnum + localnode_seq[ele_id][h]][ii] - 1][ss[z].gs_flu[l*gsnum + localnode_seq[ele_id][h]] - 1] - 1] * phig;
 							}
 						}
 						else { //The node is an orphan, directly give the value on the nearest node 
 							if (ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] != 0) {
-								ss[z].P_gs[LNA_seq[ele_id][h]][l] = WP[ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1];
+								ss[z].P_gs[l*gsnum + LNA_seq[ele_id*gsnum + h]] = WP[ss[z].gs_flu[l*gsnum + localnode_seq[ele_id][h]] - 1];
 							}
 							else { //The node is out of searching range. It should get no value. 
-								ss[z].P_gs[LNA_seq[ele_id][h]][l] = 0.0; 
+								ss[z].P_gs[l*gsnum + LNA_seq[ele_id*gsnum + h]] = 0.0;
 							}
 						}
 					}
@@ -221,9 +222,9 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			for (z = 0; z < ssnumber; z++) {
 				for (l = 0; l < ss[z].ELE_stru; l++) { //loop through each element first
 					for (i = 0; i < ss[z].elenode[l]; i++) { //i,j stands for fem points y m 
-						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[i][l] - 1) + 0] = 0.0;
-						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[i][l] - 1) + 1] = 0.0;
-						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[i][l] - 1) + 2] = 0.0;
+						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[l * 4 + i] - 1) + 0] = 0.0;
+						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[l * 4 + i] - 1) + 1] = 0.0;
+						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[l * 4 + i] - 1) + 2] = 0.0;
 					}
 				}
 				//phi_femg: the linear shape function value at base mesh Gauss-Legendre nodes
@@ -234,8 +235,8 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								for (u = 0; u < hprefg + 1; u++) { //u v stands for y x
 									for (v = 0; v < hprefg + 1; v++) {
 										for (n = 0; n < 3; n++) {
-											wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[ss[z].LNA_stru[i][j] - 1][l] - 1) + n] //force in m direction
-												+= ss[z].norm_stru[l][n] * ss[z].W_stru[u] * ss[z].W_stru[v] * ss[z].P_gs[ss[z].LNA_gs[v][u] - 1][l] * ss[z].phi_stru[ss[z].LNA_stru[i][j] - 1][v][u] * ss[z].Jacob_stru[l][u*(hprefg + 1) + v];
+											wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[l * 4 + ss[z].LNA_stru[i * 2 + j] - 1] - 1) + n] //force in m direction
+												+= ss[z].norm_stru[l][n] * ss[z].W_stru[u] * ss[z].W_stru[v] * ss[z].P_gs[l*gsnum + ss[z].LNA_gs[v][u] - 1] * ss[z].phi_stru[ss[z].LNA_stru[i * 2 + j] - 1][v][u] * ss[z].Jacob_stru[l][v*(hprefg + 1) + u];
 											//ss[z].phi_stru is the linear shape function value on gauss node (Gauss-Legendre)
 										}
 									}
@@ -247,8 +248,8 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						for (i = 0; i < 3; i++) { //interpolation point
 							for (u = 0; u < 3; u++) { //integration point
 								for (n = 0; n < 3; n++) { //normal direction vector
-									wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[i][l] - 1) + n] //force in m direction
-										+= ss[z].norm_stru[l][n] * (1.0 / 2.0) * w[u] * phi[i][u] * ss[z].P_gs[u][l] * ss[z].Jacob_stru[l][u];
+									wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[l * 4 + i] - 1) + n] //force in m direction
+										+= ss[z].norm_stru[l][n] * (1.0 / 2.0) * w[u] * phi[i][u] * ss[z].P_gs[l*gsnum + u] * ss[z].Jacob_stru[l][u];
 									//ss[z].phi_stru is the linear shape function value on gauss node (Gauss-Legendre)
 								}
 							}
@@ -287,6 +288,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			double lcx, lcy, lcz;
 			double nomx, nomy, nomz; double denomx, denomy, denomz;
 			double phig;
+			int gsnum = (hprefg + 1)*(hprefg + 1);
 
 			int localnode[2];
 			localnode[0] = 3; localnode[1] = (hprefg + 1)*(hprefg + 1);
@@ -299,58 +301,60 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			localnode_seq.push_back(localnode_seq_1D);
 			localnode_seq_1D.clear();
 			for (j = 0; j < hprefg + 1; j++) {
-				for (q = 0; q < hprefg + 1; q++) {
-					localnode_seq_1D.push_back(j*(hprefg + 1) + q);
-				}
+			for (q = 0; q < hprefg + 1; q++) {
+			localnode_seq_1D.push_back(j*(hprefg + 1) + q);
+			}
 			}
 			localnode_seq.push_back(localnode_seq_1D);
 			LNA_seq_1D.push_back(0); LNA_seq_1D.push_back(1); LNA_seq_1D.push_back(2);
 			LNA_seq.push_back(LNA_seq_1D);
 			LNA_seq_1D.clear();
 			for (j = 0; j < hprefg + 1; j++) {
-				for (q = 0; q < hprefg + 1; q++) {
-					LNA_seq_1D.push_back(ss[0].LNA_gs[j][q] - 1); //LNA_gs is the same for all wetted surface 
-				}
+			for (q = 0; q < hprefg + 1; q++) {
+			LNA_seq_1D.push_back(ss[0].LNA_gs[j][q] - 1); //LNA_gs is the same for all wetted surface
+			}
 			}
 			LNA_seq.push_back(LNA_seq_1D);
 			int ele_id;
 			*/
-			int localnode_seq[2][(hprefg + 1)*(hprefg + 1)];
-			localnode_seq[0][0] = 0; localnode_seq[0][1] = 1; localnode_seq[0][2] = 2;
-			ct = 0; 
+			int localnode_seq[2 * (hprefg + 1)*(hprefg + 1)];
+			localnode_seq[0 * gsnum + 0] = 0; localnode_seq[0 * gsnum + 1] = 1; localnode_seq[0 * gsnum + 2] = 2;
+			ct = 0;
 			for (j = 0; j < hprefg + 1; j++) {
 				for (q = 0; q < hprefg + 1; q++) {
-					localnode_seq[1][ct] = j*(hprefg + 1) + q; //LNA_gs is the same for all wetted surface 
+					localnode_seq[1 * gsnum + ct] = j*(hprefg + 1) + q; //LNA_gs is the same for all wetted surface 
 					ct += 1;
 				}
 			}
-			int LNA_seq[2][(hprefg + 1)*(hprefg + 1)];
-			LNA_seq[0][0] = 0; LNA_seq[0][1] = 1; LNA_seq[0][2] = 2;
-			ct = 0; 
+			int LNA_seq[2 * (hprefg + 1)*(hprefg + 1)];
+			LNA_seq[0 * gsnum + 0] = 0; LNA_seq[0 * gsnum + 1] = 1; LNA_seq[0 * gsnum + 2] = 2;
+			ct = 0;
 			for (j = 0; j < hprefg + 1; j++) {
 				for (q = 0; q < hprefg + 1; q++) {
-					LNA_seq[1][ct] = ss[0].LNA_gs[j][q] - 1; //LNA_gs is the same for all wetted surface 
+					LNA_seq[1 * gsnum + ct] = ss[0].LNA_gs[j][q] - 1; //LNA_gs is the same for all wetted surface 
 					ct += 1;
 				}
 			}
 			int ele_id;
-			
+
 			if (element_type == 0) {
 				for (z = 0; z < ssnumber; z++) {
 					for (l = 0; l < ss[z].ELE_stru; l++) {
 						if (ss[z].elenode[l] == 3) { //triangular element
-							ele_id = 0; 
+							ele_id = 0;
 						}
 						else { //quad element
 							ele_id = 1;
 						}
 						for (h = 0; h < localnode[ele_id]; h++) {
-							ss[z].P_gs[LNA_seq[ele_id][h]][l] = 0.0; //initialize the value 
-							if (ss[z].orphan_flag_gs[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] == 0) { //the node is not an orphan
-								//local coordinate of the projected structure gauss point
-								lcx = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]][0];
-								lcy = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]][1];
-								lcz = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]][2];
+							int WP_ele = ss[z].gs_flu[l*gsnum + localnode_seq[ele_id*gsnum + h]] - 1;
+							int P_gs_node = l*gsnum + LNA_seq[ele_id*gsnum + h];
+							ss[z].P_gs[l*gsnum + LNA_seq[ele_id*gsnum + h]] = 0.0; //initialize the value 
+							if (ss[z].orphan_flag_gs[l*gsnum + localnode_seq[ele_id*gsnum + h]] == 0) { //the node is not an orphan
+																										//local coordinate of the projected structure gauss point
+								lcx = ss[z].gs_flu_local[l*gsnum + localnode_seq[ele_id*gsnum + h]][0];
+								lcy = ss[z].gs_flu_local[l*gsnum + localnode_seq[ele_id*gsnum + h]][1];
+								lcz = ss[z].gs_flu_local[l*gsnum + localnode_seq[ele_id*gsnum + h]][2];
 								for (ii = 0; ii < NINT; ii++) {
 									for (jj = 0; jj < NINT; jj++) {
 										for (kk = 0; kk < NINT; kk++) {
@@ -371,47 +375,47 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 												}
 											}
 											phig = (nomx / denomx)*(nomy / denomy)*(nomz / denomz);
-											ss[z].P_gs[LNA_seq[ele_id][h]][l] += WP[IEN[LNA[ii][jj][kk] - 1][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1] - 1] * phig;
+											ss[z].P_gs[P_gs_node] += WP[IEN[LNA[ii][jj][kk] - 1][WP_ele] - 1] * phig;
 											//P_gs is created in Neighborhood_search.cpp 
 										}
 									}
 								}
 							}
 							else { //the node is an orphan, directly give the value on the nearest node 
-								if (ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] != 0) {
-									ss[z].P_gs[LNA_seq[ele_id][h]][l] = WP[ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1];
+								if (ss[z].gs_flu[l*gsnum + localnode_seq[ele_id*gsnum + h]] != 0) {
+									ss[z].P_gs[P_gs_node] = WP[WP_ele];
 								}
 								else {
-									ss[z].P_gs[LNA_seq[ele_id][h]][l] = 0.0; 
+									ss[z].P_gs[P_gs_node] = 0.0;
 								}
 							}
 						}
 					}
 				}
 			}
-			if (element_type == 1) {
+			if (element_type == 1) { //tetrahedral element 
 				for (z = 0; z < ssnumber; z++) {
 					for (l = 0; l < ss[z].ELE_stru; l++) {
 						if (ss[z].elenode[l] == 3) { //triangular element
-							ele_id = 0; 
+							ele_id = 0;
 						}
 						else { //quad element
 							ele_id = 1;
 						}
-						for (h = 0; h < hprefg + 1; h++) {
-							ss[z].P_gs[LNA_seq[ele_id][h]][l] = 0.0; //initialize the value 
-							if (ss[z].orphan_flag_gs[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] == 0) { //the node is not an orphan
-								//local coordinate of the projected structure gauss point
-								lcx = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]][0];
-								lcy = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]][1];
-								lcz = ss[z].gs_flu_local[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]][2];
-								ss[z].P_gs[LNA_seq[ele_id][h]][l] += WP[IEN[0][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1] - 1] * (1 - lcx - lcy - lcz) +
-									WP[IEN[1][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1] - 1] * lcx +
-									WP[IEN[2][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1] - 1] * lcy +
-									WP[IEN[3][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1] - 1] * lcz;
+						for (h = 0; h < localnode[ele_id]; h++) {
+							ss[z].P_gs[l*gsnum + LNA_seq[ele_id*gsnum + h]] = 0.0; //initialize the value 
+							if (ss[z].orphan_flag_gs[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id*gsnum + h]] == 0) { //the node is not an orphan
+																															//local coordinate of the projected structure gauss point
+								lcx = ss[z].gs_flu_local[l*gsnum + localnode_seq[ele_id*gsnum + h]][0];
+								lcy = ss[z].gs_flu_local[l*gsnum + localnode_seq[ele_id*gsnum + h]][1];
+								lcz = ss[z].gs_flu_local[l*gsnum + localnode_seq[ele_id*gsnum + h]][2];
+								ss[z].P_gs[l*gsnum + LNA_seq[ele_id*gsnum + h]] += WP[IEN[0][ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id*gsnum + h]] - 1] - 1] * (1 - lcx - lcy - lcz) +
+									WP[IEN[1][ss[z].gs_flu[l*gsnum + localnode_seq[ele_id*gsnum + h]] - 1] - 1] * lcx +
+									WP[IEN[2][ss[z].gs_flu[l*gsnum + localnode_seq[ele_id*gsnum + h]] - 1] - 1] * lcy +
+									WP[IEN[3][ss[z].gs_flu[l*gsnum + localnode_seq[ele_id*gsnum + h]] - 1] - 1] * lcz;
 							}
 							else { //the node is an orphan, directly give the value on the nearest node 
-								ss[z].P_gs[LNA_seq[ele_id][h]][l] = WP[ss[z].gs_flu[l*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][h]] - 1];
+								ss[z].P_gs[l*gsnum + LNA_seq[ele_id*gsnum + h]] = WP[ss[z].gs_flu[l*gsnum + localnode_seq[ele_id*gsnum + h]] - 1];
 							}
 						}
 					}
@@ -420,32 +424,32 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			/*
 			double hd = 0.0;
 			if (debug_algo5 == 1) {
-				for (l = 0; l < ss[z].ELE_stru; l++) {
-					for (h = 0; h < hprefg + 1; h++) {
-						for (q = 0; q < hprefg + 1; q++) {
-							hd += ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l];
-						}
-					}
-				}
+			for (l = 0; l < ss[z].ELE_stru; l++) {
+			for (h = 0; h < hprefg + 1; h++) {
+			for (q = 0; q < hprefg + 1; q++) {
+			hd += ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l];
+			}
+			}
+			}
 			} //wrong
 			*/
 			/*
 			if (debug_algo5 == 1) {
-				for (l = 0; l < ss[z].ELE_stru; l++) {
-					for (h = 0; h < hprefg + 1; h++) {
-						for (q = 0; q < hprefg + 1; q++) {
-							ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] = 0.0;
-						}
-					}
-				}
-				for (h = 0; h < hprefg + 1; h++) {
-					for (q = 0; q < hprefg + 1; q++) {
-						ss[z].P_gs[ss[z].LNA_gs[0][0] - 1][0] = 1.0;
-						ss[z].P_gs[ss[z].LNA_gs[1][0] - 1][0] = 2.0;
-						ss[z].P_gs[ss[z].LNA_gs[1][1] - 1][0] = 3.0;
-						ss[z].P_gs[ss[z].LNA_gs[0][1] - 1][0] = 4.0;
-					}
-				}
+			for (l = 0; l < ss[z].ELE_stru; l++) {
+			for (h = 0; h < hprefg + 1; h++) {
+			for (q = 0; q < hprefg + 1; q++) {
+			ss[z].P_gs[ss[z].LNA_gs[h][q] - 1][l] = 0.0;
+			}
+			}
+			}
+			for (h = 0; h < hprefg + 1; h++) {
+			for (q = 0; q < hprefg + 1; q++) {
+			ss[z].P_gs[ss[z].LNA_gs[0][0] - 1][0] = 1.0;
+			ss[z].P_gs[ss[z].LNA_gs[1][0] - 1][0] = 2.0;
+			ss[z].P_gs[ss[z].LNA_gs[1][1] - 1][0] = 3.0;
+			ss[z].P_gs[ss[z].LNA_gs[0][1] - 1][0] = 4.0;
+			}
+			}
 			}
 			*/
 			//Define the shape function and integrators for triangular structural element integration
@@ -462,9 +466,9 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			for (z = 0; z < ssnumber; z++) {
 				for (l = 0; l < ss[z].ELE_stru; l++) { //loop through each element first
 					for (i = 0; i < ss[z].elenode[l]; i++) { //i,j stands for fem points y m 
-						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[i][l] - 1) + 0] = 0.0;
-						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[i][l] - 1) + 1] = 0.0;
-						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[i][l] - 1) + 2] = 0.0;
+						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[l * 4 + i] - 1) + 0] = 0.0;
+						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[l * 4 + i] - 1) + 1] = 0.0;
+						wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[l * 4 + i] - 1) + 2] = 0.0;
 					}
 				}
 				//phi_femg: the linear shape function value at base mesh Gauss-Legendre nodes
@@ -475,8 +479,8 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								for (u = 0; u < hprefg + 1; u++) { //u v stands for y x
 									for (v = 0; v < hprefg + 1; v++) {
 										for (n = 0; n < 3; n++) {
-											wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[ss[z].LNA_stru[i][j] - 1][l] - 1) + n] //force in m direction
-												+= ss[z].norm_stru[l][n] * ss[z].W_stru[u] * ss[z].W_stru[v] * ss[z].P_gs[ss[z].LNA_gs[v][u] - 1][l] * ss[z].phi_stru[ss[z].LNA_stru[i][j] - 1][v][u] * ss[z].Jacob_stru[l][u*(hprefg + 1) + v];
+											wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[l * 4 + ss[z].LNA_stru[i * 2 + j] - 1] - 1) + n] //force in m direction
+												+= ss[z].norm_stru[l][n] * ss[z].W_stru[u] * ss[z].W_stru[v] * ss[z].P_gs[l*gsnum + ss[z].LNA_gs[v][u] - 1] * ss[z].phi_stru[ss[z].LNA_stru[i * 2 + j] - 1][v][u] * ss[z].Jacob_stru[l][v*(hprefg + 1) + u];
 											//ss[z].phi_stru is the linear shape function value on gauss node (Gauss-Legendre)
 										}
 									}
@@ -488,8 +492,8 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						for (i = 0; i < 3; i++) { //interpolation point
 							for (u = 0; u < 3; u++) { //integration point
 								for (n = 0; n < 3; n++) { //normal direction vector
-									wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[i][l] - 1) + n] //force in m direction
-										+= ss[z].norm_stru[l][n] * (1.0 / 2.0) * w[u] * phi[i][u] * ss[z].P_gs[u][l] * ss[z].Jacob_stru[l][u];
+									wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[l * 4 + i] - 1) + n] //force in m direction
+										+= ss[z].norm_stru[l][n] * (1.0 / 2.0) * w[u] * phi[i][u] * ss[z].P_gs[l*gsnum + u] * ss[z].Jacob_stru[l][u];
 									//ss[z].phi_stru is the linear shape function value on gauss node (Gauss-Legendre)
 								}
 							}
@@ -502,7 +506,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 				BF_val[z] = 0.0;
 				for (j = 0; j < wsflist[z]->nnodes; j++) {
 					//for (k = 0; k < 3; k++) {
-						BF_val[z] += wsflist[z]->nodeforce[j * 3 + 1];
+					BF_val[z] += wsflist[z]->nodeforce[j * 3 + 1];
 					//}
 				}
 			}
@@ -511,7 +515,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 		break;
 
 	case 0: //map disp from coupling mesh(fem mesh) to user defined mesh(sem mesh)
-		//The displacement is mapped from the linear element to the corresponding high-order element
+			//The displacement is mapped from the linear element to the corresponding high-order element
 		double hd = 0.0;
 
 		int elenode2D_gs;
@@ -543,14 +547,14 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
 							for (i = 0; i < NINT; i++) { //loop through each point on element surface 
 								for (j = 0; j < NINT; j++) {
-									ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[l*NINT*NINT + i*NINT + j] - 1][0] = 0.0;
-									ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[l*NINT*NINT + i*NINT + j] - 1][1] = 0.0;
-									ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[l*NINT*NINT + i*NINT + j] - 1][2] = 0.0;
+									ol[z].DISP[3 * (l*NINT*NINT + ol[z].LNA_2D[l*NINT*NINT + i*NINT + j] - 1) + 0] = 0.0;
+									ol[z].DISP[3 * (l*NINT*NINT + ol[z].LNA_2D[l*NINT*NINT + i*NINT + j] - 1) + 1] = 0.0;
+									ol[z].DISP[3 * (l*NINT*NINT + ol[z].LNA_2D[l*NINT*NINT + i*NINT + j] - 1) + 2] = 0.0;
 									for (u = 0; u < 2; u++) {
 										for (v = 0; v < 2; v++) {
 											for (n = 0; n < 3; n++) {
 												DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[ol[z].LNA_algo2[l * 4 + u * 2 + v] - 1][l] - 1) + n] - GCOORD[ol[z].IEN_gb[ol[z].LNA_norm[l * 4 + ol[z].LNA_algo2[l * 4 + u * 2 + v] - 1] - 1][l] - 1][n];
-												ol[z].DISP[l*NINT*NINT + ol[z].LNA_2D[l*NINT*NINT + i*NINT + j] - 1][n] += DISPTEMP * ol[z].phi_fem[u * 2 + v][i][j];
+												ol[z].DISP[3 * (l*NINT*NINT + ol[z].LNA_2D[l*NINT*NINT + i*NINT + j] - 1) + n] += DISPTEMP * ol[z].phi_fem[u * 2 + v][i][j];
 											}
 										}
 									}
@@ -569,18 +573,12 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 					if (ol[z].FSNEL > 0) {
 						for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
 							for (i = 0; i < 3; i++) { //loop through each point on element surface 
-								/*
-								ol[z].DISP[ol[z].IEN_lc[i][l] - 1][0] = 0.0;
-								ol[z].DISP[ol[z].IEN_lc[i][l] - 1][1] = 0.0;
-								ol[z].DISP[ol[z].IEN_lc[i][l] - 1][2] = 0.0;
-								*/
-								ol[z].DISP[l * 3 + i][0] = 0.0;
-								ol[z].DISP[l * 3 + i][1] = 0.0;
-								ol[z].DISP[l * 3 + i][2] = 0.0;
+								ol[z].DISP[3 * (l * 3 + i) + 0] = 0.0;
+								ol[z].DISP[3 * (l * 3 + i) + 1] = 0.0;
+								ol[z].DISP[3 * (l * 3 + i) + 2] = 0.0;
 								for (n = 0; n < 3; n++) {
 									DISPTEMP = wsflist[ct]->nodecoord[3 * (ol[z].IEN_2D[i][l] - 1) + n] - GCOORD[ol[z].IEN_gb[i][l] - 1][n];
-									//ol[z].DISP[ol[z].IEN_lc[i][l] - 1][n] = DISPTEMP;
-									ol[z].DISP[l * 3 + i][n] = DISPTEMP;
+									ol[z].DISP[3 * (l * 3 + i) + n] = DISPTEMP;
 								}
 							}
 						}
@@ -596,17 +594,18 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			for (z = 0; z < owsfnumber; z++) {
 				for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
 					for (i = 0; i < elenode2D_gs; i++) { //loop through each point on element surface
-						ol[z].DISP_gs[l*elenode2D_gs + i][0] = 0.0;
-						ol[z].DISP_gs[l*elenode2D_gs + i][1] = 0.0;
-						ol[z].DISP_gs[l*elenode2D_gs + i][2] = 0.0;
+						ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + 0] = 0.0;
+						ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + 1] = 0.0;
+						ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + 2] = 0.0;
+						int stru_ele = ol[z].flu_stru[l*elenode2D_gs + i] - 1; //the corresponding structural element 
 						if (ol[z].orphan_flag_flu[l*elenode2D_gs + i] == 0) { //the node is not an orphan
 							if (ss[z].elenode[ol[z].flu_stru[l*elenode2D_gs + i] - 1] == 4) { //the corresponding structural element of this fluid quadrature node is quad element
 								for (u = 0; u < 2; u++) { //u,v stands for fem points 
 									for (v = 0; v < 2; v++) {
 										phig = 1.0 / 4.0;
 										for (n = 0; n < 3; n++) {
-											DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[ss[z].LNA_stru[u][v] - 1][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[ss[z].LNA_stru[u][v] - 1][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
-											ol[z].DISP_gs[l*elenode2D_gs + i][n] += DISPTEMP * phig;
+											DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1][n];
+											ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + n] += DISPTEMP * phig;
 										}
 									}
 								}
@@ -615,8 +614,8 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								for (u = 0; u < 3; u++) { //u,v stands for fem points 
 									phig = 1.0 / 3.0;
 									for (n = 0; n < 3; n++) {
-										DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[u][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[u][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
-										ol[z].DISP_gs[l*elenode2D_gs + i][n] += DISPTEMP * phig;
+										DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + u] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + u] - 1][n];
+										ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + n] += DISPTEMP * phig;
 									}
 								}
 							}
@@ -624,13 +623,13 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						else { //the node is an orphan
 							if (ol[z].flu_stru[l*elenode2D_gs + i] != 0) {
 								for (n = 0; n < 3; n++) {
-									ol[z].DISP_gs[l*elenode2D_gs + i][n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*elenode2D_gs + i] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
+									ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*elenode2D_gs + i] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
 									//flu_stru for orphan node is actually the node number instead of the element number 
 								}
 							}
 							else {
 								for (n = 0; n < 3; n++) {
-									ol[z].DISP_gs[l*elenode2D_gs + i][n] = 0.0;
+									ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + n] = 0.0;
 								}
 							}
 						}
@@ -652,9 +651,10 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 			for (z = 0; z < owsfnumber; z++) {
 				for (l = 0; l < ol[z].FSNEL; l++) {  //loop through each element first
 					for (i = 0; i < elenode2D_gs; i++) { //loop through each point on element surface
-						ol[z].DISP_gs[l*elenode2D_gs + i][0] = 0.0;
-						ol[z].DISP_gs[l*elenode2D_gs + i][1] = 0.0;
-						ol[z].DISP_gs[l*elenode2D_gs + i][2] = 0.0;
+						ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + 0] = 0.0;
+						ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + 1] = 0.0;
+						ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + 2] = 0.0;
+						int stru_ele = ol[z].flu_stru[l*elenode2D_gs + i] - 1; //the corresponding structural element 
 						if (ol[z].orphan_flag_flu[l*elenode2D_gs + i] == 0) { //the node is not an orphan
 							lcx = ol[z].flu_local[l*elenode2D_gs + i][0];
 							lcy = ol[z].flu_local[l*elenode2D_gs + i][1];
@@ -675,8 +675,8 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 										}
 										phig = (nomx / denomx)*(nomy / denomy);
 										for (n = 0; n < 3; n++) {
-											DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[ss[z].LNA_stru[u][v] - 1][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[ss[z].LNA_stru[u][v] - 1][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
-											ol[z].DISP_gs[l*elenode2D_gs + i][n] += DISPTEMP * phig;
+											DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1][n];
+											ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + n] += DISPTEMP * phig;
 										}
 									}
 								}
@@ -685,8 +685,8 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								phi[0] = 1 - lcx - lcy; phi[1] = lcx; phi[2] = lcy;
 								for (u = 0; u < 3; u++) { //u stands for triangular element interpolation points  
 									for (n = 0; n < 3; n++) {
-										DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[u][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[u][ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
-										ol[z].DISP_gs[l*elenode2D_gs + i][n] += DISPTEMP * phi[u];
+										DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + u] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + u] - 1][n];
+										ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + n] += DISPTEMP * phi[u];
 									}
 								}
 							}
@@ -694,13 +694,13 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 						else { //the node is an orphan
 							if (ol[z].flu_stru[l*elenode2D_gs + i] != 0) {
 								for (n = 0; n < 3; n++) {
-									ol[z].DISP_gs[l*elenode2D_gs + i][n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*elenode2D_gs + i] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
+									ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + n] = wsflist[z]->nodecoord[3 * (ol[z].flu_stru[l*elenode2D_gs + i] - 1) + n] - ss[z].GCOORD_stru[ss[z].Node_glob[ol[z].flu_stru[l*elenode2D_gs + i] - 1] - 1][n];
 									//flu_stru for orphan node is actually the node number instead of the element number 
 								}
 							}
 							else {
 								for (n = 0; n < 3; n++) {
-									ol[z].DISP_gs[l*elenode2D_gs + i][n] = 0.0;
+									ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + n] = 0.0;
 									//flu_stru for orphan node is actually the node number instead of the element number 
 								}
 							}
