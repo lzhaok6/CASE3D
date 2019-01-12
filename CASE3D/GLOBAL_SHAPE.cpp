@@ -10,7 +10,7 @@
 
 //GLOBAL_SHAPE determines the global shape function derivative at the Gauss quad. points.
 
-struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double**GCOORD, int**IEN, double* JACOB_tet, int*** LNA) {
+struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double**GCOORD, int*IEN, double* JACOB_tet, int*** LNA) {
 	int i, j, k, l, m, n;
 	GLOBAL_SHAPEstruct t;
 	t.dummy = 1; 
@@ -123,23 +123,23 @@ struct GLOBAL_SHAPEstruct GLOBAL_SHAPE(int NEL, double***SHL, double**GCOORD, in
 				}
 			}
 		}
-
+		int elenode3D = 4; 
 		for (i = 0; i < NEL; i++) {
-			double x21 = GCOORD[IEN[1][i] - 1][0] - GCOORD[IEN[0][i] - 1][0];
-			double y21 = GCOORD[IEN[1][i] - 1][1] - GCOORD[IEN[0][i] - 1][1];
-			double z21 = GCOORD[IEN[1][i] - 1][2] - GCOORD[IEN[0][i] - 1][2];
-			double x31 = GCOORD[IEN[2][i] - 1][0] - GCOORD[IEN[0][i] - 1][0];
-			double y31 = GCOORD[IEN[2][i] - 1][1] - GCOORD[IEN[0][i] - 1][1];
-			double z31 = GCOORD[IEN[2][i] - 1][2] - GCOORD[IEN[0][i] - 1][2];
-			double x41 = GCOORD[IEN[3][i] - 1][0] - GCOORD[IEN[0][i] - 1][0];
-			double y41 = GCOORD[IEN[3][i] - 1][1] - GCOORD[IEN[0][i] - 1][1];
-			double z41 = GCOORD[IEN[3][i] - 1][2] - GCOORD[IEN[0][i] - 1][2];
-			double x32 = GCOORD[IEN[2][i] - 1][0] - GCOORD[IEN[1][i] - 1][0];
-			double y32 = GCOORD[IEN[2][i] - 1][1] - GCOORD[IEN[1][i] - 1][1];
-			double z32 = GCOORD[IEN[2][i] - 1][2] - GCOORD[IEN[1][i] - 1][2];
-			double x42 = GCOORD[IEN[3][i] - 1][0] - GCOORD[IEN[1][i] - 1][0];
-			double y42 = GCOORD[IEN[3][i] - 1][1] - GCOORD[IEN[1][i] - 1][1];
-			double z42 = GCOORD[IEN[3][i] - 1][2] - GCOORD[IEN[1][i] - 1][2];
+			double x21 = GCOORD[IEN[i*elenode3D + 1] - 1][0] - GCOORD[IEN[i*elenode3D + 0] - 1][0];
+			double y21 = GCOORD[IEN[i*elenode3D + 1] - 1][1] - GCOORD[IEN[i*elenode3D + 0] - 1][1];
+			double z21 = GCOORD[IEN[i*elenode3D + 1] - 1][2] - GCOORD[IEN[i*elenode3D + 0] - 1][2];
+			double x31 = GCOORD[IEN[i*elenode3D + 2] - 1][0] - GCOORD[IEN[i*elenode3D + 0] - 1][0];
+			double y31 = GCOORD[IEN[i*elenode3D + 2] - 1][1] - GCOORD[IEN[i*elenode3D + 0] - 1][1];
+			double z31 = GCOORD[IEN[i*elenode3D + 2] - 1][2] - GCOORD[IEN[i*elenode3D + 0] - 1][2];
+			double x41 = GCOORD[IEN[i*elenode3D + 3] - 1][0] - GCOORD[IEN[i*elenode3D + 0] - 1][0];
+			double y41 = GCOORD[IEN[i*elenode3D + 3] - 1][1] - GCOORD[IEN[i*elenode3D + 0] - 1][1];
+			double z41 = GCOORD[IEN[i*elenode3D + 3] - 1][2] - GCOORD[IEN[i*elenode3D + 0] - 1][2];
+			double x32 = GCOORD[IEN[i*elenode3D + 2] - 1][0] - GCOORD[IEN[i*elenode3D + 1] - 1][0];
+			double y32 = GCOORD[IEN[i*elenode3D + 2] - 1][1] - GCOORD[IEN[i*elenode3D + 1] - 1][1];
+			double z32 = GCOORD[IEN[i*elenode3D + 2] - 1][2] - GCOORD[IEN[i*elenode3D + 1] - 1][2];
+			double x42 = GCOORD[IEN[i*elenode3D + 3] - 1][0] - GCOORD[IEN[i*elenode3D + 1] - 1][0];
+			double y42 = GCOORD[IEN[i*elenode3D + 3] - 1][1] - GCOORD[IEN[i*elenode3D + 1] - 1][1];
+			double z42 = GCOORD[IEN[i*elenode3D + 3] - 1][2] - GCOORD[IEN[i*elenode3D + 1] - 1][2];
 			//First node
 			t.SHG_tet[i][0][0] = (-y32*z42 + z32*y42) / JACOB_tet[i]; //x 
 			t.SHG_tet[i][1][0] = (x32*z42 - z32*x42) / JACOB_tet[i]; //y 

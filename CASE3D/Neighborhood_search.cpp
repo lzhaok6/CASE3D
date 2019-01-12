@@ -17,7 +17,7 @@
 //Please note that each the sequence of the structural wetted surface has to be the same with the fluid wetted surface. For example, if the front structure wetted surface (ss[0])
 //is the first surface, then the fluid wetted surface has to be the first surface ol[0] as well. 
 //int** nodesperelem; 
-void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) {
+void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 	extern OWETSURF ol[owsfnumber];
 	extern STRU_WET_SURF ss[ssnumber]; //data structure used to store the properties on the structure wetted surface
 	//extern int** nodesperelem;
@@ -29,14 +29,17 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	orphannodehd.open(orphannodfile);
 
 	int elenode2D;
+	int elenode3D;
 	int elenode2D_ln; 
 	if (element_type == 0) { //hex element
 		elenode2D = NINT*NINT; 
 		elenode2D_ln = 4; 
+		elenode3D = NINT*NINT*NINT; 
 	}
 	if (element_type == 1) { //tet element
 		elenode2D = 3;
 		elenode2D_ln = 3;
+		elenode3D = 4; 
 	}
 
 	//Get the corner point of the fluid elements
@@ -44,14 +47,14 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 		for (z = 0; z < owsfnumber; z++) {
 			ol[z].IEN_flu_3D = new int[ol[z].FSNEL * 8];
 			for (i = 0; i < ol[z].FSNEL; i++) {
-				ol[z].IEN_flu_3D[i * 8 + 0] = IEN_flu[LNA[0][0][0] - 1][ol[z].GIDF[i] - 1];
-				ol[z].IEN_flu_3D[i * 8 + 1] = IEN_flu[LNA[N][0][0] - 1][ol[z].GIDF[i] - 1];
-				ol[z].IEN_flu_3D[i * 8 + 2] = IEN_flu[LNA[N][N][0] - 1][ol[z].GIDF[i] - 1];
-				ol[z].IEN_flu_3D[i * 8 + 3] = IEN_flu[LNA[0][N][0] - 1][ol[z].GIDF[i] - 1];
-				ol[z].IEN_flu_3D[i * 8 + 4] = IEN_flu[LNA[0][0][N] - 1][ol[z].GIDF[i] - 1];
-				ol[z].IEN_flu_3D[i * 8 + 5] = IEN_flu[LNA[N][0][N] - 1][ol[z].GIDF[i] - 1];
-				ol[z].IEN_flu_3D[i * 8 + 6] = IEN_flu[LNA[N][N][N] - 1][ol[z].GIDF[i] - 1];
-				ol[z].IEN_flu_3D[i * 8 + 7] = IEN_flu[LNA[0][N][N] - 1][ol[z].GIDF[i] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 0] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + LNA[0][0][0] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 1] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + LNA[N][0][0] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 2] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + LNA[N][N][0] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 3] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + LNA[0][N][0] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 4] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + LNA[0][0][N] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 5] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + LNA[N][0][N] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 6] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + LNA[N][N][N] - 1];
+				ol[z].IEN_flu_3D[i * 8 + 7] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + LNA[0][N][N] - 1];
 			}
 		}
 		for (z = 0; z < owsfnumber; z++) {
@@ -71,10 +74,10 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 	if (element_type == 1) {
 		ol[z].IEN_flu_3D = new int[ol[z].FSNEL * 4];
 		for (i = 0; i < ol[z].FSNEL; i++) {
-			ol[z].IEN_flu_3D[i * 4 + 0] = IEN_flu[0][ol[z].GIDF[i] - 1];
-			ol[z].IEN_flu_3D[i * 4 + 1] = IEN_flu[1][ol[z].GIDF[i] - 1];
-			ol[z].IEN_flu_3D[i * 4 + 2] = IEN_flu[2][ol[z].GIDF[i] - 1];
-			ol[z].IEN_flu_3D[i * 4 + 3] = IEN_flu[3][ol[z].GIDF[i] - 1];
+			ol[z].IEN_flu_3D[i * 4 + 0] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + 0];
+			ol[z].IEN_flu_3D[i * 4 + 1] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + 1];
+			ol[z].IEN_flu_3D[i * 4 + 2] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + 2];
+			ol[z].IEN_flu_3D[i * 4 + 3] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + 3];
 		}
 		for (z = 0; z < owsfnumber; z++) {
 			ol[z].IEN_flu_2D = new int*[3];
@@ -83,15 +86,15 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			}
 			for (i = 0; i < ol[z].FSNEL; i++) {
 				for (j = 0; j < 3; j++) {
-					ol[z].IEN_flu_2D[j][i] = IEN_flu[ol[z].FP[i][j] - 1][ol[z].GIDF[i] - 1];
+					ol[z].IEN_flu_2D[j][i] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + ol[z].FP[i][j] - 1];
 				}
 			}
 		}
 	}
 
 	//First bring in the structural wetted surface mesh into the code
-	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
-	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp");
+	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
+	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp");
 	if (!infile_algo5) {
 		std::cout << "can not open the structure input file" << std::endl;
 		system("PAUSE ");
@@ -197,12 +200,12 @@ void Neighborhood_search(double** GCOORD, int***LNA, int**IEN_flu, int NEL_flu) 
 			ss[z].GCOORD_stru[i] = new double[3];
 		}
 		for (i = nodestart; i < nodeend + 1; i++) {
-			//ss[z].GCOORD_stru[i - nodestart][0] = 144.220001 - stod(output[i][1]);
-			//ss[z].GCOORD_stru[i - nodestart][1] = stod(output[i][2]) - 6.0;
-			//ss[z].GCOORD_stru[i - nodestart][2] = -stod(output[i][3]);
-			ss[z].GCOORD_stru[i - nodestart][0] = stod(output[i][1]);
-			ss[z].GCOORD_stru[i - nodestart][1] = stod(output[i][2]) - 0.3048;
-			ss[z].GCOORD_stru[i - nodestart][2] = stod(output[i][3]);
+			ss[z].GCOORD_stru[i - nodestart][0] = 144.220001 - stod(output[i][1]);
+			ss[z].GCOORD_stru[i - nodestart][1] = stod(output[i][2]) - 6.0;
+			ss[z].GCOORD_stru[i - nodestart][2] = -stod(output[i][3]);
+			//ss[z].GCOORD_stru[i - nodestart][0] = stod(output[i][1]);
+			//ss[z].GCOORD_stru[i - nodestart][1] = stod(output[i][2]) - 0.3048;
+			//ss[z].GCOORD_stru[i - nodestart][2] = stod(output[i][3]);
 		}
 	}
 

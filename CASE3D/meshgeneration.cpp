@@ -54,8 +54,8 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_0.5ftbasemesh_fs_150m_10m_24m.inp";
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
-	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_2ftftbasemesh_fs_150m_10m_24m.msh";
+	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_2ftftbasemesh_fs_150m_10m_24m.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
@@ -189,14 +189,11 @@ struct meshgenerationstruct meshgeneration() {
 		}
 		//Secondly, store the global element connectivity (IEN)
 		t.NEL = numele_py[physicalgroups - 1];
-		t.IEN = new int*[elenode3D]; //element connectivity matrix
-		for (i = 0; i < elenode3D; i++) { //Since some elements are boundary elements, they may only consume elenode2D in the first dimension. Thus, some space is wasted. 
-			t.IEN[i] = new int[t.NEL];
-		}
+		t.IEN = new int[t.NEL*elenode3D]; //element connectivity matrix
 		for (j = 0; j < t.NEL; j++) { //loop through the element in the current physical group
 			nvert_py = ele_type[ele_typ[physicalgroups - 1]];
 			for (k = 0; k < nvert_py; k++) {
-				t.IEN[k][j] = EToV[st + j*nvert_py + k];
+				t.IEN[j*elenode3D + k] = EToV[st + j*nvert_py + k];
 			}
 		}
 		//populate GCOORD
@@ -367,13 +364,10 @@ struct meshgenerationstruct meshgeneration() {
 
 		//define IEN
 		t.NEL = EToV.size() / elenode3D;
-		t.IEN = new int*[elenode3D];
-		for (int i = 0; i < elenode3D; i++) {
-			t.IEN[i] = new int[t.NEL];
-		}
+		t.IEN = new int[t.NEL*elenode3D];
 		for (int i = 0; i < t.NEL; i++) {
 			for (int j = 0; j < elenode3D; j++) {
-				t.IEN[j][i] = EToV[i*elenode3D + j];
+				t.IEN[i*elenode3D + j] = EToV[i*elenode3D + j];
 			}
 		}
 		//define GIDF, NRBELE_ARR
@@ -515,7 +509,7 @@ struct meshgenerationstruct meshgeneration() {
 			for (j = 0; j < numele_py[wt_py[z]]; j++) { //loop through the element in the current physical group
 				std::vector<int>local;
 				for (k = 0; k < elenode2D; k++) {
-					local.push_back(t.IEN[ol[0].FP[ct][k] - 1][ien_py[wt_py[z]][j] - 1]);
+					local.push_back(t.IEN[(ien_py[wt_py[z]][j] - 1)*elenode3D + ol[0].FP[ct][k] - 1]);
 				}
 				iens_wt.push_back(local);
 				ct += 1; 
@@ -528,7 +522,7 @@ struct meshgenerationstruct meshgeneration() {
 			for (j = 0; j < numele_py[nrb_py[z]]; j++) { //loop through the element in the current physical group
 				std::vector<int>local;
 				for (k = 0; k < elenode2D; k++) {
-					local.push_back(t.IEN[nr[0].DP[ct][k] - 1][ien_py[nrb_py[z]][j] - 1]);
+					local.push_back(t.IEN[(ien_py[nrb_py[z]][j] - 1)*elenode3D + nr[0].DP[ct][k] - 1]);
 				}
 				iens_nr.push_back(local);
 				ct += 1; 
@@ -561,7 +555,7 @@ struct meshgenerationstruct meshgeneration() {
 		IEN_1D = new int[t.NEL*elenode3D];
 		for (i = 0; i < t.NEL; i++) {
 			for (j = 0; j < elenode3D; j++) {
-				IEN_1D[elenode3D*i + j] = t.IEN[j][i];
+				IEN_1D[elenode3D*i + j] = t.IEN[i*elenode3D + j];
 			}
 		}
 	}
@@ -586,15 +580,15 @@ struct meshgenerationstruct meshgeneration() {
 						if (!((m == 0 && n == 0 && o == 0) || (m == N && n == 0 && o == 0) || (m == N && n == N && o == 0)
 							|| (m == 0 && n == N && o == 0) || (m == 0 && n == 0 && o == N) || (m == N && n == 0 && o == N)
 							|| (m == N && n == N && o == N) || (m == 0 && n == N && o == N))) {
-							t.GCOORD[t.IEN[c.LNA[m][n][o] - 1][i] - 1][0] = 0.0;
-							t.GCOORD[t.IEN[c.LNA[m][n][o] - 1][i] - 1][1] = 0.0;
-							t.GCOORD[t.IEN[c.LNA[m][n][o] - 1][i] - 1][2] = 0.0;
+							t.GCOORD[t.IEN[i*elenode3D + c.LNA[m][n][o] - 1] - 1][0] = 0.0;
+							t.GCOORD[t.IEN[i*elenode3D + c.LNA[m][n][o] - 1] - 1][1] = 0.0;
+							t.GCOORD[t.IEN[i*elenode3D + c.LNA[m][n][o] - 1] - 1][2] = 0.0;
 							for (j = 0; j < 2; j++) { //j, k, l stands for corner nodes
 								for (k = 0; k < 2; k++) {
 									for (l = 0; l < 2; l++) {
-										t.GCOORD[t.IEN[c.LNA[m][n][o] - 1][i] - 1][0] += t.GCOORD[t.IEN[LNA_ln[j][k][l] - 1][i] - 1][0] * ls_ln.SHL[3][c_ln.LNA[j][k][l] - 1][m*elenode2D + n*NINT + o];
-										t.GCOORD[t.IEN[c.LNA[m][n][o] - 1][i] - 1][1] += t.GCOORD[t.IEN[LNA_ln[j][k][l] - 1][i] - 1][1] * ls_ln.SHL[3][c_ln.LNA[j][k][l] - 1][m*elenode2D + n*NINT + o];
-										t.GCOORD[t.IEN[c.LNA[m][n][o] - 1][i] - 1][2] += t.GCOORD[t.IEN[LNA_ln[j][k][l] - 1][i] - 1][2] * ls_ln.SHL[3][c_ln.LNA[j][k][l] - 1][m*elenode2D + n*NINT + o];
+										t.GCOORD[t.IEN[i*elenode3D + c.LNA[m][n][o] - 1] - 1][0] += t.GCOORD[t.IEN[i*elenode3D + LNA_ln[j][k][l] - 1] - 1][0] * ls_ln.SHL[3][c_ln.LNA[j][k][l] - 1][m*elenode2D + n*NINT + o];
+										t.GCOORD[t.IEN[i*elenode3D + c.LNA[m][n][o] - 1] - 1][1] += t.GCOORD[t.IEN[i*elenode3D + LNA_ln[j][k][l] - 1] - 1][1] * ls_ln.SHL[3][c_ln.LNA[j][k][l] - 1][m*elenode2D + n*NINT + o];
+										t.GCOORD[t.IEN[i*elenode3D + c.LNA[m][n][o] - 1] - 1][2] += t.GCOORD[t.IEN[i*elenode3D + LNA_ln[j][k][l] - 1] - 1][2] * ls_ln.SHL[3][c_ln.LNA[j][k][l] - 1][m*elenode2D + n*NINT + o];
 									}
 								}
 							}
@@ -626,7 +620,7 @@ struct meshgenerationstruct meshgeneration() {
 						ct = 0;
 						for (l = 0; l < elenode2D; l++) {
 							for (m = 0; m < elenode3D; m++) {
-								if (t.BCIEN[i][j][l] == t.IEN[m][k]) {
+								if (t.BCIEN[i][j][l] == t.IEN[k*elenode3D + m]) {
 									localnode[i][l] = m + 1; //store the corresponding local node in BCIEN in global element connectivity matrix
 									ct += 1;
 								}
@@ -1605,9 +1599,9 @@ struct meshgenerationstruct meshgeneration() {
 			for (j = 0; j < t.NEL; j++) {
 				flag = 0;
 				for (k = 0; k < elenode3D; k++) {
-					if (t.GCOORD[t.IEN[k][j] - 1][0] >= xlim[0] && t.GCOORD[t.IEN[k][j] - 1][0] <= xlim[1]
-						&& t.GCOORD[t.IEN[k][j] - 1][1] >= ylim[0] && t.GCOORD[t.IEN[k][j] - 1][1] <= ylim[1]
-						&& t.GCOORD[t.IEN[k][j] - 1][2] >= zlim[0] && t.GCOORD[t.IEN[k][j] - 1][2] <= zlim[1]) {
+					if (t.GCOORD[t.IEN[j*elenode3D + k] - 1][0] >= xlim[0] && t.GCOORD[t.IEN[j*elenode3D + k] - 1][0] <= xlim[1]
+						&& t.GCOORD[t.IEN[j*elenode3D + k] - 1][1] >= ylim[0] && t.GCOORD[t.IEN[j*elenode3D + k] - 1][1] <= ylim[1]
+						&& t.GCOORD[t.IEN[j*elenode3D + k] - 1][2] >= zlim[0] && t.GCOORD[t.IEN[j*elenode3D + k] - 1][2] <= zlim[1]) {
 						//If any point of the current element is within the bounding box, we will search it later on 
 						flag = 1;
 					}
@@ -1649,7 +1643,7 @@ struct meshgenerationstruct meshgeneration() {
 					for (j = 0; j < t.NEL; j++) {
 						ct = 0;
 						for (k = 0; k < 4; k++) {
-							if (t.IEN[ol[z].LNA_norm_3D[i * 4 + k] - 1][j] == ol[z].IEN_gb[ol[z].LNA_norm[i * 4 + k] - 1][i]) {
+							if (t.IEN[j*elenode3D + ol[z].LNA_norm_3D[i * 4 + k] - 1] == ol[z].IEN_gb[ol[z].LNA_norm[i * 4 + k] - 1][i]) {
 								ct += 1;
 							}
 						}
@@ -1670,7 +1664,7 @@ struct meshgenerationstruct meshgeneration() {
 					for (j = 0; j < ele_bd.size(); j++) {
 						ct = 0;
 						for (k = 0; k < 4; k++) {
-							if (t.IEN[ol[z].LNA_norm_3D[i * 4 + k] - 1][ele_bd[j]] == ol[z].IEN_gb[ol[z].LNA_norm[i * 4 + k] - 1][i]) {
+							if (t.IEN[ele_bd[j] * elenode3D + ol[z].LNA_norm_3D[i * 4 + k] - 1] == ol[z].IEN_gb[ol[z].LNA_norm[i * 4 + k] - 1][i]) {
 								ct += 1;
 							}
 						}
@@ -1870,7 +1864,7 @@ struct meshgenerationstruct meshgeneration() {
 					for (j = 0; j < t.NEL; j++) {
 						ct = 0;
 						for (k = 0; k < elenode2D; k++) {
-							if (t.IEN[nr[z].DP[i][k] - 1][j] == nr[z].IEN_gb[nr[z].DP_2D[i*elenode2D + k] - 1][i]) {
+							if (t.IEN[j*elenode3D + nr[z].DP[i][k] - 1] == nr[z].IEN_gb[nr[z].DP_2D[i*elenode2D + k] - 1][i]) {
 								ct += 1;
 							}
 						}

@@ -7,7 +7,7 @@
 #include <Eigen/Dense>
 #include <Eigen/LU>
 
-struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) {
+struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int *IEN, int*** LNA) {
 	int i, j, k, l, m, n, z;
 	JACOBIANstruct t;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
@@ -449,24 +449,25 @@ struct JACOBIANstruct JACOBIAN(int NEL, double **GCOORD, int **IEN, int*** LNA) 
 	}
 
 	if (element_type == 1) {
+		int elenode3D = 4;
 		t.JACOB_tet = new double[NEL]; //For first order tetrahedral element, the Jacobian determinant is the same throught the element
 		double XS_tet[3][3];
 		for (i = 0; i < NEL; i++) {
-			double x21 = GCOORD[IEN[1][i] - 1][0] - GCOORD[IEN[0][i] - 1][0];
-			double y21 = GCOORD[IEN[1][i] - 1][1] - GCOORD[IEN[0][i] - 1][1];
-			double z21 = GCOORD[IEN[1][i] - 1][2] - GCOORD[IEN[0][i] - 1][2];
-			double x31 = GCOORD[IEN[2][i] - 1][0] - GCOORD[IEN[0][i] - 1][0];
-			double y31 = GCOORD[IEN[2][i] - 1][1] - GCOORD[IEN[0][i] - 1][1];
-			double z31 = GCOORD[IEN[2][i] - 1][2] - GCOORD[IEN[0][i] - 1][2];
-			double x41 = GCOORD[IEN[3][i] - 1][0] - GCOORD[IEN[0][i] - 1][0];
-			double y41 = GCOORD[IEN[3][i] - 1][1] - GCOORD[IEN[0][i] - 1][1];
-			double z41 = GCOORD[IEN[3][i] - 1][2] - GCOORD[IEN[0][i] - 1][2];
-			double x32 = GCOORD[IEN[2][i] - 1][0] - GCOORD[IEN[1][i] - 1][0];
-			double y32 = GCOORD[IEN[2][i] - 1][1] - GCOORD[IEN[1][i] - 1][1];
-			double z32 = GCOORD[IEN[2][i] - 1][2] - GCOORD[IEN[1][i] - 1][2];
-			double x42 = GCOORD[IEN[3][i] - 1][0] - GCOORD[IEN[1][i] - 1][0];
-			double y42 = GCOORD[IEN[3][i] - 1][1] - GCOORD[IEN[1][i] - 1][1];
-			double z42 = GCOORD[IEN[3][i] - 1][2] - GCOORD[IEN[1][i] - 1][2];
+			double x21 = GCOORD[IEN[i*elenode3D + 1] - 1][0] - GCOORD[IEN[i*elenode3D + 0] - 1][0];
+			double y21 = GCOORD[IEN[i*elenode3D + 1] - 1][1] - GCOORD[IEN[i*elenode3D + 0] - 1][1];
+			double z21 = GCOORD[IEN[i*elenode3D + 1] - 1][2] - GCOORD[IEN[i*elenode3D + 0] - 1][2];
+			double x31 = GCOORD[IEN[i*elenode3D + 2] - 1][0] - GCOORD[IEN[i*elenode3D + 0] - 1][0];
+			double y31 = GCOORD[IEN[i*elenode3D + 2] - 1][1] - GCOORD[IEN[i*elenode3D + 0] - 1][1];
+			double z31 = GCOORD[IEN[i*elenode3D + 2] - 1][2] - GCOORD[IEN[i*elenode3D + 0] - 1][2];
+			double x41 = GCOORD[IEN[i*elenode3D + 3] - 1][0] - GCOORD[IEN[i*elenode3D + 0] - 1][0];
+			double y41 = GCOORD[IEN[i*elenode3D + 3] - 1][1] - GCOORD[IEN[i*elenode3D + 0] - 1][1];
+			double z41 = GCOORD[IEN[i*elenode3D + 3] - 1][2] - GCOORD[IEN[i*elenode3D + 0] - 1][2];
+			double x32 = GCOORD[IEN[i*elenode3D + 2] - 1][0] - GCOORD[IEN[i*elenode3D + 1] - 1][0];
+			double y32 = GCOORD[IEN[i*elenode3D + 2] - 1][1] - GCOORD[IEN[i*elenode3D + 1] - 1][1];
+			double z32 = GCOORD[IEN[i*elenode3D + 2] - 1][2] - GCOORD[IEN[i*elenode3D + 1] - 1][2];
+			double x42 = GCOORD[IEN[i*elenode3D + 3] - 1][0] - GCOORD[IEN[i*elenode3D + 1] - 1][0];
+			double y42 = GCOORD[IEN[i*elenode3D + 3] - 1][1] - GCOORD[IEN[i*elenode3D + 1] - 1][1];
+			double z42 = GCOORD[IEN[i*elenode3D + 3] - 1][2] - GCOORD[IEN[i*elenode3D + 1] - 1][2];
 			XS_tet[0][0] = x21; XS_tet[0][1] = x31; XS_tet[0][2] = x41;
 			XS_tet[1][0] = y21; XS_tet[1][1] = y31; XS_tet[1][2] = y41;
 			XS_tet[2][0] = z21; XS_tet[2][1] = z31; XS_tet[2][2] = z41;

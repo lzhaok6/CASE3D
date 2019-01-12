@@ -16,8 +16,8 @@
 
 
 //NRB determines the NRB local node numbering and the associated NRB arrays
-void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int TIME, double *T, double DT, int NDT, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC,
-	double ZC, double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double***Gn, double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double** HMASTER) {
+void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TIME, double *T, double DT, int NDT, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC,
+	double ZC, double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double***Gn, double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double* HMASTER) {
 	int h, i, j, k, q, z, ii, jj, kk, m;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[nrbsurfnumber];
@@ -31,6 +31,23 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	int* LNAct1; int* LNAct2; int* LNAct3;
 	double* SHOD1;
 	int*IENct1; int*IENct2; int*IENct3;
+
+	int elenode3D = 0;
+	int elenode2D = 0;
+	if (element_type == 0) { //hex element
+		elenode3D = NINT*NINT*NINT;
+		elenode2D = NINT*NINT;
+	}
+	if (element_type == 1) { //tet element
+		if (N == 1) {
+			elenode3D = 4;
+			elenode2D = 3;
+		}
+		else {
+			std::cout << "High-order tet element is not supported yet" << std::endl;
+			system("PAUSE ");
+		}
+	}
 
 	if (tensorfactorization == 1) {
 		int ctt1 = 0;
@@ -80,7 +97,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		IENct1 = new int[NINT*NINT*NINT*NEL];
 		for (i = 0; i < NEL; i++) {
 			for (j = 0; j < NINT*NINT*NINT; j++) {
-				IENct1[ctt1] = IEN[LNAct1[j]][i] - 1;
+				IENct1[ctt1] = IEN[i*elenode3D + LNAct1[j]] - 1;
 				ctt1 += 1;
 			}
 		}
@@ -88,7 +105,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		IENct2 = new int[NINT*NINT*NINT*NEL];
 		for (i = 0; i < NEL; i++) {
 			for (j = 0; j < NINT*NINT*NINT; j++) {
-				IENct2[ctt2] = IEN[LNAct2[j]][i] - 1;
+				IENct2[ctt2] = IEN[i*elenode3D + LNAct2[j]] - 1;
 				ctt2 += 1;
 			}
 		}
@@ -96,7 +113,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		IENct3 = new int[NINT*NINT*NINT*NEL];
 		for (i = 0; i < NEL; i++) {
 			for (j = 0; j < NINT*NINT*NINT; j++) {
-				IENct3[ctt3] = IEN[LNAct3[j]][i] - 1;
+				IENct3[ctt3] = IEN[i*elenode3D + LNAct3[j]] - 1;
 				ctt3 += 1;
 			}
 		}
@@ -125,23 +142,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 	std::ostringstream oss;
 	oss << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
 	auto timestr = oss.str();
-
-	int elenode3D = 0;
-	int elenode2D = 0;
-	if (element_type == 0) { //hex element
-		elenode3D = NINT*NINT*NINT;
-		elenode2D = NINT*NINT;
-	}
-	if (element_type == 1) { //tet element
-		if (N == 1) {
-			elenode3D = 4;
-			elenode2D = 3;
-		}
-		else {
-			std::cout << "High-order tet element is not supported yet" << std::endl;
-			system("PAUSE ");
-		}
-	}
 
 	//dynamic variables initiation
 	//double *DSDOT; //SOLUTION ARRAY FOR FIRST TIME DERIVATIVE OF CONDENSATION
@@ -1370,6 +1370,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 		//start = std::clock();
 		//ctt3 = 0;
 		if (tensorfactorization == 0) {
+			int HMsize = elenode3D*(elenode3D + 1) / 2;
 			#pragma omp parallel for num_threads(6)
 			for (int j = 0; j < NEL; j++) { //the loop takes 1+NEL+1+NEL=2*NEL+2 operations
 				double HFTEMP[NINT*NINT*NINT]; //We did not distinguish hex and tet here since the size of HFTEMP would be sufficient for tet element
@@ -1380,15 +1381,15 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int**IEN, int NEL, int T
 				for (int z = 0; z < elenode3D; z++) { //takes NEL*(2*NINT^3+2) operations
 					for (int k = 0; k < elenode3D; k++) { //takes NEL*NINT^3*(2*NINT^3+2) operaitons
 						if (z <= k) { //see the matrix storing algorithm in: https://stackoverflow.com/questions/9039189/make-efficient-the-copy-of-symmetric-matrix-in-c-sharp/9040526#9040526
-							HFTEMP[z] += HMASTER[j][z*elenode3D - z*(z + 1) / 2 + k] * FEE[IEN[k][j] - 1][1];
+							HFTEMP[z] += HMASTER[j*HMsize + z*elenode3D - z*(z + 1) / 2 + k] * FEE[IEN[j*elenode3D + k] - 1][1];
 						}
 						else {
-							HFTEMP[z] += HMASTER[j][k*elenode3D - k*(k + 1) / 2 + z] * FEE[IEN[k][j] - 1][1];
+							HFTEMP[z] += HMASTER[j*HMsize + k*elenode3D - k*(k + 1) / 2 + z] * FEE[IEN[j*elenode3D + k] - 1][1];
 						}
 					}
 				}
 				for (int k = 0; k < elenode3D; k++) { //takes NEL*(2*NINT^3+2) operations
-					HF[IEN[k][j] - 1] = HF[IEN[k][j] - 1] + HFTEMP[k];   //global level reactance matrix //takes 2*NINT^3*NEL operations
+					HF[IEN[j*elenode3D + k] - 1] = HF[IEN[j*elenode3D + k] - 1] + HFTEMP[k];   //global level reactance matrix //takes 2*NINT^3*NEL operations
 				} //HF is like global stiffness matrix (include variable in it)
 			}
 		}

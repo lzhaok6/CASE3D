@@ -9,7 +9,7 @@
 #include <ctime>
 #include <omp.h>
 
-struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN, int***LNA, double* JACOB_tet, double*** SHG_tet, double** GCOORD) {
+struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int*IEN, int***LNA, double* JACOB_tet, double*** SHG_tet, double** GCOORD) {
 	MATRIXstruct t;
 	double QFUNC;  //CAPACITANCE MATRIX SUM VARIABLE (mass matrix)
 	//double HFUNC;  //REACTANCE MATRIX SUM VARIABLE (stiffness matrix)
@@ -57,13 +57,12 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 		}
 	}
 	*/
-	t.HMASTER = new double*[NEL];
-	for (i = 0; i < NEL; i++) {
-		t.HMASTER[i] = new double[elenode3D*(elenode3D + 1) / 2];
-	}
+	//t.HMASTER = new double*[NEL];
+	t.HMASTER = new double[NEL*(elenode3D*(elenode3D + 1) / 2)];
+	int HMsize = elenode3D*(elenode3D + 1) / 2; 
 	for (i = 0; i < NEL; i++) {
 		for (j = 0; j < elenode3D*(elenode3D + 1) / 2; j++) {
-			t.HMASTER[i][j] = 0.0;
+			t.HMASTER[i*HMsize + j] = 0.0;
 		}
 	}
 
@@ -136,15 +135,15 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 						XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] = 0;
 						XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] = 0;
 						for (l = 0; l < 8; l++) {
-							XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][0]; //dx/dxi
-							XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][0]; //dx/deta 
-							XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][0]; //dx/dzeta  
-							XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][1]; //dy/dxi 
-							XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][1]; //dy/deta
-							XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][1]; //dy/dzeta 
-							XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][2]; //dz/dxi 
-							XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][2]; //dz/deta 
-							XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][2]; //dz/dzeta
+							XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][0]; //dx/dxi
+							XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][0]; //dx/deta 
+							XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][0]; //dx/dzeta  
+							XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][1]; //dy/dxi 
+							XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][1]; //dy/deta
+							XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][1]; //dy/dzeta 
+							XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][2]; //dz/dxi 
+							XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][2]; //dz/deta 
+							XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][2]; //dz/dzeta
 						}
 						JACOB[i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] * (XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] - XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k])
 							- XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] * (XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] - XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k])
@@ -169,7 +168,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 					if (i <= j) { //store only the upper triangle elements
 						for (int k = 0; k < NINT*NINT*NINT; k++) {   //k l m are for four points
 							//See https://stackoverflow.com/questions/9039189/make-efficient-the-copy-of-symmetric-matrix-in-c-sharp/9040526#9040526 for the storing algorithm
-							t.HMASTER[e][i*elenode3D - i*(i + 1) / 2 + j] += W_new[k] * JACOB[k] * (SHG[2][i][k] * SHG[2][j][k] + SHG[1][i][k] * SHG[1][j][k] + SHG[0][i][k] * SHG[0][j][k]);
+							t.HMASTER[e*HMsize + i*elenode3D - i*(i + 1) / 2 + j] += W_new[k] * JACOB[k] * (SHG[2][i][k] * SHG[2][j][k] + SHG[1][i][k] * SHG[1][j][k] + SHG[0][i][k] * SHG[0][j][k]);
 						}
 					}
 				}
@@ -182,7 +181,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 			for (int i = 0; i < 4; i++) {     //totally NINT*NINT*NINT points for an element 
 				for (int j = 0; j < 4; j++) { //the transpose of shape function
 					if (i <= j) { //store only the upper triangle elements
-						t.HMASTER[e][i*elenode3D - i*(i + 1) / 2 + j] = Vol * (SHG_tet[e][2][i] * SHG_tet[e][2][j] + SHG_tet[e][1][i] * SHG_tet[e][1][j] + SHG_tet[e][0][i] * SHG_tet[e][0][j]);
+						t.HMASTER[e*HMsize + i*elenode3D - i*(i + 1) / 2 + j] = Vol * (SHG_tet[e][2][i] * SHG_tet[e][2][j] + SHG_tet[e][1][i] * SHG_tet[e][1][j] + SHG_tet[e][0][i] * SHG_tet[e][0][j]);
 					}
 				}
 			}
@@ -210,7 +209,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 				}
 				//assemble the local mass matrix 
 				for (i = 0; i < NINT*NINT*NINT; i++) {
-					t.Q[IEN[i][e] - 1] += QMASTER[i][i];
+					t.Q[IEN[e*elenode3D + i] - 1] += QMASTER[i][i];
 				}
 			}
 			else {
@@ -227,7 +226,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 								} //check point: whether the QMASTER matrix is diagonal, if not wrong
 							}
 							//ASSEMBLE GLOBAL CAPACITANCE MATRIX
-							t.Q[IEN[i][e] - 1] = t.Q[IEN[i][e] - 1] + QMASTER[i][j];
+							t.Q[IEN[e*elenode3D + i] - 1] = t.Q[IEN[e*elenode3D + i] - 1] + QMASTER[i][j];
 						}
 					}
 				}
@@ -247,7 +246,7 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 				for (j = 0; j < 4; j++) { //the transpose of shape function
 					if (i == j) { //diagonal terms
 						QMASTER[i][j] = Vol*(1.0 / 4.0)*1.0;  //the mass matrix is directly diagonalized (Pozrikidis 8.2.38)
-						t.Q[IEN[i][e] - 1] = t.Q[IEN[i][e] - 1] + QMASTER[i][j];
+						t.Q[IEN[e*elenode3D + i] - 1] = t.Q[IEN[e*elenode3D + i] - 1] + QMASTER[i][j];
 					}
 				}
 			}
@@ -258,16 +257,16 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 			SUMH = 0.0;
 			for (j = 0; j < elenode3D; j++) { //Column sum (Since HMASTER is symmetric, row sum and column sum would actually yield the same result)
 				if (i < j) {
-					HFUNC = abs(t.HMASTER[e][i*elenode3D - i*(i + 1) / 2 + j]);
+					HFUNC = abs(t.HMASTER[e*HMsize + i*elenode3D - i*(i + 1) / 2 + j]);
 					SUMH = SUMH + HFUNC;
 				}
 				else if (i > j) {
-					HFUNC = abs(t.HMASTER[e][j*elenode3D - j*(j + 1) / 2 + i]);
+					HFUNC = abs(t.HMASTER[e*HMsize + j*elenode3D - j*(j + 1) / 2 + i]);
 					SUMH = SUMH + HFUNC;
 				}
 			}
 			//add all element to diagonal element line by line
-			FUNC[i] = (t.HMASTER[e][i*elenode3D - i*(i + 1) / 2 + i] + SUMH) / QMASTER[i][i]; //the HMASTER here doesn't have the absolute sign. 
+			FUNC[i] = (t.HMASTER[e*HMsize + i*elenode3D - i*(i + 1) / 2 + i] + SUMH) / QMASTER[i][i]; //the HMASTER here doesn't have the absolute sign. 
 		}
 		//DERIVE THE MAX EIGEN VALUE IN THE ELEMENT e
 		LMAXi[e] = FUNC[0];
@@ -314,13 +313,8 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 	*/
 
 	if (tensorfactorization == 1) {
-
 		//If tensor product factorization is used, HMASTER is not used after the maximum eigenvalue is determined
-		for (i = 0; i < NEL; i++) {
-			delete[] t.HMASTER[i];
-		}
 		delete[] t.HMASTER;
-
 		//tensors for the evaluation of stiffness terms
 		t.gamma = new double***[NINT];
 		for (i = 0; i < NINT; i++) {
@@ -458,15 +452,15 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int**IEN,
 						XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] = 0;
 						XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] = 0; XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] = 0;
 						for (l = 0; l < 8; l++) {
-							XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][0]; //dx/dxi
-							XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][0]; //dx/deta 
-							XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][0]; //dx/dzeta  
-							XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][1]; //dy/dxi 
-							XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][1]; //dy/deta
-							XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][1]; //dy/dzeta 
-							XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][2]; //dz/dxi 
-							XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][2]; //dz/deta 
-							XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[cn[l] - 1][e] - 1][2]; //dz/dzeta
+							XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][0]; //dx/dxi
+							XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][0]; //dx/deta 
+							XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 0][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][0]; //dx/dzeta  
+							XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][1]; //dy/dxi 
+							XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][1]; //dy/deta
+							XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][1]; //dy/dzeta 
+							XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[0][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][2]; //dz/dxi 
+							XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[1][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][2]; //dz/deta 
+							XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] = XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] + lg.GSHL[2][l][i][j][k] * GCOORD[IEN[e*elenode3D + cn[l] - 1] - 1][2]; //dz/dzeta
 						}
 						JACOB[i*NINT*NINT + j*NINT + k] = XS[3 * 0 + 0][i*NINT*NINT + j*NINT + k] * (XS[3 * 1 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] - XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 1 + 2][i*NINT*NINT + j*NINT + k])
 							- XS[3 * 1 + 0][i*NINT*NINT + j*NINT + k] * (XS[3 * 0 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 2 + 2][i*NINT*NINT + j*NINT + k] - XS[3 * 2 + 1][i*NINT*NINT + j*NINT + k] * XS[3 * 0 + 2][i*NINT*NINT + j*NINT + k])
