@@ -26,7 +26,7 @@ void FSILINK(int*** LNA);
 struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD, double* WP, int* IEN, int***LNA);
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TIME, double *T, double DT, int NDT, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
 	double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double***Gn,
-	double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double* HMASTER);
+	double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double** HMASTER);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
 
 //extern int** nodesperelem;
@@ -238,7 +238,7 @@ struct LOCAL_SHAPEstruct {
 };
 
 struct LOCAL_GSHAPEstruct {
-	double***** GSHL;
+	double*** GSHL;
 	//double****GSHL_2D; 
 	double MCOORD[8][3];
 	double MCOORD_2D[4][2];
@@ -260,8 +260,8 @@ struct GLOBAL_SHAPEstruct {
 
 struct MATRIXstruct {
 	//double***HMASTER;
-	//double**HMASTER;
-	double*HMASTER;
+	double**HMASTER;
+	//double*HMASTER;
 	double *Q;  //GLOBAL CAPACITANCE MATRIX
 	double ****gamma;
 	double gamman[NINT*NINT*NINT * 3];
@@ -299,7 +299,7 @@ const double SY = -fs_offset; //for DDG case
 const double SZ = 0.0; //for DDG case (the stand-off is at the keel)
 const int NC = 1;   //NC is the element order on coupling mesh 
 const int NCINT = NC + 1; //NCINT=NC+1;
-const int Nq = N + 1; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
+const int Nq = N; //The integration order for boundary nodal force term (exact integration). Should be at least one unit higher than the interpolation order (for algorithm 1, 2 and 5) since the Gauss-Legendre-Lobatto nodes are not accuracy enough. Need not to be used for FEM case since the Gauss-Legendre nodes is accurate enough. 
 const int NqINT = Nq + 1;
 const int refine = 1; //The refinement rate of fluid mesh against base fluid mesh for h refinement. 
 const int hpref = refine*N; //total refinement level of h and p refinement
@@ -312,8 +312,8 @@ const int WAVE = 2; //1 for plane wave; 2 for spherical wave
 const int wavdirc[3] = { 0,1,0 }; //the direction of incident plane wave (positive y axis) 
 const double C = 1500.0; //original  
 //const double C = 1450.0; //Bleich_Sandler	
-//const double CFLFRAC = 0.5;  //original 
-const double CFLFRAC = 1.0; 
+const double CFLFRAC = 0.5;  //original 
+//const double CFLFRAC = 1.0; 
 const int dtscale = 1;
 const double BETA = 0.0;   //original 
 const double TTERM = 0.03;    //SIMULATION END TIME 
@@ -326,6 +326,7 @@ const double PATM = 101.3e3; //pa
 //const double depth = 30; //ft
 const double stdoff = 0; //ft
 const double depth = 60; //ft
+//const double depth = 70; //ft
 const double x_loc = 74.22;//m for DDG case
 //const double x_loc = 0.0;//m for FSP case
 const double W = 60; //charge weight (lb)
@@ -335,7 +336,7 @@ const double W = 60; //charge weight (lb)
 //const double YO = -SY;
 //const double ZO = SZ / 2;
 //the parameter to control whether a tabulated smoothed waveform is used 
-const double output_int = 1e-3; //output file time interval (0.5ms)
+const double output_int = 5e-4; //output file time interval (0.5ms)
 const int debug = 0; //is the code in debug mode?
 const int debug2 = 0; 
 const int debug3 = 0; 
@@ -348,25 +349,26 @@ const int tfm = 1; //is total field model used?
 const int tensorfactorization = 0;
 const int TNT = 1;
 const int output = 0;
-const int FEM = 0; //Is this a first order FEM code? 
+const int FEM = 1; //Is this a first order FEM code? 
 const int nodeforcemap2 = 1; //If the property to be mapped by MpCCI is nodal force (use 0 if the property is absolute pressure)
 const int owsfnumber = 1; //The number of fluid wetted surfaces. 
 const int nrbsurfnumber = 1; //The number of fluid NRB surface. 
 const int ssnumber = 1; //The number of structural wetted surface (used for algorithm 4 and 5)
 const int wt_pys_num[owsfnumber] = { 0 };  //the physical group number that corresponds to the wet surface (physical group 3)
-const int nrb_pys_num[nrbsurfnumber] = { 1 }; 
+const int nrb_pys_num[1] = { 1 };
+//const int nrb_pys_num[nrbsurfnumber] = { 1 }; 
 //const int wt_pys_num[owsfnumber] = { 0,1,2,3 };
 //const int nrb_pys_num[nrbsurfnumber] = { 4,5,6,7 };
 const double XHE = 0.3048;
 //const double XHE = 0.1; //Bleich_Sandler
 const double YHE = 0.3048;
 //const double YHE = 0.141 / 2; //Bleich_Sandler 
-const double DY = 2 * SY;
+const double DY = 3 * SY;
 //const double DY = 3.807; //Bleich_Sandler
-const int SYNEL = 4 * refine;
-//const int SYNEL = 0;
+//const int SYNEL = 4 * refine;
+const int SYNEL = 0;
 const double xo = SY;
 const int Bleich = 0; 
 const int improvednrb = 0;
-const int element_type = 0; //0 for hexahedral element; 1 for tetrahedral element; 
+const int element_type = 1; //0 for hexahedral element; 1 for tetrahedral element; 
 const int nodeadj = 1; //If the node coordinate needs to be adjusted. 

@@ -72,12 +72,14 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 		
 	}
 	if (element_type == 1) {
-		ol[z].IEN_flu_3D = new int[ol[z].FSNEL * 4];
-		for (i = 0; i < ol[z].FSNEL; i++) {
-			ol[z].IEN_flu_3D[i * 4 + 0] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + 0];
-			ol[z].IEN_flu_3D[i * 4 + 1] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + 1];
-			ol[z].IEN_flu_3D[i * 4 + 2] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + 2];
-			ol[z].IEN_flu_3D[i * 4 + 3] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + 3];
+		for (z = 0; z < owsfnumber; z++) {
+			ol[z].IEN_flu_3D = new int[ol[z].FSNEL * 4];
+			for (i = 0; i < ol[z].FSNEL; i++) {
+				ol[z].IEN_flu_3D[i * 4 + 0] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + 0];
+				ol[z].IEN_flu_3D[i * 4 + 1] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + 1];
+				ol[z].IEN_flu_3D[i * 4 + 2] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + 2];
+				ol[z].IEN_flu_3D[i * 4 + 3] = IEN_flu[(ol[z].GIDF[i] - 1)*elenode3D + 3];
+			}
 		}
 		for (z = 0; z < owsfnumber; z++) {
 			ol[z].IEN_flu_2D = new int*[3];
@@ -94,7 +96,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 
 	//First bring in the structural wetted surface mesh into the code
 	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
-	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp");
+	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl_1surf.inp");
 	if (!infile_algo5) {
 		std::cout << "can not open the structure input file" << std::endl;
 		system("PAUSE ");
@@ -840,7 +842,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 							x1 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 0] - 1][0]; x2 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 1] - 1][0]; x3 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 2] - 1][0]; x4 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 3] - 1][0];
 							y1 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 0] - 1][1]; y2 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 1] - 1][1]; y3 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 2] - 1][1]; y4 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 3] - 1][1];
 							z1 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 0] - 1][2]; z2 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 1] - 1][2]; z3 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 2] - 1][2]; z4 = GCOORD[ol[e].IEN_flu_3D[k * 4 + 3] - 1][2];
-							AA00 = x2 - x1; AA00 = x3 - x1; AA02 = x4 - x1;
+							AA00 = x2 - x1; AA01 = x3 - x1; AA02 = x4 - x1;
 							AA10 = y2 - y1; AA11 = y3 - y1; AA12 = y4 - y1;
 							AA20 = z2 - z1; AA21 = z3 - z1; AA22 = z4 - z1;
 							BB0 = xu - x1; BB1 = yu - y1; BB2 = zu - z1;
@@ -1025,18 +1027,18 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 					for (ii = 0; ii < elenode2D; ii++) {
 						ss[e].FP_flu[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][ii] = FP_searched[ii];
 					}
-				}
-				//Check if the searched node is on the element surface
-				if (element_type == 1) {
-					double xi_fd = ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][0];
-					double eta_fd = ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][1];
-					double zeta_fd = ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][2];
-					if (abs(xi_fd) < 1e-5 || abs(eta_fd) < 1e-5 || abs(zeta_fd) < 1e-5 || abs(xi_fd + eta_fd + zeta_fd - 1) < 1e-5) {
-						//the node is on one of the surfaces
-					}
-					else {
-						std::cout << "The local node is not on one of the surfaces" << std::endl;
-						system("PAUSE ");
+					//Check if the searched node is on the element surface
+					if (element_type == 1) {
+						double xi_fd = ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][0];
+						double eta_fd = ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][1];
+						double zeta_fd = ss[e].gs_flu_local[i*(hprefg + 1)*(hprefg + 1) + localnode_seq[ele_id][j]][2];
+						if (abs(xi_fd) < 1e-5 || abs(eta_fd) < 1e-5 || abs(zeta_fd) < 1e-5 || abs(xi_fd + eta_fd + zeta_fd - 1) < 1e-5) {
+							//the node is on one of the surfaces
+						}
+						else {
+							std::cout << "The local node is not on one of the surfaces" << std::endl;
+							system("PAUSE ");
+						}
 					}
 				}
 				//store the projected node location

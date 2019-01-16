@@ -176,7 +176,7 @@ int main()
 	FSILINK(c.LNA);
 
 	//clean ol[z].Jacob_2D
-	if (mappingalgo == 2 || mappingalgo == 4 || mappingalgo == 5) {
+	if (element_type == 0 && (mappingalgo == 2 || mappingalgo == 4 || mappingalgo == 5)) {
 		for (z = 0; z < owsfnumber; z++) {
 			for (i = 0; i < ol[z].FSNEL; i++) {
 				delete[] ol[z].Jacob_2D[i];
@@ -186,7 +186,7 @@ int main()
 	}
 	else {
 		std::cout << "are you sure you don't want to delete the ol[z].Jacob_2D?";
-		system("PAUSE ");
+		//system("PAUSE ");
 	}
 
 	//read the model file to MpCCI adapter

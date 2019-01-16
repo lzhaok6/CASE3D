@@ -53,9 +53,9 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "reading the mesh file: " << std::endl;
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
-	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_0.5ftbasemesh_fs_150m_10m_24m.inp";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1ftbasemesh_tet_150m_10m_24m.inp";
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_2ftftbasemesh_fs_150m_10m_24m.msh";
+	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_2ftftbasemesh_fs_150m_10m_24m.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
@@ -603,15 +603,22 @@ struct meshgenerationstruct meshgeneration() {
 
 	//Need to be modified, localnode needs to corresponds each physical group! we cannot make the assumption anymore
 	//int localnode[elenode2D];
-	std::cout << "Don't forget to fix the localnode before debugging!" << std::endl; 
-	system("PAUSE "); 
+	//std::cout << "Don't forget to fix the localnode before debugging!" << std::endl; 
+	//system("PAUSE "); 
 	int **localnode;
+	int surfacenumber;
+	if (input_type == "Gmsh") {
+		surfacenumber = owsfnumber + nrbsurfnumber;
+	}
+	else if (input_type == "Abaqus") {
+		surfacenumber = wt_py.size() + nrb_py.size();
+	}
+	localnode = new int*[surfacenumber];
+	for (i = 0; i < surfacenumber; i++) {
+		localnode[i] = new int[elenode2D];
+	}
 	if (element_type == 0) {
 		if (input_type == "Gmsh") {
-			localnode = new int*[owsfnumber + nrbsurfnumber];
-			for (i = 0; i < owsfnumber + nrbsurfnumber; i++) {
-				localnode[i] = new int[elenode2D];
-			}
 			//The following loop only attempts to extract the pattern of localnode[] from one corresponding global element since the assumption here is that all the elements in all physical groups
 			//follow the same pattern. However, that is not rigorous enough since the corresponding local node for all 2D element in physical group do not necessary be the same. 
 			for (i = 0; i < owsfnumber + nrbsurfnumber; i++) {
@@ -635,10 +642,6 @@ struct meshgenerationstruct meshgeneration() {
 			}
 		}
 		else if (input_type == "Abaqus") {
-			localnode = new int*[wt_py.size() + nrb_py.size()];
-			for (i = 0; i < wt_py.size() + nrb_py.size(); i++) {
-				localnode[i] = new int[elenode2D];
-			}
 			ct = 0; 
 			for (i = 0; i < wt_py.size(); i++) {
 				//localnode is actually the FP and DP 
@@ -1511,8 +1514,8 @@ struct meshgenerationstruct meshgeneration() {
 			delete[] localno;
 		}
 		if (element_type == 1) {
-			std::cout << "We have chagne the way IEN_2D is defined. Please check if the model file is correctly written" << std::endl; 
-			system(" PAUSE"); 
+			//std::cout << "We have chagne the way IEN_2D is defined. Please check if the model file is correctly written" << std::endl; 
+			//system(" PAUSE"); 
 			//Derive the IEN_2D to write the MpCCI model file (basically renumbering the node in IEN_gb sequentially to be recognized by MpCCI)
 			ol[z].IEN_2D = new int*[3]; //Connecvitity matrix of wetted surface (after removing the free surface elements)
 			for (i = 0; i < 3; i++) {

@@ -17,7 +17,7 @@
 
 //NRB determines the NRB local node numbering and the associated NRB arrays
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TIME, double *T, double DT, int NDT, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC,
-	double ZC, double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double***Gn, double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double* HMASTER) {
+	double ZC, double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double***Gn, double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double** HMASTER) {
 	int h, i, j, k, q, z, ii, jj, kk, m;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[nrbsurfnumber];
@@ -121,12 +121,14 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 
 	NRBstruct nrb;
 	nrb = NRB(NNODE, GCOORD, LNA_3D);
-	//clean nr[z].Jacob_2D
-	for (z = 0; z < nrbsurfnumber; z++) {
-		for (i = 0; i < nr[z].NEL_nrb; i++) {
-			delete[] nr[z].Jacob_2D[i];
+	if (element_type == 0) {
+		//clean nr[z].Jacob_2D
+		for (z = 0; z < nrbsurfnumber; z++) {
+			for (i = 0; i < nr[z].NEL_nrb; i++) {
+				delete[] nr[z].Jacob_2D[i];
+			}
+			delete[] nr[z].Jacob_2D;
 		}
-		delete[] nr[z].Jacob_2D;
 	}
 
 	//time history record
@@ -148,7 +150,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	double **ds;   //SOLUTION ARRAY FOR CONDENSATION
 	double **FEEDOT; //SOLUTION ARRAY FOR FIRST TIME DERIVATIVE OF DISP. POTENTIAL
 	//double **FEEDOT_inc;
-	double **FEE;  //SOLUTION ARRAY FOR DISP. POTENTIAL
+	//double **FEE;  //SOLUTION ARRAY FOR DISP. POTENTIAL
+	double *FEE;  //SOLUTION ARRAY FOR DISP. POTENTIAL
 	double **P; //SOLUTION ARRAY FOR DYNAMIC/SCATTERED PRESSURE
 	double **PT; //SOLUTION ARRAY FOR TOTAL PRESSURE
 	double *PH;
@@ -156,13 +159,10 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	double *FFORCE; //ARRAY OF INTERNAL + EXTERNAL FORCE ON FLUID
 	double *BNRB; //SOLUTION ARRAY FOR FORCE OF NRBC ON FLUID
 	double *HF; //GLOBAL REACTANCE MATIRX
-	/*
-	double **HFTEMP;
-	HFTEMP = new double*[NEL];
-	for (i = 0; i < NEL; i++) {
-		HFTEMP[i] = new double[elenode3D];
-	}
-	*/
+	
+	double *HFTEMP;
+	HFTEMP = new double[elenode3D];
+	
 	double *HFTEMPn;
 	if (tensorfactorization == 1) {
 		HFTEMPn = new double[elenode3D];
@@ -197,10 +197,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		FEEDOT_inc[i] = new double[2];
 	}
 	*/
-	FEE = new double*[NNODE];
-	for (i = 0; i < NNODE; i++) {
-		FEE[i] = new double[2];
-	}
+	FEE = new double[NNODE*2];
 	P = new double*[NNODE];
 	for (i = 0; i < NNODE; i++) {
 		P[i] = new double[2];
@@ -311,10 +308,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		}
 	}
 	*/
-	for (i = 0; i < NNODE; i++) {
-		for (j = 0; j < 2; j++) {
-			FEE[i][j] = 0.0;
-		}
+	for (i = 0; i < NNODE * 2; i++) {
+		FEE[i] = 0.0;
 	}
 	for (i = 0; i < NNODE; i++) {
 		for (j = 0; j < 2; j++) {
@@ -563,10 +558,10 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 			//initialize FEE (initialized to 0)
 			for (i = 0; i < NNODE; i++) {
 				if (-(xo - abs(GCOORD[i][1])) / C >= 0.0) {
-					FEE[i][0] = -(PPEAK*TAU*exp(-abs(GCOORD[i][1]) / (C*TAU))*1.0*(xo*exp(abs(GCOORD[i][1]) / (C*TAU)) - abs(GCOORD[i][1])*exp(abs(GCOORD[i][1]) / (C*TAU)) - C*TAU*exp(xo / (C*TAU)) + C*TAU*exp(abs(GCOORD[i][1]) / (C*TAU)))) / C;
+					FEE[i * 2 + 0] = -(PPEAK*TAU*exp(-abs(GCOORD[i][1]) / (C*TAU))*1.0*(xo*exp(abs(GCOORD[i][1]) / (C*TAU)) - abs(GCOORD[i][1])*exp(abs(GCOORD[i][1]) / (C*TAU)) - C*TAU*exp(xo / (C*TAU)) + C*TAU*exp(abs(GCOORD[i][1]) / (C*TAU)))) / C;
 				}
 				else {
-					FEE[i][0] = -(PPEAK*TAU*exp(-abs(GCOORD[i][1]) / (C*TAU))*0.0*(xo*exp(abs(GCOORD[i][1]) / (C*TAU)) - abs(GCOORD[i][1])*exp(abs(GCOORD[i][1]) / (C*TAU)) - C*TAU*exp(xo / (C*TAU)) + C*TAU*exp(abs(GCOORD[i][1]) / (C*TAU)))) / C;
+					FEE[i * 2 + 0] = -(PPEAK*TAU*exp(-abs(GCOORD[i][1]) / (C*TAU))*0.0*(xo*exp(abs(GCOORD[i][1]) / (C*TAU)) - abs(GCOORD[i][1])*exp(abs(GCOORD[i][1]) / (C*TAU)) - C*TAU*exp(xo / (C*TAU)) + C*TAU*exp(abs(GCOORD[i][1]) / (C*TAU)))) / C;
 				}
 			}
 			//prototype: -(PPEAK*TAU*exp(-x/(C*TAU))*heaviside(-(XO - x)/C)*(XO*exp(x/(C*TAU)) - x*exp(x/(C*TAU)) - C*TAU*exp(XO/(C*TAU)) + C*TAU*exp(x/(C*TAU))))/C
@@ -600,10 +595,10 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 				}
 				//-(PPEAK*TAU*ro*heaviside(-(2 * rd - 2 * ro + C*dt) / (2 * C))*(exp((dt / 2 + (rd - ro) / C) / TAU) - 1)) / rd
 				if (-(rd - ro) / C >= 0) {
-					FEE[i][0] = -(PPEAK*TAU*ro*1.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*rd);
+					FEE[i * 2 + 0] = -(PPEAK*TAU*ro*1.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*rd);
 				}
 				else {
-					FEE[i][0] = -(PPEAK*TAU*ro*0.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*rd);
+					FEE[i * 2 + 0] = -(PPEAK*TAU*ro*0.0*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*rd);
 				}
 				//-(PPEAK*TAU*ro*heaviside(-(rd - ro) / C)*(rd - ro + C*TAU - C*TAU*exp(rd / (C*TAU) - ro / (C*TAU)))) / (C*rd)
 			}
@@ -1359,7 +1354,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		for (int j = 0; j < NNODE; j++) {
 			//DSDOT[j] = (ds[j][1] - ds[j][0]) / DT; //SOLUTION ARRAY FOR FIRST TIME DERIVATIVE OF CONDENSATION
 			FEEDOT[j][1] = FEEDOT[j][0] + DT*(P[j][0] + (BETA*DT*(pow(C, 2))*(ds[j][1] - ds[j][0]) / DT));
-			FEE[j][1] = FEE[j][0] + DT*FEEDOT[j][1];
+			FEE[j * 2 + 1] = FEE[j * 2 + 0] + DT*FEEDOT[j][1];
 			FEEDOT[j][0] = FEEDOT[j][1];  //USE TWO VALUE TO STORE THE N TIME STEP AND N+1 TIME STEP
 			HF[j] = 0.0;
 		} //1 MEANS N+1 TIME STEP; 0 MEANS N TIME STEP
@@ -1371,20 +1366,18 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		//ctt3 = 0;
 		if (tensorfactorization == 0) {
 			int HMsize = elenode3D*(elenode3D + 1) / 2;
-			#pragma omp parallel for num_threads(6)
+			//#pragma omp parallel for num_threads(6)
 			for (int j = 0; j < NEL; j++) { //the loop takes 1+NEL+1+NEL=2*NEL+2 operations
-				double HFTEMP[NINT*NINT*NINT]; //We did not distinguish hex and tet here since the size of HFTEMP would be sufficient for tet element
-				for (int z = 0; z < NINT*NINT*NINT; z++) {
-					HFTEMP[z] = 0.0;
-				}
+				//double HFTEMP[4]; //We did not distinguish hex and tet here since the size of HFTEMP would be sufficient for tet element
 				//-------------------------matrix multiplication-------------------------//
 				for (int z = 0; z < elenode3D; z++) { //takes NEL*(2*NINT^3+2) operations
+					HFTEMP[z] = 0.0;
 					for (int k = 0; k < elenode3D; k++) { //takes NEL*NINT^3*(2*NINT^3+2) operaitons
 						if (z <= k) { //see the matrix storing algorithm in: https://stackoverflow.com/questions/9039189/make-efficient-the-copy-of-symmetric-matrix-in-c-sharp/9040526#9040526
-							HFTEMP[z] += HMASTER[j*HMsize + z*elenode3D - z*(z + 1) / 2 + k] * FEE[IEN[j*elenode3D + k] - 1][1];
+							HFTEMP[z] += HMASTER[j][z*elenode3D - z*(z + 1) / 2 + k] * FEE[(IEN[j*elenode3D + k] - 1) * 2 + 1];
 						}
 						else {
-							HFTEMP[z] += HMASTER[j*HMsize + k*elenode3D - k*(k + 1) / 2 + z] * FEE[IEN[j*elenode3D + k] - 1][1];
+							HFTEMP[z] += HMASTER[j][k*elenode3D - k*(k + 1) / 2 + z] * FEE[(IEN[j*elenode3D + k] - 1) * 2 + 1];
 						}
 					}
 				}
@@ -1405,9 +1398,9 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 							gamman[3 * counter2[ii*NINT*NINT + h*NINT + z] + 1] = 0.0;
 							gamman[3 * counter3[ii*NINT*NINT + h*NINT + z] + 2] = 0.0;
 							for (int q = 0; q < NINT; q++) { //q (recurrent addition in this dimension) //takes NEL*NINT^3*(2*NINT+2) operations	
-								gamman[3 * counter1[ii*NINT*NINT + h*NINT + z] + 0] += SHOD1[q*NINT + ii] * FEE[IENct1[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
-								gamman[3 * counter2[ii*NINT*NINT + h*NINT + z] + 1] += SHOD1[q*NINT + ii] * FEE[IENct2[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
-								gamman[3 * counter3[ii*NINT*NINT + h*NINT + z] + 2] += SHOD1[q*NINT + ii] * FEE[IENct3[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]][1];
+								gamman[3 * counter1[ii*NINT*NINT + h*NINT + z] + 0] += SHOD1[q*NINT + ii] * FEE[(IENct1[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]) * 2 + 1];
+								gamman[3 * counter2[ii*NINT*NINT + h*NINT + z] + 1] += SHOD1[q*NINT + ii] * FEE[(IENct2[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]) * 2 + 1];
+								gamman[3 * counter3[ii*NINT*NINT + h*NINT + z] + 2] += SHOD1[q*NINT + ii] * FEE[(IENct3[j*NINT*NINT*NINT + h*NINT*NINT + z*NINT + q]) * 2 + 1];
 							}
 							//ctt1 += 1;
 						}
@@ -1494,6 +1487,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		//std::cout << "total CPU time (ms): " << duration << std::endl;
 		//std::cout << " " << std::endl;
 		
+		double hd = 0.0;
+		for (j = 0; j < NNODE; j++) {
+			hd += HF[j];
+		}
+
 		for (j = 0; j < NNODE; j++) {
 			FFORCE[j] = -HF[j];
 		}
@@ -1757,7 +1755,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		for (j = 0; j < NNODE; j++) {
 			ds[j][0] = ds[j][1];
 			ds[j][1] = ds[j][2];
-			FEE[j][0] = FEE[j][1];
+			FEE[j * 2 + 0] = FEE[j * 2 + 1];
 			PIN[j][0] = PIN[j][1];
 			P[j][0] = P[j][1];
 			PT[j][0] = PT[j][1];

@@ -12,28 +12,18 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT) {
 	//double t.MCOORD[8][3]; //MATRIX OF LOCAL ELEMENT COORDINATES
 	int i, j, k, l, m;
 	LOCAL_GSHAPEstruct t;
-	t.GSHL = new double****[4];
+	t.GSHL = new double**[4];
 	for (i = 0; i < 4; i++) {
-		t.GSHL[i] = new double***[8];
+		t.GSHL[i] = new double*[8];
 		for (j = 0; j < 8; j++) { //NINT*NINT*NINT
-			t.GSHL[i][j] = new double**[NINT];
-			for (k = 0; k < NINT; k++) {
-				t.GSHL[i][j][k] = new double*[NINT];
-				for (l = 0; l < NINT; l++) {
-					t.GSHL[i][j][k][l] = new double[NINT];
-				}
-			}
+			t.GSHL[i][j] = new double[NINT*NINT*NINT];
 		}
 	}
 
 	for (i = 0; i < 4; i++) {
 		for (j = 0; j < 8; j++) {
-			for (k = 0; k < NINT; k++) {
-				for (l = 0; l < NINT; l++) {
-					for (m = 0; m < NINT; m++) {
-						t.GSHL[i][j][k][l][m] = 0.0;
-					}
-				}
+			for (k = 0; k < NINT*NINT*NINT; k++) {
+				t.GSHL[i][j][k] = 0.0;
 			}
 		}
 	}
@@ -138,13 +128,13 @@ struct LOCAL_GSHAPEstruct LOCAL_GSHAPE(double* S, int*** LNA, int NINT) {
 		for (j = 0; j < NINT; j++) { // j k l are integration point where discrete value of shape function is derived
 			for (k = 0; k < NINT; k++) {
 				for (l = 0; l < NINT; l++) {
-					t.GSHL[3][i][j][k][l] = (1.0 / 8.0)*(1 + t.MCOORD[i][0] * S[j])*(1 + t.MCOORD[i][1] * S[k])*(1 + t.MCOORD[i][2] * S[l]);
+					t.GSHL[3][i][j*NINT*NINT + k*NINT + l] = (1.0 / 8.0)*(1 + t.MCOORD[i][0] * S[j])*(1 + t.MCOORD[i][1] * S[k])*(1 + t.MCOORD[i][2] * S[l]);
 					//not derivative
-					t.GSHL[0][i][j][k][l] = (1.0 / 8.0)*t.MCOORD[i][0] * (1 + t.MCOORD[i][1] * S[k])*(1 + t.MCOORD[i][2] * S[l]);
+					t.GSHL[0][i][j*NINT*NINT + k*NINT + l] = (1.0 / 8.0)*t.MCOORD[i][0] * (1 + t.MCOORD[i][1] * S[k])*(1 + t.MCOORD[i][2] * S[l]);
 					//xi direction derivative
-					t.GSHL[1][i][j][k][l] = (1.0 / 8.0)*t.MCOORD[i][1] * (1 + t.MCOORD[i][0] * S[j])*(1 + t.MCOORD[i][2] * S[l]);
+					t.GSHL[1][i][j*NINT*NINT + k*NINT + l] = (1.0 / 8.0)*t.MCOORD[i][1] * (1 + t.MCOORD[i][0] * S[j])*(1 + t.MCOORD[i][2] * S[l]);
 					//eta direction derivative
-					t.GSHL[2][i][j][k][l] = (1.0 / 8.0)*t.MCOORD[i][2] * (1 + t.MCOORD[i][0] * S[j])*(1 + t.MCOORD[i][1] * S[k]);
+					t.GSHL[2][i][j*NINT*NINT + k*NINT + l] = (1.0 / 8.0)*t.MCOORD[i][2] * (1 + t.MCOORD[i][0] * S[j])*(1 + t.MCOORD[i][1] * S[k]);
 					//zeta direction derivative
 				}
 			}
