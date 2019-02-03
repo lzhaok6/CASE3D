@@ -95,8 +95,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 	}
 
 	//First bring in the structural wetted surface mesh into the code
-	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
-	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl_1surf.inp");
+	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
+	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp");
 	if (!infile_algo5) {
 		std::cout << "can not open the structure input file" << std::endl;
 		system("PAUSE ");
@@ -202,12 +202,12 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 			ss[z].GCOORD_stru[i] = new double[3];
 		}
 		for (i = nodestart; i < nodeend + 1; i++) {
-			ss[z].GCOORD_stru[i - nodestart][0] = 144.220001 - stod(output[i][1]);
-			ss[z].GCOORD_stru[i - nodestart][1] = stod(output[i][2]) - 6.0;
-			ss[z].GCOORD_stru[i - nodestart][2] = -stod(output[i][3]);
-			//ss[z].GCOORD_stru[i - nodestart][0] = stod(output[i][1]);
-			//ss[z].GCOORD_stru[i - nodestart][1] = stod(output[i][2]) - 0.3048;
-			//ss[z].GCOORD_stru[i - nodestart][2] = stod(output[i][3]);
+			//ss[z].GCOORD_stru[i - nodestart][0] = 144.220001 - stod(output[i][1]);
+			//ss[z].GCOORD_stru[i - nodestart][1] = stod(output[i][2]) - 6.0;
+			//ss[z].GCOORD_stru[i - nodestart][2] = -stod(output[i][3]);
+			ss[z].GCOORD_stru[i - nodestart][0] = stod(output[i][1]);
+			ss[z].GCOORD_stru[i - nodestart][1] = stod(output[i][2]) - 0.3048;
+			ss[z].GCOORD_stru[i - nodestart][2] = stod(output[i][3]);
 		}
 	}
 

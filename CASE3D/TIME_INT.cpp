@@ -1487,7 +1487,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		//std::cout << "total CPU time (ms): " << duration << std::endl;
 		//std::cout << " " << std::endl;
 		
-		double hd = 0.0;
+		hd = 0.0;
 		for (j = 0; j < NNODE; j++) {
 			hd += HF[j];
 		}
@@ -1517,6 +1517,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 				Q[fspt[j] - 1] = 1.0;
 				FFORCE[fspt[j] - 1] = -PIN[fspt[j] - 1][1] / pow(C, 2.0); //PIN[][1] error prone
 			}
+		}
+
+		hd = 0.0;
+		for (j = 0; j < NNODE; j++) {
+			hd += FFORCE[j];
 		}
 
 		for (j = 0; j < NNODE; j++) {
@@ -1727,6 +1732,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 			}
 		}
 		
+		hd = 0.0;
+		for (j = 0; j < NNODE; j++) {
+			hd += PT[j][1];
+		}
+
 		if (output == 1) {
 			for (k = 0; k < NDT_out; k++) {
 				if (i == T_out[k]) {

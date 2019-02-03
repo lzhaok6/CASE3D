@@ -488,7 +488,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 									for (v = 0; v < hprefg + 1; v++) {
 										for (n = 0; n < 3; n++) {
 											wsflist[z]->nodeforce[3 * (ss[z].IEN_stru_MpCCI[l * 4 + ss[z].LNA_stru[i * 2 + j] - 1] - 1) + n] //force in m direction
-												+= ss[z].norm_stru[l][n] * ss[z].W_stru[u] * ss[z].W_stru[v] * ss[z].P_gs[l*gsnum + u*(hpref + 1) + v] * ss[z].phi_stru[ss[z].LNA_stru[i * 2 + j] - 1][u][v] * ss[z].Jacob_stru[l][u*(hprefg + 1) + v];
+												+= ss[z].norm_stru[l][n] * ss[z].W_stru[u] * ss[z].W_stru[v] * ss[z].P_gs[l*gsnum + u*(hprefg + 1) + v] * ss[z].phi_stru[ss[z].LNA_stru[i * 2 + j] - 1][u][v] * ss[z].Jacob_stru[l][u*(hprefg + 1) + v];
 											//ss[z].phi_stru is the linear shape function value on gauss node (Gauss-Legendre)
 										}
 									}
