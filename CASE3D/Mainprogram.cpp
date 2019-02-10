@@ -98,7 +98,18 @@ int main()
 		std::cout << "Are you sure you want to use CFL other than 0.5?" << std::endl;
 		system("PAUSE");
 	}
-
+	if (freesurface == 0) {
+		std::cout << "Are you sure you don't want to use free surface?" << std::endl;
+		system("PAUSE");
+	}
+	if (step == 1) {
+		std::cout << "Are you sure you want to use step wave instead of exponential decay wave?" << std::endl;
+		system("PAUSE");
+	}
+	if (hydrostatic == 0) {
+		std::cout << "Are you sure you don't want to include hydrostatic pressure?" << std::endl;
+		system("PAUSE");
+	}
 	meshgenerationstruct a;
 	a = meshgeneration();
 	std::cout << "mesh generation done" << std::endl;
@@ -333,6 +344,10 @@ int main()
 	if (Bleich == 1 && WAVE == 1) {
 		PPEAK = 0.712e6;
 		TAU = 0.999e-3;
+	}
+
+	if (step == 1) {
+		PPEAK = 1e6; 
 	}
 
 	TIME_INT(a.NNODE, a.GCOORD, c.LNA, a.IEN, a.NEL, TIME, T, t.DT, t.NDT, o.Q, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamman, o.gamma_tn, o.Gn,

@@ -54,7 +54,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1ftbasemesh_tet_150m_10m_24m.inp";
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/Spherical_shell_fluid_0.05ft.inp";
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_2ftftbasemesh_fs_150m_10m_24m.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
@@ -325,11 +325,25 @@ struct meshgenerationstruct meshgeneration() {
 					while (fscanf(fp, "%d,", &d) != 0) {
 						py_ele.push_back(d); //store all the element number in the current physical group
 					}
-					if (py_ele.size() == 3 && py_ele[0] == 1) { //the elements are defined in a concise way (e.g., 1,100,1 meaning 1 to 100 with interval 1)
+					if (py_ele.size() == 3) { //the elements are defined in a concise way (e.g., 1,100,1 meaning 1 to 100 with interval 1)
+						std::cout << "Please the element is defined in the concise way in the mesh file" << std::endl; 
+						system("PAUSE "); 
+						/*
 						for (int i = 0; i < py_ele[1] - 3; i++) {
 							py_ele.push_back(py_ele[0] + 3 + i);
 						}
 						py_ele[1] = py_ele[0] + py_ele[2]; py_ele[2] = py_ele[1] + (py_ele[1] - py_ele[0]);
+						*/
+						int start = py_ele[0];
+						int end = py_ele[1];
+						int interval = py_ele[2];
+						int accumulator = start;
+						py_ele.clear(); 
+						while (accumulator <= end) {
+							py_ele.push_back(accumulator);
+							accumulator += interval; 
+						}
+						std::cout << " " << std::endl; 
 					}
 					if (currentline.find("FSI_fluid") != std::string::npos) {
 						wt_py.push_back(ct);
@@ -542,10 +556,13 @@ struct meshgenerationstruct meshgeneration() {
 		//adjust the node location if necessary
 		if (nodeadj == 1) {
 			for (int i = 0; i < t.NNODE; i++) {
-				t.GCOORD[i][0] = VX[i];
-				t.GCOORD[i][1] = VZ[i] + fs_offset;
-				t.GCOORD[i][2] = -VY[i];
+				//t.GCOORD[i][0] = VX[i];
+				//t.GCOORD[i][1] = VZ[i] + fs_offset;
+				//t.GCOORD[i][2] = -VY[i];
 				//t.GCOORD[i][1] = VY[i] + fs_offset;
+				t.GCOORD[i][0] += -0.2572;
+				t.GCOORD[i][1] += -0.2072;
+				t.GCOORD[i][2] += -0.4572; 
 			}
 		}
 	}

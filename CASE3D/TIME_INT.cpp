@@ -527,9 +527,17 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 
 	//Initialize the incident pressure and total pressure along with hydrostatic pressure for the first time step
 	TIME = 1;
-	for (i = 0; i < NNODE; i++) {
-		PH[i] = abs(GCOORD[i][1]) * RHO * grav + PATM; //absolute pressure
+	if (hydrostatic == 1) {
+		for (i = 0; i < NNODE; i++) {
+			PH[i] = abs(GCOORD[i][1]) * RHO * grav + PATM; //absolute pressure
+		}
 	}
+	else {
+		for (i = 0; i < NNODE; i++) {
+			PH[i] = PATM;
+		}
+	}
+
 	PIN = WAVE_IN(NNODE, GCOORD, T, TIME, PIN, DT, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO);
 
 	if (tfm == 1) {
@@ -550,50 +558,95 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	//the loop below is only effective when the wave front touches the structural bottom at the first time step (6.17)
 
 	//Initial conditions special for TFM
+	//See the matlab code OneDrive/UNDEX research/MpCCI/codes/integration.m for the prototype equations (analytically integrated)
 	//The below initial condition calculation is prepared for exponential decay wave form rather than the Abaqus smoothed wave form
 	//initialize FEEDOT (initialized to -(1/2)dt, correspond to staggered integration (a.k.a leap frog integration))
 	//currently, the initial condition of Abaqus wave profile is not coded
-
 	if (tfm == 1) {
 		double rd = 0.0; double ro = 0.0;
 		if (WAVE == 1) {
-			for (i = 0; i < NNODE; i++) {
-				if (-(2 * xo - 2 * abs(GCOORD[i][1]) + C*DT) / (2 * C) >= 0.0) {
-					FEEDOT[i][0] = -PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[i][1])) / C) / TAU) - 1);
+			if (step == 1) {
+				for (i = 0; i < NNODE; i++) {
+					if (-(2 * xo - 2 * GCOORD[i][0] + C*DT) / (2 * C) >= 0) {
+						FEEDOT[i][0] = -PPEAK*1.0*(DT / 2 + (xo - GCOORD[i][0]) / C);
+					}
+					else {
+						FEEDOT[i][0] = -PPEAK*0.0*(DT / 2 + (xo - GCOORD[i][0]) / C);
+					}
 				}
-				else {
-					FEEDOT[i][0] = -PPEAK*TAU*0.0*(exp((DT / 2 + (xo - abs(GCOORD[i][1])) / C) / TAU) - 1);
+				//Prototype: -Ppeak*heaviside(-(2*xo - 2*x + c*dt)/(2*c))*(dt/2 + (xo - x)/c)
+				for (i = 0; i < NNODE; i++) {
+					if (-(xo - GCOORD[i][0]) / C >= 0.0) {
+						FEE[i * 2 + 0] = (PPEAK*1.0*pow(xo - GCOORD[i][0], 2)) / (2 * pow(C, 2));
+					}
+					else {
+						FEE[i * 2 + 0] = (PPEAK*0.0*pow(xo - GCOORD[i][0], 2)) / (2 * pow(C, 2));
+					}
 				}
-			}
-			//prototype: -PPEAK*TAU*heaviside(-(2*xo - 2*x + C*dt)/(2*C))*(exp((dt/2 + (xo - x)/C)/TAU) - 1)
-
-			//initialize FEE (initialized to 0)
-			for (i = 0; i < NNODE; i++) {
-				if (-(xo - abs(GCOORD[i][1])) / C >= 0.0) {
-					FEE[i * 2 + 0] = -(PPEAK*TAU*exp(-abs(GCOORD[i][1]) / (C*TAU))*1.0*(xo*exp(abs(GCOORD[i][1]) / (C*TAU)) - abs(GCOORD[i][1])*exp(abs(GCOORD[i][1]) / (C*TAU)) - C*TAU*exp(xo / (C*TAU)) + C*TAU*exp(abs(GCOORD[i][1]) / (C*TAU)))) / C;
-				}
-				else {
-					FEE[i * 2 + 0] = -(PPEAK*TAU*exp(-abs(GCOORD[i][1]) / (C*TAU))*0.0*(xo*exp(abs(GCOORD[i][1]) / (C*TAU)) - abs(GCOORD[i][1])*exp(abs(GCOORD[i][1]) / (C*TAU)) - C*TAU*exp(xo / (C*TAU)) + C*TAU*exp(abs(GCOORD[i][1]) / (C*TAU)))) / C;
-				}
-			}
-			//prototype: -(PPEAK*TAU*exp(-x/(C*TAU))*heaviside(-(XO - x)/C)*(XO*exp(x/(C*TAU)) - x*exp(x/(C*TAU)) - C*TAU*exp(XO/(C*TAU)) + C*TAU*exp(x/(C*TAU))))/C
-
-			//initialize XNBORG (initialize to 0)
-			for (z = 0; z < nrbsurfnumber; z++) {
-				for (j = 0; j < nr[z].NEL_nrb; j++) {
-					for (k = 0; k < elenode2D; k++) {
-						if (-(2 * xo - 2 * abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][1]) + C*DT) / (2 * C) >= 0.0) {
-							nr[z].XNRBORG[nr[z].DP_2D[j*elenode2D + k] - 1][j] = -(PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
-						}
-						else {
-							nr[z].XNRBORG[nr[z].DP_2D[j*elenode2D + k] - 1][j] = -(PPEAK*TAU*0.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
+				//Prototype: (Ppeak*heaviside(-(xo - x)/c)*(xo - x)^2)/(2*c^2)
+				for (z = 0; z < nrbsurfnumber; z++) {
+					for (j = 0; j < nr[z].NEL_nrb; j++) {
+						for (k = 0; k < elenode2D; k++) {
+							if (-(2 * xo - 2 * GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][0] + C*DT) / (2 * C) >= 0.0) {
+								nr[z].XNRBORG[nr[z].DP_2D[j*elenode2D + k] - 1][j] = -(PPEAK*1.0*(DT / 2 + (xo - GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][0]) / C)) / (C*RHO);
+							}
+							else {
+								nr[z].XNRBORG[nr[z].DP_2D[j*elenode2D + k] - 1][j] = -(PPEAK*0.0*(DT / 2 + (xo - GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][0]) / C)) / (C*RHO);
+							}
 						}
 					}
 				}
+				//Prototype: -(Ppeak*heaviside(-(2*xo - 2*x + c*dt)/(2*c))*(dt/2 + (xo - x)/c))/(c*rho)
+				//initialize the dynamic pressure P
+				for (j = 0; j < NNODE; j++) {
+					if ((T[TIME - 1] + (-xo + GCOORD[j][0]) / C) > -1e-6) {
+						P[j][0] = PPEAK;
+					}
+					else {
+						P[j][0] = 0.0;
+					}
+				}
 			}
-			//prototype: -(PPEAK*TAU*heaviside(-(2*XO - 2*x + C*dt)/(2*C))*(exp((dt/2 + (XO - x)/C)/TAU) - 1))/(C*RHO)
+			else {
+				for (i = 0; i < NNODE; i++) {
+					if (-(2 * xo - 2 * abs(GCOORD[i][1]) + C*DT) / (2 * C) >= 0.0) {
+						FEEDOT[i][0] = -PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[i][1])) / C) / TAU) - 1);
+					}
+					else {
+						FEEDOT[i][0] = -PPEAK*TAU*0.0*(exp((DT / 2 + (xo - abs(GCOORD[i][1])) / C) / TAU) - 1);
+					}
+				}
+				//prototype: -PPEAK*TAU*heaviside(-(2*xo - 2*x + C*dt)/(2*C))*(exp((dt/2 + (xo - x)/C)/TAU) - 1)
+
+				//initialize FEE (initialized to 0)
+				for (i = 0; i < NNODE; i++) {
+					if (-(xo - abs(GCOORD[i][1])) / C >= 0.0) {
+						FEE[i * 2 + 0] = -(PPEAK*TAU*exp(-abs(GCOORD[i][1]) / (C*TAU))*1.0*(xo*exp(abs(GCOORD[i][1]) / (C*TAU)) - abs(GCOORD[i][1])*exp(abs(GCOORD[i][1]) / (C*TAU)) - C*TAU*exp(xo / (C*TAU)) + C*TAU*exp(abs(GCOORD[i][1]) / (C*TAU)))) / C;
+					}
+					else {
+						FEE[i * 2 + 0] = -(PPEAK*TAU*exp(-abs(GCOORD[i][1]) / (C*TAU))*0.0*(xo*exp(abs(GCOORD[i][1]) / (C*TAU)) - abs(GCOORD[i][1])*exp(abs(GCOORD[i][1]) / (C*TAU)) - C*TAU*exp(xo / (C*TAU)) + C*TAU*exp(abs(GCOORD[i][1]) / (C*TAU)))) / C;
+					}
+				}
+				//prototype: -(PPEAK*TAU*exp(-x/(C*TAU))*heaviside(-(XO - x)/C)*(XO*exp(x/(C*TAU)) - x*exp(x/(C*TAU)) - C*TAU*exp(XO/(C*TAU)) + C*TAU*exp(x/(C*TAU))))/C
+
+				//initialize XNBORG (initialize to 0)
+				for (z = 0; z < nrbsurfnumber; z++) {
+					for (j = 0; j < nr[z].NEL_nrb; j++) {
+						for (k = 0; k < elenode2D; k++) {
+							if (-(2 * xo - 2 * abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][1]) + C*DT) / (2 * C) >= 0.0) {
+								nr[z].XNRBORG[nr[z].DP_2D[j*elenode2D + k] - 1][j] = -(PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
+							}
+							else {
+								nr[z].XNRBORG[nr[z].DP_2D[j*elenode2D + k] - 1][j] = -(PPEAK*TAU*0.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
+							}
+						}
+					}
+				}
+				//prototype: -(PPEAK*TAU*heaviside(-(2*XO - 2*x + C*dt)/(2*C))*(exp((dt/2 + (XO - x)/C)/TAU) - 1))/(C*RHO)
+			}
 		}
-		else { //spherical wave
+
+		else if (WAVE == 2) { //spherical wave
 			for (i = 0; i < NNODE; i++) {
 				rd = pow((pow((GCOORD[i][0] - XC), 2) + pow((GCOORD[i][1] - YC), 2) + pow((GCOORD[i][2] - ZC), 2)), 0.5);
 				ro = pow((pow((XC - XO), 2) + pow((YC - YO), 2) + pow((ZC - ZO), 2)), 0.5);
@@ -644,7 +697,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	int fspt_num = 0;
 	double searchrange = 1e-2;
 	for (j = 0; j < NNODE; j++) {
-		if (fsdebug == 0) {
+		if (freesurface == 1) {
 			if (abs(GCOORD[j][1]) <= searchrange) {
 				fspt_num += 1;
 			}
@@ -664,7 +717,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	}
 	int count = 0;
 	for (j = 0; j < NNODE; j++) {
-		if (fsdebug == 0) {
+		if (freesurface == 1) {
 			if (abs(GCOORD[j][1]) <= searchrange) {
 				fspt[count] = j + 1;
 				count += 1;
@@ -756,15 +809,23 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	std::string tecplotfile = "tecplot.dat";
 	std::ofstream tecplotfilehd;
 	tecplotfilehd.open(tecplotfile);
-	//std::string energyfile = "history.txt";
-	//std::ofstream energyfilehd;
-	//energyfilehd.open(energyfile);
+	for (j = 0; j < NNODE; j++) {
+		tecplotfilehd << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << FEE[j * 2 + 0] << " " << FEEDOT[j][0] << std::endl;
+	}
+	for (j = 0; j < NEL; j++) {
+		for (z = 0; z < NINT*NINT*NINT; z++) {
+			tecplotfilehd << IEN[j*NINT*NINT*NINT + z] << " ";
+		}
+		tecplotfilehd << std::endl;
+	}
+	
+
 	//Get the sample points on a line to observe the wave propagation pressure distribution
 	count = 0;
 	for (i = 0; i < NNODE; i++) {
-		if (abs(GCOORD[i][0] - 0.0) < 1e-6 && abs(GCOORD[i][2] - 0.0) < 1e-6) {
+		if (abs(GCOORD[i][1] - 0.0) < 1e-6 && abs(GCOORD[i][2] - 0.0) < 1e-6) {
 			sampline.push_back(i + 1);
-			sampline_gc.push_back(GCOORD[i][1]); 
+			sampline_gc.push_back(GCOORD[i][0]); 
 			count += 1;
 		}
 	}
@@ -772,7 +833,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 
 	for (i = 0; i < sampline_gc.size(); i++) {
 		for (j = 0; j < sampline.size(); j++) {
-			if (GCOORD[sampline[j] - 1][1] == sampline_gc[i]) {
+			if (GCOORD[sampline[j] - 1][0] == sampline_gc[i]) {
 				sampline_found.push_back(sampline[j]);
 			}
 		}
@@ -787,7 +848,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		
 	outline = new std::ofstream[NDT_out];
 	std::string filename2;
-	if (output == 1) {
+	if (output == 1 || tecplot == 1) {
 		for (i = 0; i < NDT_out; i++) {
 			filename2 = name2 + std::to_string(T_out[i] * DT * 1000) + "ms " + timestr + ".txt";
 			outline[i].open(filename2);
@@ -817,10 +878,6 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 				}
 			}
 		}
-	}
-
-	if (Bleich == 1) {
-		int wavdirc[3] = { 0,1,0 };
 	}
 
 	double*** SHG;
@@ -1111,7 +1168,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		if (tfm == 1) { //TFM
 			if (WAVE == 1) { //Plane wave
 				for (z = 0; z < nrbsurfnumber; z++) {
-					angle = -1.0;
+					//angle = -1.0;
 					for (j = 0; j < nr[z].NEL_nrb; j++) { //Need to be changed
 						for (k = 0; k < elenode2D; k++) {
 							if (improvednrb == 1) {
@@ -1131,6 +1188,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 								}
 							}
 							if (debug == 0) {
+								angle = nr[z].norm[j][0] * wavdirc[0] + nr[z].norm[j][1] * wavdirc[1] + nr[z].norm[j][2] * wavdirc[2]; 
 								nr[z].XEST_kn[nr[z].DP_2D[j*elenode2D + k] - 1][j] = angle*(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][1])
 									- (0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][1]);
 							}
@@ -1732,7 +1790,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 			for (k = 0; k < NDT_out; k++) {
 				if (i == T_out[k]) {
 					for (j = 0; j < sampline_found.size(); j++) {
-						outline[k] << GCOORD[sampline_found[j] - 1][1] << " " << PT[sampline_found[j] - 1][0] << " " << PT[sampline_found[j] - 1][1] << std::endl;
+						outline[k] << GCOORD[sampline_found[j] - 1][0] << " " << PT[sampline_found[j] - 1][0] << " " << PT[sampline_found[j] - 1][1] << std::endl;
 					}
 				}
 			}
@@ -1795,6 +1853,25 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 				}
 			}
 		}
+
+		//output the properties into tecplot contour plot 
+		if (tecplot == 1) {
+			for (k = 0; k < NDT_out; k++) {
+				if (i == T_out[k]) {
+					for (j = 0; j < NNODE; j++) {
+						outline[k] << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << PT[j][0] << " " << P[j][0] << " " << PIN[j][0] << " " << ds[j][2] << " " << WBS[j] << " " << BNRB[j] << " " << HF[j] << " " << FEE[j * 2 + 1] << " " << FEEDOT[j][1] << std::endl;
+						//outline[k] << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << PH[j] << std::endl;
+					}
+					for (j = 0; j < NEL; j++) {
+						for (z = 0; z < NINT*NINT*NINT; z++) {
+							outline[k] << IEN[j*NINT*NINT*NINT + z] << " ";
+						}
+						outline[k] << std::endl;
+					}
+				}
+			}
+		}
+		std::cout << " " << std::endl; 
 		//Output the pressure history under a specified point
 		//extern double BF_val[4];
 		//energyfilehd << current_time << " " << nr[1].angle_disp1[nr[1].DP_2D[2] - 1][291] << " " << nr[1].angle_disp2[nr[1].DP_2D[2] - 1][291] << " " << nr[1].P_dev[291][nr[1].DP_2D[2] - 1][0] << " " << nr[1].P_dev[291][nr[1].DP_2D[2] - 1][1] << " " << nr[1].P_dev[291][nr[1].DP_2D[2] - 1][2] << std::endl;

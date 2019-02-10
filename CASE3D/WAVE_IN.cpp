@@ -16,36 +16,60 @@ double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, 
 	double RO = 0.0; 
 
 	if (WAVE == 1) {
-		if (TIME == 1) {
-			for (j = 0; j < NNODE; j++) {
-				//if ((T[TIME - 1] + (abs(GCOORD[j][1]) - xo) / C) >= 0) {
-				//if ((T[TIME - 1] + ((-xo) - GCOORD[j][1]) / C) >= 0) {
-				if ((T[TIME - 1] + ((-xo) - GCOORD[j][1]) / C) > -1e-6) {
-					//PIN[j][0] = PPEAK*exp(-(T[TIME - 1] + ((abs(GCOORD[j][1]) - xo) / C)) / TAU);
-					PIN[j][0] = PPEAK*exp(-(T[TIME - 1] + (((-xo) - GCOORD[j][1]) / C)) / TAU);
-					
+		if (step == 0) {
+			if (TIME == 1) {
+				for (j = 0; j < NNODE; j++) {
+					//if ((T[TIME - 1] + (abs(GCOORD[j][1]) - xo) / C) >= 0) {
+					//if ((T[TIME - 1] + ((-xo) - GCOORD[j][1]) / C) >= 0) {
+					if ((T[TIME - 1] + ((-xo) - GCOORD[j][1]) / C) > -1e-6) {
+						//PIN[j][0] = PPEAK*exp(-(T[TIME - 1] + ((abs(GCOORD[j][1]) - xo) / C)) / TAU);
+						PIN[j][0] = PPEAK*exp(-(T[TIME - 1] + (((-xo) - GCOORD[j][1]) / C)) / TAU);
+
+					}
+					else {
+						PIN[j][0] = 0.0;
+					}
 				}
-				else {
-					PIN[j][0] = 0.0;
+			}
+			else { //TIME>0
+				for (j = 0; j < NNODE; j++) {
+					//if ((T[TIME - 1] + (abs(GCOORD[j][1]) - xo) / C) >= 0) {
+					//if ((T[TIME - 1] + ((-xo) - GCOORD[j][1]) / C) >= 0) {
+					if ((T[TIME - 1] + ((-xo) - GCOORD[j][1]) / C) > -1e-6) {
+						//PIN[j][1] = PPEAK*exp(-(T[TIME - 1] + ((abs(GCOORD[j][1]) - xo) / C)) / TAU);
+						PIN[j][1] = PPEAK*exp(-(T[TIME - 1] + (((-xo) - GCOORD[j][1]) / C)) / TAU);
+						//std::cout << " " << std::endl;
+					}
+					else {
+						PIN[j][1] = 0.0;
+					}
 				}
 			}
 		}
-		else { //TIME>0
-			for (j = 0; j < NNODE; j++) {
-				//if ((T[TIME - 1] + (abs(GCOORD[j][1]) - xo) / C) >= 0) {
-				//if ((T[TIME - 1] + ((-xo) - GCOORD[j][1]) / C) >= 0) {
-				if ((T[TIME - 1] + ((-xo) - GCOORD[j][1]) / C) >= -1e-6) {
-					//PIN[j][1] = PPEAK*exp(-(T[TIME - 1] + ((abs(GCOORD[j][1]) - xo) / C)) / TAU);
-					PIN[j][1] = PPEAK*exp(-(T[TIME - 1] + (((-xo) - GCOORD[j][1]) / C)) / TAU);
-					//std::cout << " " << std::endl;
+		else { //step wave with no exponential decay
+			if (TIME == 1) {
+				for (j = 0; j < NNODE; j++) {
+					if ((T[TIME - 1] + (-xo + GCOORD[j][0]) / C) > -1e-6) {
+						PIN[j][0] = PPEAK;
+					}
+					else {
+						PIN[j][0] = 0.0;
+					}
 				}
-				else {
-					PIN[j][1] = 0.0;
+			}
+			else { //TIME>0
+				for (j = 0; j < NNODE; j++) {
+					if ((T[TIME - 1] + (-xo + GCOORD[j][0]) / C) > -1e-6) {
+						PIN[j][1] = PPEAK;
+					}
+					else {
+						PIN[j][1] = 0.0;
+					}
 				}
 			}
 		}
 	}
-	else { //Spherical wave
+	else if (WAVE == 2) { //Spherical wave
 		if (TIME == 1) {
 			RO = sqrt(pow((ZC - ZO), 2) + pow((YC - YO), 2) + pow((XC - XO), 2));
 			//the distance between reference point and explosion point
