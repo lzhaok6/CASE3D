@@ -54,7 +54,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1ftbasemesh_tet_150m_10m_24m.inp";
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/Spherical_shell_fluid_0.05ft.inp";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1.25ftbasemesh_fs_150m_10m_24m.inp";
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_2ftftbasemesh_fs_150m_10m_24m.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
@@ -556,13 +556,10 @@ struct meshgenerationstruct meshgeneration() {
 		//adjust the node location if necessary
 		if (nodeadj == 1) {
 			for (int i = 0; i < t.NNODE; i++) {
-				//t.GCOORD[i][0] = VX[i];
-				//t.GCOORD[i][1] = VZ[i] + fs_offset;
-				//t.GCOORD[i][2] = -VY[i];
+				t.GCOORD[i][0] = VX[i];
+				t.GCOORD[i][1] = VZ[i] + fs_offset;
+				t.GCOORD[i][2] = -VY[i];
 				//t.GCOORD[i][1] = VY[i] + fs_offset;
-				t.GCOORD[i][0] += -0.2572;
-				t.GCOORD[i][1] += -0.2072;
-				t.GCOORD[i][2] += -0.4572; 
 			}
 		}
 	}

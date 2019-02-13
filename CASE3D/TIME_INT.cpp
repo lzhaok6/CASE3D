@@ -630,9 +630,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 				//prototype: -(PPEAK*TAU*exp(-x/(C*TAU))*heaviside(-(XO - x)/C)*(XO*exp(x/(C*TAU)) - x*exp(x/(C*TAU)) - C*TAU*exp(XO/(C*TAU)) + C*TAU*exp(x/(C*TAU))))/C
 
 				//initialize XNBORG (initialize to 0)
+				double angle = 0.0; 
 				for (z = 0; z < nrbsurfnumber; z++) {
+					angle = 0.0;
 					for (j = 0; j < nr[z].NEL_nrb; j++) {
 						for (k = 0; k < elenode2D; k++) {
+							angle = ol[z].norm[j][0] * wavdirc[0] + ol[z].norm[j][1] * wavdirc[1] + ol[z].norm[j][2] * wavdirc[2];
 							if (-(2 * xo - 2 * abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][1]) + C*DT) / (2 * C) >= 0.0) {
 								nr[z].XNRBORG[nr[z].DP_2D[j*elenode2D + k] - 1][j] = -(PPEAK*TAU*1.0*(exp((DT / 2 + (xo - abs(GCOORD[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][1])) / C) / TAU) - 1)) / (C*RHO);
 							}
@@ -809,16 +812,17 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	std::string tecplotfile = "tecplot.dat";
 	std::ofstream tecplotfilehd;
 	tecplotfilehd.open(tecplotfile);
-	for (j = 0; j < NNODE; j++) {
-		tecplotfilehd << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << FEE[j * 2 + 0] << " " << FEEDOT[j][0] << std::endl;
-	}
-	for (j = 0; j < NEL; j++) {
-		for (z = 0; z < NINT*NINT*NINT; z++) {
-			tecplotfilehd << IEN[j*NINT*NINT*NINT + z] << " ";
+	if (tecplot == 1) {
+		for (j = 0; j < NNODE; j++) {
+			tecplotfilehd << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << FEE[j * 2 + 0] << " " << FEEDOT[j][0] << std::endl;
 		}
-		tecplotfilehd << std::endl;
+		for (j = 0; j < NEL; j++) {
+			for (z = 0; z < NINT*NINT*NINT; z++) {
+				tecplotfilehd << IEN[j*NINT*NINT*NINT + z] << " ";
+			}
+			tecplotfilehd << std::endl;
+		}
 	}
-	
 
 	//Get the sample points on a line to observe the wave propagation pressure distribution
 	count = 0;
@@ -998,7 +1002,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		else {
 			for (z = 0; z < owsfnumber; z++) {
 				for (j = 0; j < ol[z].GIDNct; j++) {
-					WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM; // //correct version with structural gravity
+					if (debug_PH == 0) {
+						WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM; // //correct version with structural gravity
+					}
+					else {
+						WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0];
+					}
 					if (Bleich == 1) {
 						WP[ol[z].GIDN[j] - 1] = (PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]) / SX / SZ;
 					}
@@ -1191,6 +1200,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 								angle = nr[z].norm[j][0] * wavdirc[0] + nr[z].norm[j][1] * wavdirc[1] + nr[z].norm[j][2] * wavdirc[2]; 
 								nr[z].XEST_kn[nr[z].DP_2D[j*elenode2D + k] - 1][j] = angle*(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][1])
 									- (0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[j*elenode2D + k] - 1][j] - 1][1]);
+								nr[z].XNRBORG2[nr[z].DP_2D[j*elenode2D + k] - 1][j] = angle*nr[z].XNRBORG[nr[z].DP_2D[j*elenode2D + k] - 1][j];
 							}
 							else {
 								//nr[z].XEST_kn[nr[z].DP_2D[k] - 1][j] = angle*(0.5 * DT / (RHO*C))*(PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][0] + PIN[nr[z].IEN_gb[nr[z].DP_2D[k] - 1][j] - 1][1]) 
@@ -1218,7 +1228,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 					}
 					for (j = 0; j < nr[z].NEL_nrb; j++) {
 						for (k = 0; k < elenode2D; k++) {
-							NRBDISPTEMP[k] = -RHO* (nr[z].XNRB_kn[nr[z].DP_2D[j*elenode2D + k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[j*elenode2D + k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[j*elenode2D + k] - 1][j]);
+							//NRBDISPTEMP[k] = -RHO* (nr[z].XNRB_kn[nr[z].DP_2D[j*elenode2D + k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[j*elenode2D + k] - 1][j][1] - nr[z].XNRBORG[nr[z].DP_2D[j*elenode2D + k] - 1][j]);
+							NRBDISPTEMP[k] = -RHO* (nr[z].XNRB_kn[nr[z].DP_2D[j*elenode2D + k] - 1][j][1] + nr[z].XNRB_ukn[nr[z].DP_2D[j*elenode2D + k] - 1][j][1] + nr[z].XNRBORG2[nr[z].DP_2D[j*elenode2D + k] - 1][j]);
 						}
 						for (h = 0; h < elenode2D; h++) {
 							BNRBTEMP[h] = 0.0;
