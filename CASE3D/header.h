@@ -31,7 +31,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 
 //extern int** nodesperelem;
 //extern int nodesperelem2; 
-const int N = 1;    //N is the element order of fluid mesh 
+const int N = 2;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;
 const int hprefg = 1; //The level of Gauss-Legendre integration on the structure mesh (for mapping algorithm 4 and 5)
 const int hprefg_flu = N; //The level of Gauss-Legendre integration on the fluid mesh (for mapping algorithm 4 and 5) 
@@ -305,7 +305,7 @@ const int refine = 1; //The refinement rate of fluid mesh against base fluid mes
 const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
 //const int hprefg = 1;
-const int mappingalgo = 2; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
+const int mappingalgo = 5; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
 const double RHO = 1025.0; //original
 //const double RHO = 989.0; //Bleich-Sandler
 const int WAVE = 2; //1 for plane wave; 2 for spherical wave 
@@ -345,8 +345,8 @@ const int debug_algo5 = 0;
 const int debug_PH = 0; 
 const int debug_IEN = 0; 
 const int fsdebug = 0;
-const int tfm = 0; //is the total field model used? 
-const int tensorfactorization = 0;
+const int tfm = 1; //is the total field model used? 
+const int tensorfactorization = 1;
 const int TNT = 1;
 const int output = 0;
 const int FEM = 0; //Is this a first order FEM code? 
