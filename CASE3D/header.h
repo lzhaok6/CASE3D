@@ -31,7 +31,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 
 //extern int** nodesperelem;
 //extern int nodesperelem2; 
-const int N = 2;    //N is the element order of fluid mesh 
+const int N = 1;    //N is the element order of fluid mesh 
 const int NINT = N + 1; //NINT=N+1;
 const int hprefg = 1; //The level of Gauss-Legendre integration on the structure mesh (for mapping algorithm 4 and 5)
 const int hprefg_flu = N; //The level of Gauss-Legendre integration on the fluid mesh (for mapping algorithm 4 and 5) 
@@ -305,7 +305,7 @@ const int refine = 1; //The refinement rate of fluid mesh against base fluid mes
 const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
 //const int hprefg = 1;
-const int mappingalgo = 5; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
+const int mappingalgo = 4; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
 const double RHO = 1025.0; //original
 //const double RHO = 989.0; //Bleich-Sandler
 const int WAVE = 2; //1 for plane wave; 2 for spherical wave 
@@ -314,7 +314,7 @@ const int wavdirc[3] = { -1,0,0 }; //the direction of incident plane wave (posit
 const double C = 1500.0; //original  
 //const double C = 1450.0; //Bleich_Sandler	
 //const double CFLFRAC = 0.5;  //original 
-const double CFLFRAC = 1.0; 
+const double CFLFRAC = 0.5; 
 const int dtscale = 1;
 const double BETA = 0.25;   //original 
 const double TTERM = 0.03;    //SIMULATION END TIME 
@@ -341,6 +341,7 @@ const int debug = 0; //is the code in debug mode?
 const int debug2 = 0; 
 const int debug3 = 0; 
 const int debug4 = 0; 
+const int debug5 = 0; 
 const int debug_algo5 = 0; 
 const int debug_PH = 0; 
 const int debug_IEN = 0; 

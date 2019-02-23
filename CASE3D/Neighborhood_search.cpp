@@ -774,10 +774,10 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 			if (i % 1000 == 0) {
 				std::cout << i << " structure elements scanned out of: " << ss[e].ELE_stru << std::endl;
 			}
-			if (ss[e].elenode[i] == 3) { //quad element
+			if (ss[e].elenode[i] == 3) { //triangular
 				ele_id = 0; 
 			}
-			else {
+			else { //quad element
 				ele_id = 1;
 			}
 			for (j = 0; j < localnode[ele_id]; j++) { //j stands for gauss points
@@ -1432,11 +1432,13 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 		}
 		delete[] ol[z].flu_stru_global;
 	}
-	for (z = 0; z < ssnumber; z++) {
-		for (i = 0; i < ss[z].ELE_stru * (hprefg + 1) * (hprefg + 1); i++) {
-			delete[] ss[z].FP_flu[i];
+	if (mappingalgo == 5) {
+		for (z = 0; z < ssnumber; z++) {
+			for (i = 0; i < ss[z].ELE_stru * (hprefg + 1) * (hprefg + 1); i++) {
+				delete[] ss[z].FP_flu[i];
+			}
+			delete[] ss[z].FP_flu;
 		}
-		delete[] ss[z].FP_flu;
 	}
 	std::cout << std::endl; 
 

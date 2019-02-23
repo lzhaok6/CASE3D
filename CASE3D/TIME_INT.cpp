@@ -1074,6 +1074,19 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 			}
 		}
 
+		if (debug5 == 1) {
+			//ol[0].DISP_gs[3 * (0*elenode2D_gs + 0) + 0] = 1.0; 
+			//ol[0].DISP_gs[3 * (0*elenode2D_gs + 0) + 1] = 1.0;
+			//ol[0].DISP_gs[3 * (0*elenode2D_gs + 0) + 2] = 1.0;
+			
+			for (k = 0; k < elenode2D_gs; k++) {
+				for (h = 0; h < 3; h++) {
+					ol[0].DISP_gs[3 * (0 * elenode2D_gs + k) + h] = 1.0; 
+				}
+			}
+			
+		}
+
 		if (tfm == 1) { //Total field model
 			for (z = 0; z < owsfnumber; z++) {
 				for (j = 0; j < ol[z].FSNEL; j++) { //for every fluid element linked to structure
@@ -1172,7 +1185,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 			}
 			*/
 		}
-
+		
 		//NRB predictor
 		if (tfm == 1) { //TFM
 			if (WAVE == 1) { //Plane wave
