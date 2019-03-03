@@ -3,6 +3,7 @@
 #include "data.h"
 #include <stdio.h>
 #include <iostream>
+#include <iomanip>
 #include <stdlib.h>
 #include <fstream>
 #include <string>
@@ -54,7 +55,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1ftbasemesh_tet_150m_10m_24m.inp";
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_3ftbasemesh_fs.msh";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_0.625ftbasemesh_fs_150m_10m_24m_tet.inp";
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_2ftftbasemesh_fs_150m_10m_24m.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
@@ -1749,7 +1750,7 @@ struct meshgenerationstruct meshgeneration() {
 			myfile << wetsurface_name << std::endl;
 			myfile << "NODES " << ol[z].GIDNct_MpCCI << std::endl;
 			for (i = 0; i < ol[z].GIDNct_MpCCI; i++) {
-				myfile << i << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][0] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][1] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][2] << " " << std::endl;
+				myfile << i << " " << std::fixed << std::setprecision(15) << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][0] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][1] << " " << t.GCOORD[ol[z].GIDN_MpCCI[i] - 1][2] << " " << std::endl;
 			}
 			myfile << "ELEMENTS " << ol[z].FSNEL << std::endl;
 			//Output connectivity matrix

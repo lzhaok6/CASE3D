@@ -827,9 +827,9 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	//Get the sample points on a line to observe the wave propagation pressure distribution
 	count = 0;
 	for (i = 0; i < NNODE; i++) {
-		if (abs(GCOORD[i][1] - 0.0) < 1e-6 && abs(GCOORD[i][2] - 0.0) < 1e-6) {
+		if (abs(GCOORD[i][0] - 0.0) < 1e-6 && abs(GCOORD[i][2] - 0.0) < 1e-6) {
 			sampline.push_back(i + 1);
-			sampline_gc.push_back(GCOORD[i][0]); 
+			sampline_gc.push_back(GCOORD[i][1]); 
 			count += 1;
 		}
 	}
@@ -837,7 +837,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 
 	for (i = 0; i < sampline_gc.size(); i++) {
 		for (j = 0; j < sampline.size(); j++) {
-			if (GCOORD[sampline[j] - 1][0] == sampline_gc[i]) {
+			if (GCOORD[sampline[j] - 1][1] == sampline_gc[i]) {
 				sampline_found.push_back(sampline[j]);
 			}
 		}
@@ -976,7 +976,8 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 						}
 						else {
 							//WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM;
-							WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0];
+							//WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0];
+							WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1];
 						}
 						//ol[z].WP[ol[z].GIDN[j] - 1] = PH[ol[z].GIDN[j] - 1] - PATM; //pure hydrostatic pressure
 					//ol[z].WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0]; //incident pressure
@@ -1814,7 +1815,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 			for (k = 0; k < NDT_out; k++) {
 				if (i == T_out[k]) {
 					for (j = 0; j < sampline_found.size(); j++) {
-						outline[k] << GCOORD[sampline_found[j] - 1][0] << " " << PT[sampline_found[j] - 1][0] << " " << PT[sampline_found[j] - 1][1] << std::endl;
+						outline[k] << GCOORD[sampline_found[j] - 1][1] << " " << P[sampline_found[j] - 1][0] << " " << P[sampline_found[j] - 1][1] << std::endl;
 					}
 				}
 			}

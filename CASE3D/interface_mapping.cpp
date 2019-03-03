@@ -1,6 +1,7 @@
 //#include "stdafx.h"
 #include <stdio.h>
 #include <iostream>
+#include <iomanip>
 #include <stdlib.h>
 #include "header.h"
 #include <fstream>

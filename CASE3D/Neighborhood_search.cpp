@@ -6,6 +6,7 @@
 #include <cmath>
 #include <math.h>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <Eigen/Dense>
 #include <Eigen/LU>
@@ -638,7 +639,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 			myfile_algo5 << wetsurface_name << std::endl;
 			myfile_algo5 << "NODES " << ss[z].Node_stru << std::endl;
 			for (i = 0; i < ss[z].Node_stru; i++) {
-				myfile_algo5 << i << " " << ss[z].GCOORD_stru[ss[z].Node_glob[i] - 1][0] << " " << ss[z].GCOORD_stru[ss[z].Node_glob[i] - 1][1] << " " << ss[z].GCOORD_stru[ss[z].Node_glob[i] - 1][2] << " " << std::endl;
+				myfile_algo5 << i << " " << std::fixed << std::setprecision(15) << ss[z].GCOORD_stru[ss[z].Node_glob[i] - 1][0] << " " << ss[z].GCOORD_stru[ss[z].Node_glob[i] - 1][1] << " " << ss[z].GCOORD_stru[ss[z].Node_glob[i] - 1][2] << " " << std::endl;
 			}
 			myfile_algo5 << "ELEMENTS " << ss[z].ELE_stru << std::endl;
 			//Output connectivity matrix
