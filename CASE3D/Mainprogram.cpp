@@ -87,7 +87,7 @@ int main()
 		system("PAUSE ");
 	}
 	if (debug_PH == 1) {
-		std::cout << "Do you really not want to sent only incident pressure to structure?" << std::endl;
+		std::cout << "Do you really want to enable debug_PH?" << std::endl;
 		system("PAUSE"); 
 	}
 	if (BETA == 0) {

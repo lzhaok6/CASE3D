@@ -812,6 +812,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	std::string tecplotfile = "tecplot.dat";
 	std::ofstream tecplotfilehd;
 	tecplotfilehd.open(tecplotfile);
+
 	if (tecplot == 1) {
 		for (j = 0; j < NNODE; j++) {
 			tecplotfilehd << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << FEE[j * 2 + 0] << " " << FEEDOT[j][0] << std::endl;
@@ -858,6 +859,10 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 			outline[i].open(filename2);
 		}
 	}
+
+	std::string pressurefile = "pressure_history.txt";
+	std::ofstream Pressurehistoryhd;
+	Pressurehistoryhd.open(pressurefile);
 
 	double hd = 0;
 	//for (i = 0; i < NDT - 1; i++) { //error prone: i other than time should not present in this loop
@@ -1007,7 +1012,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 						WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PATM; // //correct version with structural gravity
 					}
 					else {
-						WP[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][0];
+						WP[ol[z].GIDN[j] - 1] = PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1];
 					}
 					if (Bleich == 1) {
 						WP[ol[z].GIDN[j] - 1] = (PT[ol[z].GIDN[j] - 1][0] - PH[ol[z].GIDN[j] - 1]) / SX / SZ;
@@ -1815,7 +1820,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 			for (k = 0; k < NDT_out; k++) {
 				if (i == T_out[k]) {
 					for (j = 0; j < sampline_found.size(); j++) {
-						outline[k] << GCOORD[sampline_found[j] - 1][1] << " " << P[sampline_found[j] - 1][0] << " " << P[sampline_found[j] - 1][1] << std::endl;
+						outline[k] << GCOORD[sampline_found[j] - 1][1] << " " << PT[sampline_found[j] - 1][0] << " " << PT[sampline_found[j] - 1][1] << std::endl;
 					}
 				}
 			}
@@ -1899,8 +1904,9 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		std::cout << " " << std::endl; 
 		//Output the pressure history under a specified point
 		//extern double BF_val[4];
-		//energyfilehd << current_time << " " << nr[1].angle_disp1[nr[1].DP_2D[2] - 1][291] << " " << nr[1].angle_disp2[nr[1].DP_2D[2] - 1][291] << " " << nr[1].P_dev[291][nr[1].DP_2D[2] - 1][0] << " " << nr[1].P_dev[291][nr[1].DP_2D[2] - 1][1] << " " << nr[1].P_dev[291][nr[1].DP_2D[2] - 1][2] << std::endl;
-		//energyfilehd << current_time << " " << nr[0].angle_disp1[nr[0].DP_2D[2] - 1][94] << " " << nr[0].angle_disp2[nr[0].DP_2D[2] - 1][94] << " " << nr[0].P_dev[94][nr[0].DP_2D[2] - 1][0] << " " << nr[0].P_dev[94][nr[0].DP_2D[2] - 1][1] << " " << nr[0].P_dev[94][nr[0].DP_2D[2] - 1][2] << " " << P[nr[0].IEN_gb[nr[0].DP_2D[2] - 1][94] - 1][1] << std::endl;
+
+		Pressurehistoryhd << current_time << " " << P[4269090][0] << " " << P[4268892][0] << " " << P[5990795][0] << std::endl; //For 0.5ft hex mesh (DDG_0.5ftbasemesh_fs_150m_10m_24m.inp)
+		//Pressurehistoryhd << current_time << " " << P[313281][0] << " " << P[313359][0] << " " << P[442319][0] << std::endl; //For 1.25ft hex mesh (DDG_1.25ftbasemesh_fs_150m_10m_24m.inp)
 	}
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 	myfile2 << "total CPU time: " << duration << std::endl;
