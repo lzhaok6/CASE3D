@@ -21,6 +21,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	int h, i, j, k, q, z, ii, jj, kk, m;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[nrbsurfnumber];
+	extern STRU_WET_SURF ss[ssnumber]; //data structure used to store the properties on the structure wetted surface
 
 	int* counter1;
 	int* counter2;
@@ -176,10 +177,10 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	double *FFORCE; //ARRAY OF INTERNAL + EXTERNAL FORCE ON FLUID
 	double *BNRB; //SOLUTION ARRAY FOR FORCE OF NRBC ON FLUID
 	double *HF; //GLOBAL REACTANCE MATIRX
-	
+
 	double *HFTEMP;
 	HFTEMP = new double[elenode3D];
-	
+
 	double *HFTEMPn;
 	if (tensorfactorization == 1) {
 		HFTEMPn = new double[elenode3D];
@@ -196,7 +197,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	//double *XCOR; //SOLUTION ARRAY FOR NRB
 	//double *XCOR_kn;
 	//double *XCOR_ukn;
-	double** PSI_inc;
+	//double** PSI_inc;
 	//double *DPS;
 	//==============================================================================//
 	//DSDOT = new double[NNODE];
@@ -214,7 +215,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		FEEDOT_inc[i] = new double[2];
 	}
 	*/
-	FEE = new double[NNODE*2];
+	FEE = new double[NNODE * 2];
 	P = new double*[NNODE];
 	for (i = 0; i < NNODE; i++) {
 		P[i] = new double[2];
@@ -243,11 +244,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		for (i = 0; i < elenode2D; i++) {
 			nr[z].XNRBORG[i] = new double[nr[z].NEL_nrb];
 		}
-		nr[z].FEEDOT_inc = new double**[elenode2D]; 
+		nr[z].FEEDOT_inc = new double**[elenode2D];
 		for (i = 0; i < elenode2D; i++) {
 			nr[z].FEEDOT_inc[i] = new double*[nr[z].NEL_nrb];
 			for (j = 0; j < nr[z].NEL_nrb; j++) {
-				nr[z].FEEDOT_inc[i][j] = new double[2]; 
+				nr[z].FEEDOT_inc[i][j] = new double[2];
 			}
 		}
 		nr[z].XEST = new double*[elenode2D];
@@ -361,7 +362,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	for (i = 0; i < elenode3D; i++) {
 		FEETEMP[i] = 0.0;
 	}
-	
+
 
 	for (i = 0; i < NNODE; i++) {
 		//DPS_ukn[i] = 0.0;
@@ -377,7 +378,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 				nr[z].XEST_ukn[i][j] = 0.0;
 				nr[z].angle_disp1[i][j] = 1.0;
 				nr[z].angle_disp2[i][j] = 1.0;
-				nr[z].XNRBORG[i][j] = 0.0; 
+				nr[z].XNRBORG[i][j] = 0.0;
 				nr[z].XNRBORG2[i][j] = 0.0;
 				for (k = 0; k < 2; k++) {
 					nr[z].disp_mag[i][j][k] = 0.0;
@@ -404,18 +405,43 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 
 	if (tfm == 0) {
 		//declarition
-		PSI_inc = new double*[NNODE];
-		for (i = 0; i < NNODE; i++) {
-			PSI_inc[i] = new double[2];
-		}
 		for (z = 0; z < owsfnumber; z++) { //this memory allocation scheme could have been improved
 			ol[z].PSI = new double[ol[z].FSNEL*elenode2D_gs];
 			ol[z].DI = new double[ol[z].FSNEL*elenode2D_gs];
 			ol[z].DISPI = new double*[ol[z].FSNEL*elenode2D_gs];
+			ol[z].WPIN_gs = new double[ol[z].FSNEL*elenode2D_gs];
 			for (j = 0; j < ol[z].FSNEL*elenode2D_gs; j++) {
 				ol[z].DISPI[j] = new double[2];
 			}
+			ol[z].PIN_gs = new double*[ol[z].FSNEL*elenode2D_gs];
+			for (j = 0; j < ol[z].FSNEL*elenode2D_gs; j++) {
+				ol[z].PIN_gs[j] = new double[2];
+			}
+			ol[z].PSI_inc = new double*[ol[z].FSNEL*elenode2D_gs];
+			for (i = 0; i < ol[z].FSNEL*elenode2D_gs; i++) {
+				ol[z].PSI_inc[i] = new double[2];
+			}
 		}
+
+		if (incidentdisp_on_fluid == 0) {
+			for (z = 0; z < ssnumber; z++) {
+				ss[z].PIN = new double*[ss[z].Node_stru];
+				for (j = 0; j < ss[z].Node_stru; j++) {
+					ss[z].PIN[j] = new double[2];
+				}
+				ss[z].PSI = new double[ss[z].Node_stru];
+				ss[z].DI = new double[ss[z].Node_stru];
+				ss[z].DISPI = new double*[ss[z].Node_stru * 3];
+				for (j = 0; j < ss[z].Node_stru * 3; j++) {
+					ss[z].DISPI[j] = new double[2];
+				}
+				ss[z].PSI_inc = new double*[ss[z].Node_stru];
+				for (i = 0; i < ss[z].Node_stru; i++) {
+					ss[z].PSI_inc[i] = new double[2];
+				}
+			}
+		}
+
 		if (debug == 0) {
 			for (z = 0; z < nrbsurfnumber; z++) {
 				nr[z].XNRB = new double**[elenode2D];
@@ -454,17 +480,32 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		}
 		//DPS = new double[NNODE];
 		//initialization
-		for (i = 0; i < NNODE; i++) {
-			for (j = 0; j < 2; j++) {
-				PSI_inc[i][j] = 0.0;
-			}
-		}
 		for (z = 0; z < owsfnumber; z++) {
 			for (j = 0; j < ol[z].FSNEL*elenode2D_gs; j++) {
 				ol[z].PSI[j] = 0.0;
 				ol[z].DI[j] = 0.0;
+				ol[z].WPIN_gs[j] = 0.0;
 				for (k = 0; k < 2; k++) {
 					ol[z].DISPI[j][k] = 0.0;
+					ol[z].PIN_gs[j][k] = 0.0;
+					ol[z].PSI_inc[j][k] = 0.0;
+				}
+			}
+		}
+		if (incidentdisp_on_fluid == 0) {
+			for (z = 0; z < ssnumber; z++) {
+				for (j = 0; j < ss[z].Node_stru; j++) {
+					ss[z].PSI[j] = 0.0;
+					ss[z].DI[j] = 0.0;
+					for (k = 0; k < 2; k++) {
+						ss[z].PIN[j][k] = 0.0;
+						ss[z].PSI_inc[j][k] = 0.0;
+					}
+				}
+				for (j = 0; j < 3 * ss[z].Node_stru; j++) {
+					for (k = 0; k < 2; k++) {
+						ss[z].DISPI[j][k] = 0.0;
+					}
 				}
 			}
 		}
@@ -743,7 +784,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 	//Initiate the first coupling
 	initcoupling();
 
-	//Update the current MpCCI time
+	//Update the current MpCCI time6
 	current_time = T[0];
 
 	interface_mappingstruct in;
@@ -849,7 +890,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 			NDT_out += 1;
 		}
 	}
-	std::string name2 = "PT_line_result_";
+	std::string name2 = "PT_result_";
 		
 	outline = new std::ofstream[NDT_out];
 	std::string filename2;
@@ -1019,6 +1060,11 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 					}
 					WPIN[ol[z].GIDN[j] - 1] = PIN[ol[z].GIDN[j] - 1][1] + PIN[ol[z].GIDN[j] - 1][0];
 				}
+				for (j = 0; j < ol[z].FSNEL; j++) {  //FOR STRUCTURE ELEMENT ON THE FSI BOUNDARY
+					for (k = 0; k < elenode2D_gs; k++) {
+						ol[z].WPIN_gs[j*elenode2D_gs + k] = ol[z].PIN_gs[j*elenode2D_gs + k][1] + ol[z].PIN_gs[j*elenode2D_gs + k][0];
+					}
+				}
 			}
 		}
 
@@ -1048,12 +1094,20 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 							ol[z].DISPI[j*elenode2D_gs + k][1] = ol[z].DISPI[j*elenode2D_gs + k][0] + angle*ol[z].DI[j*elenode2D_gs + k];
 						}
 						else { //Spherical wave 
-							r = sqrt(pow((GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][0] - XC), 2) + pow((GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][1] - YC), 2) + pow((GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][2] - ZC), 2));
-							ol[z].PSI[j*elenode2D_gs + k]
-								= (DT / 2.0)*(WPIN[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1]); //INCIDENT DISP. PREDICTOR by time integration	
-							PSI_inc[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][1] = ol[z].PSI[j*elenode2D_gs + k];
-							angle = (ol[z].norm[j][0] * (GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][0] - XC) / r + ol[z].norm[j][1] * (GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][1] - YC) / r + ol[z].norm[j][2] * (GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][2] - ZC) / r);
-							ol[z].DI[j*elenode2D_gs + k] = ol[z].PSI[j*elenode2D_gs + k] / (RHO*C) + (PSI_inc[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][0] + PSI_inc[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][1]) * (DT / 2) / (RHO * r);  //trapezoidal integration of the double integrator
+							if (mappingalgo == 4 || mappingalgo == 5) {
+								if (incidentdisp_on_fluid == 1) {
+									r = sqrt(pow((ol[z].GCOORD_flu_gs[j*elenode2D + k][0] - XC), 2) + pow((ol[z].GCOORD_flu_gs[j*elenode2D + k][1] - YC), 2) + pow((ol[z].GCOORD_flu_gs[j*elenode2D + k][2] - ZC), 2));
+									angle = (ol[z].norm[j][0] * (ol[z].GCOORD_flu_gs[j*elenode2D + k][0] - XC) / r + ol[z].norm[j][1] * (ol[z].GCOORD_flu_gs[j*elenode2D + k][1] - YC) / r + ol[z].norm[j][2] * (ol[z].GCOORD_flu_gs[j*elenode2D + k][2] - ZC) / r);
+									ol[z].PSI[j*elenode2D_gs + k] = (DT / 2.0)*ol[z].WPIN_gs[j*elenode2D_gs + k]; //INCIDENT DISP. PREDICTOR by time integration	
+								}
+							}
+							else {
+								r = sqrt(pow((GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][0] - XC), 2) + pow((GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][1] - YC), 2) + pow((GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][2] - ZC), 2));
+								angle = (ol[z].norm[j][0] * (GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][0] - XC) / r + ol[z].norm[j][1] * (GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][1] - YC) / r + ol[z].norm[j][2] * (GCOORD[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1][2] - ZC) / r);
+								ol[z].PSI[j*elenode2D_gs + k] = (DT / 2.0)*WPIN[ol[z].IEN_gb[ol[z].FP_2D[j*elenode2D + k] - 1][j] - 1]; //INCIDENT DISP. PREDICTOR by time integration	
+							}
+							ol[z].PSI_inc[j*elenode2D_gs + k][1] = ol[z].PSI[j*elenode2D_gs + k];
+							ol[z].DI[j*elenode2D_gs + k] = ol[z].PSI[j*elenode2D_gs + k] / (RHO*C) + (ol[z].PSI_inc[j*elenode2D_gs + k][0] + ol[z].PSI_inc[j*elenode2D_gs + k][1]) * (DT / 2) / (RHO * r);  //trapezoidal integration of the double integrator
 							ol[z].DISPI[j*elenode2D_gs + k][1] = ol[z].DISPI[j*elenode2D_gs + k][0] + angle*ol[z].DI[j*elenode2D_gs + k]; //UPDATED INCIDENT STRUCUTRE DISPLACEMENT 
 						}
 					}
@@ -1072,13 +1126,37 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 				for (j = 0; j < ol[z].FSNEL*elenode2D_gs; j++) {
 					ol[z].DISPI[j][0] = ol[z].DISPI[j][1];
 				}
-				for (j = 0; j < ol[z].FSNEL; j++) {
-					for (k = 0; k < elenode2D; k++) {
-						PSI_inc[ol[z].IEN_gb[k][j] - 1][0] = PSI_inc[ol[z].IEN_gb[k][j] - 1][1];
+				for (j = 0; j < ol[z].FSNEL*elenode2D_gs; j++) {
+					ol[z].PSI_inc[j][0] = ol[z].PSI_inc[j][1];
+				}
+			}
+			if (incidentdisp_on_fluid == 0) { //the incident displacement is defined on structure
+				//Don't forget to create those variables first
+				if (mappingalgo == 4 || mappingalgo == 5) {
+					for (z = 0; z < ssnumber; z++) {
+						for (j = 0; j < ss[z].Node_stru; j++) {
+							r = sqrt(pow((wsflist[z]->nodecoord[3 * j + 0] - XC), 2) + pow((wsflist[z]->nodecoord[3 * j + 1] - YC), 2) + pow((wsflist[z]->nodecoord[3 * j + 2] - ZC), 2));
+							//angle = ((-ss[z].norm_stru_pt[j][0]) * (wsflist[z]->nodecoord[3 * j + 0] - XC) / r + (-ss[z].norm_stru_pt[j][1]) * (wsflist[z]->nodecoord[3 * j + 1] - YC) / r + (-ss[z].norm_stru_pt[j][2]) * (wsflist[z]->nodecoord[3 * j + 2] - ZC) / r);
+							ss[z].PSI[j] = (DT / 2.0)*(ss[z].PIN[j][0] + ss[z].PIN[j][1]); //INCIDENT DISP. PREDICTOR by time integration	
+							ss[z].PSI_inc[j][1] = ss[z].PSI[j];
+							ss[z].DI[j] = ss[z].PSI[j] / (RHO*C) + (ss[z].PSI_inc[j][0] + ss[z].PSI_inc[j][1]) * (DT / 2) / (RHO * r);  //trapezoidal integration of the double integrator
+							ss[z].DISPI[j * 3 + 0][1] = ss[z].DISPI[j * 3 + 0][0] + ss[z].DI[j] * (wsflist[z]->nodecoord[3 * j + 0] - XC) / r; //the component of incident displacement vector
+							ss[z].DISPI[j * 3 + 1][1] = ss[z].DISPI[j * 3 + 1][0] + ss[z].DI[j] * (wsflist[z]->nodecoord[3 * j + 1] - YC) / r;
+							ss[z].DISPI[j * 3 + 2][1] = ss[z].DISPI[j * 3 + 2][0] + ss[z].DI[j] * (wsflist[z]->nodecoord[3 * j + 2] - ZC) / r;
+						}
+					}
+					for (z = 0; z < ssnumber; z++) {
+						for (j = 0; j < ss[z].Node_stru * 3; j++) {
+							ss[z].DISPI[j][0] = ss[z].DISPI[j][1];
+						}
+						for (j = 0; j < ss[z].Node_stru; j++) {
+							ss[z].PSI_inc[j][0] = ss[z].PSI_inc[j][1];
+						}
 					}
 				}
 			}
 		}
+
 
 		if (debug5 == 1) {
 			//ol[0].DISP_gs[3 * (0*elenode2D_gs + 0) + 0] = 1.0; 
@@ -1130,7 +1208,12 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 							//std::cout << "We need to derive the DISPI on gauss point!!! (not done yet)" << std::endl;
 							//system("PAUSE ");
 							//we did not derive the DISPI on gauss point (the value is on interpolation point). This is not technically correct but should result in little difference 
-							WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D_gs + k][1] + (ol[z].DISP_norm[j*elenode2D_gs + k][1] - ol[z].DISP_norm[j*elenode2D_gs + k][0]) - ol[z].DISPI[j*elenode2D_gs + k][1]);
+							if (incidentdisp_on_fluid == 1) {
+								WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D_gs + k][1] + (ol[z].DISP_norm[j*elenode2D_gs + k][1] - ol[z].DISP_norm[j*elenode2D_gs + k][0]) - ol[z].DISPI[j*elenode2D_gs + k][1]);
+							}
+							else {
+								WBSTEMP[h] += ol[z].FPMASTER[j][h][k] * (-1) * RHO * (ol[z].DISP_norm[j*elenode2D_gs + k][1] + (ol[z].DISP_norm[j*elenode2D_gs + k][1] - ol[z].DISP_norm[j*elenode2D_gs + k][0]));
+							}
 						}
 					}
 					for (k = 0; k < elenode2D; k++) {
@@ -1872,13 +1955,26 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 				for (j = 0; j < ol[z].FSNEL; j++) {
 					for (k = 0; k < elenode2D_gs; k++) {
 						ol[z].DISP_norm[j*elenode2D_gs + k][0] = ol[z].DISP_norm[j*elenode2D_gs + k][1];
+						if (tfm == 0) {
+							ol[z].PIN_gs[j*elenode2D_gs + k][0] = ol[z].PIN_gs[j*elenode2D_gs + k][1];
+						}
 					}
 				}
+				
 			}
 			else {
 				for (j = 0; j < ol[z].FSNEL; j++) {
 					for (k = 0; k < elenode2D; k++) {
 						ol[z].DISP_norm[j*elenode2D + k][0] = ol[z].DISP_norm[j*elenode2D + k][1];
+					}
+				}
+			}
+		}
+		if (mappingalgo == 4 || mappingalgo == 5) {
+			if (incidentdisp_on_fluid == 0) {
+				for (z = 0; z < ssnumber; z++) {
+					for (j = 0; j < ss[z].Node_stru; j++) {
+						ss[z].PIN[j][0] = ss[z].PIN[j][1];
 					}
 				}
 			}
@@ -1905,7 +2001,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		//Output the pressure history under a specified point
 		//extern double BF_val[4];
 
-		Pressurehistoryhd << current_time << " " << P[4269090][0] << " " << P[4268892][0] << " " << P[5990795][0] << std::endl; //For 0.5ft hex mesh (DDG_0.5ftbasemesh_fs_150m_10m_24m.inp)
+		//Pressurehistoryhd << current_time << " " << P[4269090][0] << " " << P[4268892][0] << " " << P[5990795][0] << std::endl; //For 0.5ft hex mesh (DDG_0.5ftbasemesh_fs_150m_10m_24m.inp)
 		//Pressurehistoryhd << current_time << " " << P[313281][0] << " " << P[313359][0] << " " << P[442319][0] << std::endl; //For 1.25ft hex mesh (DDG_1.25ftbasemesh_fs_150m_10m_24m.inp)
 	}
 	duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;

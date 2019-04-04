@@ -96,9 +96,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 	}
 
 	//First bring in the structural wetted surface mesh into the code
-	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
-	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl.inp");
-	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp");
+	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
+	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl_1surf.inp");
+	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp");
 	if (!infile_algo5) {
 		std::cout << "can not open the structure input file" << std::endl;
 		system("PAUSE ");
@@ -379,6 +379,8 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 		}
 	}
 	if (mappingalgo == 4 || mappingalgo == 5) {
+		
+
 		double x1, x2, x3; double y1, y2, y3; double z1, z2, z3;
 		double ax, ay, az; double bx, by, bz;
 		double n1, n2, n3; double absn;
@@ -626,6 +628,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 			for (i = 0; i < ss[z].Node_stru; i++) {
 				ss[z].Node_glob[i] = dummy[i];
 			}
+			ss[z].dispi_stru = new double[ss[z].Node_stru * 3]; //could be extracted by IEN_stru_MpCCI[]
 		}
 	}
 
@@ -649,6 +652,18 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 					myfile_algo5 << " " << ss[z].IEN_stru_MpCCI[i * 4 + j] - 1; //node numbering starts from 0 in model file
 				}
 				myfile_algo5 << std::endl;
+			}
+		}
+		//define the nodal normal vector
+		for (z = 0; z < ssnumber; z++) {
+			ss[z].norm_stru_pt = new double*[ss[z].Node_stru];
+			for (i = 0; i < ss[z].Node_stru; i++) {
+				ss[z].norm_stru_pt[i] = new double[3];
+			}
+			for (i = 0; i < ss[z].ELE_stru; i++) {
+				for (j = 0; j < ss[z].elenode[i]; j++) {
+					ss[z].norm_stru_pt[ss[z].IEN_stru_MpCCI[i * 4 + j] - 1] = ss[z].norm_stru[i];
+				}
 			}
 		}
 	}
@@ -778,7 +793,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 			if (ss[e].elenode[i] == 3) { //triangular
 				ele_id = 0; 
 			}
-			else { //quad element
+			else { //quad element	
 				ele_id = 1;
 			}
 			for (j = 0; j < localnode[ele_id]; j++) { //j stands for gauss points
@@ -1399,6 +1414,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 	for (z = 0; z < ssnumber; z++) {
 		delete[] ss[z].GCOORD_stru_gs;
 	}
+	/*
 	if (element_type == 0) {
 		for (z = 0; z < owsfnumber; z++) {
 			for (i = 0; i < ol[z].FSNEL*(hprefg_flu + 1)*(hprefg_flu + 1); i++) {
@@ -1415,6 +1431,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 			delete[] ol[z].GCOORD_flu_gs;
 		}
 	}
+	*/
 	for (z = 0; z < ssnumber; z++) {
 		for (k = 0; k < ss[z].ELE_stru * 4; k++) {
 			delete[] ss[z].GCOORD_stru_fs[k];

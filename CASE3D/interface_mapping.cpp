@@ -493,7 +493,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 				}
 				//phi_femg: the linear shape function value at base mesh Gauss-Legendre nodes
 				for (l = 0; l < ss[z].ELE_stru; l++) {
-					if (ss[z].elenode[l] == 4) {
+					if (ss[z].elenode[l] == 4) { //quad structural element
 						for (i = 0; i < 2; i++) {
 							for (j = 0; j < 2; j++) {
 								for (u = 0; u < hprefg + 1; u++) { //u v stands for y x
@@ -508,7 +508,7 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 							}
 						}
 					}
-					else {
+					else { //triangular structural element
 						for (i = 0; i < 3; i++) { //interpolation point
 							for (u = 0; u < 3; u++) { //integration point
 								for (n = 0; n < 3; n++) { //normal direction vector
@@ -624,7 +624,12 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 									for (v = 0; v < 2; v++) {
 										phig = 1.0 / 4.0;
 										for (n = 0; n < 3; n++) {
-											DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1][n];
+											if (incidentdisp_on_fluid == 1) {
+												DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1][n];
+											}
+											else {
+												DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1][n] - ss[z].DISPI[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1) + n][1];
+											}
 											ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + n] += DISPTEMP * phig;
 										}
 									}
@@ -634,7 +639,12 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								for (u = 0; u < 3; u++) { //u,v stands for fem points 
 									phig = 1.0 / 3.0;
 									for (n = 0; n < 3; n++) {
-										DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + u] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + u] - 1][n];
+										if (incidentdisp_on_fluid == 1) {
+											DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + u] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + u] - 1][n];
+										}
+										else {
+											DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + u] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + u] - 1][n] - ss[z].DISPI[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + u] - 1) + n][1];
+										}
 										ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + n] += DISPTEMP * phig;
 									}
 								}
@@ -695,7 +705,12 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 										}
 										phig = (nomx / denomx)*(nomy / denomy);
 										for (n = 0; n < 3; n++) {
-											DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1][n];
+											if (incidentdisp_on_fluid == 1) {
+												DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1][n];
+											}
+											else {
+												DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1][n] - ss[z].DISPI[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + ss[z].LNA_stru[u * 2 + v] - 1] - 1) + n][1];
+											}
 											ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + n] += DISPTEMP * phig;
 										}
 									}
@@ -705,7 +720,12 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 								phi[0] = 1 - lcx - lcy; phi[1] = lcx; phi[2] = lcy;
 								for (u = 0; u < 3; u++) { //u stands for triangular element interpolation points  
 									for (n = 0; n < 3; n++) {
-										DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + u] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + u] - 1][n];
+										if (incidentdisp_on_fluid == 1) {
+											DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + u] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + u] - 1][n];
+										}
+										else {
+											DISPTEMP = wsflist[z]->nodecoord[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + u] - 1) + n] - ss[z].GCOORD_stru[ss[z].IEN_stru[stru_ele * 4 + u] - 1][n] - ss[z].DISPI[3 * (ss[z].IEN_stru_MpCCI[stru_ele * 4 + u] - 1) + n][1];
+										}
 										ol[z].DISP_gs[3 * (l*elenode2D_gs + i) + n] += DISPTEMP * phi[u];
 									}
 								}

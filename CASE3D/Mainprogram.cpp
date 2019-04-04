@@ -110,6 +110,10 @@ int main()
 		std::cout << "Are you sure you don't want to include hydrostatic pressure?" << std::endl;
 		system("PAUSE");
 	}
+	if (tfm == 1 && Colewave == 1) {
+		std::cout << "The wave with varying peak pressure and decay rate can only be used with total field models" << std::endl;
+		system("PAUSE"); 
+	}
 	meshgenerationstruct a;
 	a = meshgeneration();
 	std::cout << "mesh generation done" << std::endl;

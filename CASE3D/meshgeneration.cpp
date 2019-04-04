@@ -55,7 +55,7 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1ftbasemesh_tet_150m_10m_24m.inp";
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_0.5ftbasemesh_fs_150m_10m_24m.inp";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1.25ftbasemesh_fs_150m_10m_24m.inp";
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_2ftftbasemesh_fs_150m_10m_24m.msh";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
@@ -76,7 +76,7 @@ struct meshgenerationstruct meshgeneration() {
 		system("PAUSE ");
 	}
 
-	std::vector<int> wt_py; //the physical group corresponds to wetted surface
+	std::vector<int> wt_py; //the physical group corresponds to wetted surface 
 	std::vector<int> nrb_py; //the physical group corresponds to nrb surface
 	std::vector<int>numele_py; //total number of element in each physical group
 	std::vector<std::vector<int>> ien_py; //the elements in each physical group (subset)

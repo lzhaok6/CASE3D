@@ -98,19 +98,22 @@ typedef struct owetsurf {
 	double* DISP_gs; //The displacement on gauss nodes  
 	double* GCOORD_fs; //The array built for fast access
 	int* IEN_flu_3D; //Get the corner point of the fluid elements 
+	double** PIN_gs; 
+	double** PSI_inc; 
+	double* WPIN_gs;
 } OWETSURF;
 
 typedef struct stru_wet_surf {
 	int*gs_flu; //used to store the corresponding fluid element or fluid point (for orphan node)
 	double**gs_flu_global;
 	double**gs_flu_local; //used to store the local coordinate of the projected structural gauss point on fluid element
-						  //std::vector<int>orphan_flag_gs; //the container to store the node numbering of orphan nodes
+	//std::vector<int>orphan_flag_gs; //the container to store the node numbering of orphan nodes
 	int* orphan_flag_gs;
 	int ELE_stru; //total number of structural wetted surface elements
-				  //int** IEN_stru; //Connectivity matrix of the structural wetted surface elements
+	//int** IEN_stru; //Connectivity matrix of the structural wetted surface elements
 	int* IEN_stru; //Connectivity matrix of the structural wetted surface elements
 	double **GCOORD_stru; //the coordinate of structure nodes
-						  //int** IEN_stru_MpCCI; //Renumber the node on wetted surface to start from 1
+	//int** IEN_stru_MpCCI; //Renumber the node on wetted surface to start from 1
 	int* IEN_stru_MpCCI; //Renumber the node on wetted surface to start from 1
 	int Node_stru; //total node on structural wetted surface
 	int* Node_glob; //Associate the corresponding global node number to the local node in MpCCI model file
@@ -128,11 +131,18 @@ typedef struct stru_wet_surf {
 	double****xs_2D; //for the 2D elements on wetted surface
 	int** IEN_stru_norm;
 	double* GCOORD_stru_gs; //the coordinate of structure wetted surface gauss points
+	double* dispi_stru; //the incident displacement on the structural mesh points (not gauss points)
 	int** IEN_stru_gs;
 	int gs_num;
 	int** FP_flu; //store the interface node for mapping algorithm 4
 	int* elenode; //the number of node of the element (3 means triangular element; 4 means quad element)
 	double** GCOORD_stru_fs;
+	double* PSI; 
+	double* DI; 
+	double** DISPI; 
+	double** PSI_inc; 
+	double** norm_stru_pt; //normal vector on structural wetted surface points
+	double **PIN; 
 }STRU_WET_SURF;
 
 //Store the properties on NRB surface (currently just one)
@@ -305,7 +315,7 @@ const int refine = 1; //The refinement rate of fluid mesh against base fluid mes
 const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
 //const int hprefg = 1;
-const int mappingalgo = 5; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
+const int mappingalgo = 2; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
 const double RHO = 1025.0; //original
 //const double RHO = 989.0; //Bleich-Sandler
 const int WAVE = 2; //1 for plane wave; 2 for spherical wave 
@@ -317,15 +327,16 @@ const double C = 1500.0; //original
 const double CFLFRAC = 1.0;
 const int dtscale = 1;
 const double BETA = 0.0;   //original 
-const double TTERM = 0.030;    //SIMULATION END TIME 
+const double TTERM = 0.015;    //SIMULATION END TIME 
 const int CAV = 1; //1 for cavitation, 0 for non-cavitation 
 const double PSAT = 0.0; //saturated pressure 
 const double pi = 3.141593;
 const double grav = 9.81;
 const double PATM = 101.3e3; //pa 
-const double stdoff = 0; //ft
-//const double depth = 30; //ft
-const double depth = 60; //ft
+const double stdoff = 50; //ft
+//const double stdoff = 0; //ft
+const double depth = 20; //ft
+//const double depth = 60; //ft
 //const double depth = 70; //ft
 const double x_loc = 74.22;//m for DDG case
 //const double x_loc = 0.0;//m for FSP case
@@ -336,7 +347,7 @@ const double W = 60; //charge weight (lb)
 //const double YO = -SY;
 //const double ZO = SZ / 2;
 //the parameter to control whether a tabulated smoothed waveform is used 
-const double output_int = 1e-4; //output file time interval (0.5ms)
+const double output_int = 1e-3; //output file time interval (0.5ms)
 const int debug = 0; //is the code in debug mode?	
 const int debug2 = 0;
 const int debug3 = 0;
@@ -363,7 +374,7 @@ const double XHE = 0.3048;
 //const double XHE = 0.1; //Bleich_Sandler
 const double YHE = 0.3048;
 //const double YHE = 0.141 / 2; //Bleich_Sandler 
-const double DY = 3 * SY;
+const double DY = 2 * SY;
 //const double DY = 3.807; //Bleich_Sandler
 //const int SYNEL = 4 * refine;
 const int SYNEL = 0;
@@ -374,4 +385,6 @@ const int element_type = 0; //0 for hexahedral element; 1 for tetrahedral elemen
 const int nodeadj = 1; //If the node coordinate needs to be adjusted. 
 const int freesurface = 1;
 const int hydrostatic = 1;
-const int tecplot = 0;
+const int tecplot = 1;
+const int incidentdisp_on_fluid = 1; //If the incident pressure displacement is defined on the fluid side rather than the structural side
+const int Colewave = 0; 
