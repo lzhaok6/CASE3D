@@ -21,13 +21,14 @@ struct MATRIXstruct MATRIX(int NEL, int NNODE, double***SHL, double*W, int*IEN, 
 double EIGENMAX(double*** QMASTER, double*** HMASTER, int NEL);
 struct TIMINTstruct TIMINT(double LMAX);
 struct NRBstruct NRB(int NNODE, double **GCOORD, int*** LNA);
-double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO);
+double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO, std::vector<int> shadow_pts);
 void FSILINK(int*** LNA);
 struct interface_mappingstruct interface_mapping(int fluid2structure, double ** GCOORD, double* WP, int* IEN, int***LNA);
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TIME, double *T, double DT, int NDT, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC, double ZC,
 	double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double***Gn,
-	double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double** HMASTER);
+	double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double** HMASTER, std::vector<int> shadow_pts);
 //used to map the force value from user defined fluid mesh to MpCCI defined mesh and map the displacement in the opposite way. 
+std::vector<int> shadow_pt_identification(double XC, double YC, double ZC, int NNODE, double** GCOORD); 
 
 //extern int** nodesperelem;
 //extern int nodesperelem2; 
@@ -315,7 +316,7 @@ const int refine = 1; //The refinement rate of fluid mesh against base fluid mes
 const int hpref = refine*N; //total refinement level of h and p refinement
 //const int hprefg = refine*N; //The level of Gauss-Legendre integration on the base mesh (dedicated for mapping algorithm 5) this could integrate the nodal force on the linear base mesh upto the order 2(refine*N)-2
 //const int hprefg = 1;
-const int mappingalgo = 2; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
+const int mappingalgo = 5; //Mapping algoritm, please refer to the description in the main file (1, 2, 3, 4)
 const double RHO = 1025.0; //original
 //const double RHO = 989.0; //Bleich-Sandler
 const int WAVE = 2; //1 for plane wave; 2 for spherical wave 
@@ -327,7 +328,7 @@ const double C = 1500.0; //original
 const double CFLFRAC = 1.0;
 const int dtscale = 1;
 const double BETA = 0.0;   //original 
-const double TTERM = 0.015;    //SIMULATION END TIME 
+const double TTERM = 0.030;    //SIMULATION END TIME 
 const int CAV = 1; //1 for cavitation, 0 for non-cavitation 
 const double PSAT = 0.0; //saturated pressure 
 const double pi = 3.141593;
@@ -335,7 +336,7 @@ const double grav = 9.81;
 const double PATM = 101.3e3; //pa 
 const double stdoff = 50; //ft
 //const double stdoff = 0; //ft
-const double depth = 20; //ft
+const double depth = 30; //ft
 //const double depth = 60; //ft
 //const double depth = 70; //ft
 const double x_loc = 74.22;//m for DDG case
@@ -348,7 +349,7 @@ const double W = 60; //charge weight (lb)
 //const double ZO = SZ / 2;
 //the parameter to control whether a tabulated smoothed waveform is used 
 const double output_int = 1e-3; //output file time interval (0.5ms)
-const int debug = 0; //is the code in debug mode?	
+const int debug = 0; //is the code in debug mode?
 const int debug2 = 0;
 const int debug3 = 0;
 const int debug4 = 0;
@@ -385,6 +386,6 @@ const int element_type = 0; //0 for hexahedral element; 1 for tetrahedral elemen
 const int nodeadj = 1; //If the node coordinate needs to be adjusted. 
 const int freesurface = 1;
 const int hydrostatic = 1;
-const int tecplot = 1;
+const int tecplot = 0;
 const int incidentdisp_on_fluid = 1; //If the incident pressure displacement is defined on the fluid side rather than the structural side
 const int Colewave = 0; 

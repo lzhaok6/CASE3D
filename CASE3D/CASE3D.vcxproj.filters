@@ -152,5 +152,8 @@
     <ClCompile Include="TD_LOCAL_NODE.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Shadow_pt_identification.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

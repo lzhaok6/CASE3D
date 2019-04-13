@@ -354,8 +354,10 @@ int main()
 		PPEAK = 1e6; 
 	}
 
+	std::vector<int>shadow_pts = shadow_pt_identification(XC, YC, ZC, a.NNODE, a.GCOORD);
+
 	TIME_INT(a.NNODE, a.GCOORD, c.LNA, a.IEN, a.NEL, TIME, T, t.DT, t.NDT, o.Q, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamman, o.gamma_tn, o.Gn,
-		o.gamma_t, o.gamma, o.G, f.W, g.SHL, n.SHG_tet, m.JACOB_tet, o.HMASTER);
+		o.gamma_t, o.gamma, o.G, f.W, g.SHL, n.SHG_tet, m.JACOB_tet, o.HMASTER, shadow_pts);
 
 	printf("Cleaning up...\n");
 	/* clean up */

@@ -10,7 +10,7 @@
 #include "data.h"
 
 int loc;
-double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO) {
+double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, double DT, double PPEAK, double TAU, double XC, double YC, double ZC, double XO, double YO, double ZO, std::vector<int> shadow_pts) {
 	//In this code, we've only coded the spherical wave case since you don't have plane wave in real application
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern STRU_WET_SURF ss[ssnumber];
@@ -120,6 +120,14 @@ double** WAVE_IN(int NNODE, double** GCOORD, double* T, int TIME, double** PIN, 
 				}
 			}
 		}
+
+		if (tfm == 0) { //Scattered field model. Redefine the PIN in the shadow region
+			for (i = 0; i < shadow_pts.size(); i++) {
+				PIN[shadow_pts[i] - 1][0] = 0.0;
+				PIN[shadow_pts[i] - 1][1] = 0.0;
+			}
+		}
+
 
 		//if 
 		if (tfm == 0 && (mappingalgo == 4 || mappingalgo == 5)) {

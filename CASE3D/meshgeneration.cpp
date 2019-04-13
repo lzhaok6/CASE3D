@@ -55,8 +55,8 @@ struct meshgenerationstruct meshgeneration() {
 	std::cout << "Have you configured the mesh file name correctly? If yes, hit Enter to proceed" << std::endl;
 	int ct = -1;
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1ftbasemesh_tet_150m_10m_24m.inp";
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1.25ftbasemesh_fs_150m_10m_24m.inp";
-	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_2ftftbasemesh_fs_150m_10m_24m.msh";
+	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=1_1ft_BOLT.msh";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_0.83ftbasemesh_fs_150m_10m_24m.inp";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");
@@ -64,7 +64,7 @@ struct meshgenerationstruct meshgeneration() {
 	}
 	std::string filenamestr(filename);
 	std::string input_type; 
-	if (filenamestr.find(".msh") != std::string::npos) { //Gmsh input file
+	if (filenamestr.find(".msh") != std::string::npos) { //Gmshd input file
 		input_type = "Gmsh"; 
 	}
 	else if (filenamestr.find(".inp") != std::string::npos) {
@@ -2002,12 +2002,14 @@ struct meshgenerationstruct meshgeneration() {
 		for (z = 0; z < owsfnumber; z++) {
 			delete[] ol[z].GIDN_MpCCI;
 		}
+		/*
 		for (z = 0; z < owsfnumber; z++) {
 			for (i = 0; i < 4; i++) {
 				delete[] ol[z].IEN_algo2[i];
 			}
 			delete[] ol[z].IEN_algo2;
 		}
+		*/
 	}
 
 	std::cout << " " << std::endl;

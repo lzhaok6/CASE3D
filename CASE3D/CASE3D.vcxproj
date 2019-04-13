@@ -187,6 +187,7 @@
     <ClCompile Include="meshgeneration.cpp" />
     <ClCompile Include="Neighborhood_search.cpp" />
     <ClCompile Include="NRB.cpp" />
+    <ClCompile Include="Shadow_pt_identification.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>

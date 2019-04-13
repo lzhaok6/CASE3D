@@ -17,11 +17,22 @@
 
 //NRB determines the NRB local node numbering and the associated NRB arrays
 void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TIME, double *T, double DT, int NDT, double* Q, double KAPPA, double PPEAK, double TAU, double XC, double YC,
-	double ZC, double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double***Gn, double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL, double*** SHG_tet, double* JACOB_tet, double** HMASTER) {
+	double ZC, double XO, double YO, double ZO, double ***SHOD, double gamman[], double gamma_tn[], double***Gn, double****gamma_t, double ****gamma, double*****G, double*W, double*** SHL,
+	double*** SHG_tet, double* JACOB_tet, double** HMASTER, std::vector<int>shadow_pts) {
 	int h, i, j, k, q, z, ii, jj, kk, m;
 	extern OWETSURF ol[owsfnumber]; //defined in FSILINK 
 	extern NRBSURF nr[nrbsurfnumber];
 	extern STRU_WET_SURF ss[ssnumber]; //data structure used to store the properties on the structure wetted surface
+
+
+	int* shadow_pt_vis = new int[NNODE];
+	for (i = 0; i < NNODE; i++) {
+		shadow_pt_vis[i] = 0; 
+	}
+	for (i = 0; i < shadow_pts.size(); i++) {
+		shadow_pt_vis[shadow_pts[i] - 1] = 1;
+	}
+
 
 	int* counter1;
 	int* counter2;
@@ -579,7 +590,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 		}
 	}
 
-	PIN = WAVE_IN(NNODE, GCOORD, T, TIME, PIN, DT, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO);
+	PIN = WAVE_IN(NNODE, GCOORD, T, TIME, PIN, DT, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, shadow_pts);
 
 	if (tfm == 1) {
 		for (j = 0; j < NNODE; j++) {
@@ -789,9 +800,9 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 
 	interface_mappingstruct in;
 
-	in = interface_mapping(1, GCOORD, WP, IEN, LNA_3D);
-	dotransfer();
-	in = interface_mapping(0, GCOORD, WP, IEN, LNA_3D);
+	in = interface_mapping(1, GCOORD, WP, IEN, LNA_3D); //send nodal force to MpCCI var
+	dotransfer(); //exchange info
+	in = interface_mapping(0, GCOORD, WP, IEN, LNA_3D); //retrieve displacement from MpCCI var
 
 	//Generate the information file
 	std::string name3 = "parameters_" + timestr + ".txt";
@@ -1007,7 +1018,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 			current_time = TTERM;
 		}
 
-		PIN = WAVE_IN(NNODE, GCOORD, T, TIME, PIN, DT, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO); //USED TO UPDATE PIN IN THIS SUBROUTINE
+		PIN = WAVE_IN(NNODE, GCOORD, T, TIME, PIN, DT, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, shadow_pts); //USED TO UPDATE PIN IN THIS SUBROUTINE
 
 		for (k = 0; k < NNODE; k++) {
 			WBS[k] = 0.0;
@@ -1098,6 +1109,9 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 								if (incidentdisp_on_fluid == 1) {
 									r = sqrt(pow((ol[z].GCOORD_flu_gs[j*elenode2D + k][0] - XC), 2) + pow((ol[z].GCOORD_flu_gs[j*elenode2D + k][1] - YC), 2) + pow((ol[z].GCOORD_flu_gs[j*elenode2D + k][2] - ZC), 2));
 									angle = (ol[z].norm[j][0] * (ol[z].GCOORD_flu_gs[j*elenode2D + k][0] - XC) / r + ol[z].norm[j][1] * (ol[z].GCOORD_flu_gs[j*elenode2D + k][1] - YC) / r + ol[z].norm[j][2] * (ol[z].GCOORD_flu_gs[j*elenode2D + k][2] - ZC) / r);
+									if (angle < 0) {
+										angle = 0; 
+									}
 									ol[z].PSI[j*elenode2D_gs + k] = (DT / 2.0)*ol[z].WPIN_gs[j*elenode2D_gs + k]; //INCIDENT DISP. PREDICTOR by time integration	
 								}
 							}
@@ -1985,7 +1999,7 @@ void TIME_INT(int NNODE, double** GCOORD, int***LNA_3D, int*IEN, int NEL, int TI
 			for (k = 0; k < NDT_out; k++) {
 				if (i == T_out[k]) {
 					for (j = 0; j < NNODE; j++) {
-						outline[k] << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << PT[j][0] << " " << P[j][0] << " " << PIN[j][0] << " " << ds[j][2] << " " << WBS[j] << " " << BNRB[j] << " " << HF[j] << " " << FEE[j * 2 + 1] << " " << FEEDOT[j][1] << std::endl;
+						outline[k] << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << PT[j][0] << " " << P[j][0] << " " << PIN[j][0] << " " << ds[j][2] << " " << WBS[j] << " " << BNRB[j] << " " << HF[j] << " " << FEE[j * 2 + 1] << " " << FEEDOT[j][1] << " " << shadow_pt_vis[j] << std::endl;
 						//outline[k] << GCOORD[j][0] << " " << GCOORD[j][1] << " " << GCOORD[j][2] << " " << PH[j] << std::endl;
 					}
 					for (j = 0; j < NEL; j++) {

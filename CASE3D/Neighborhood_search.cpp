@@ -42,7 +42,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 		elenode2D_ln = 3;
 		elenode3D = 4; 
 	}
-
+	
 	//Get the corner point of the fluid elements
 	if (element_type == 0) { //hex element
 		for (z = 0; z < owsfnumber; z++) {
@@ -96,9 +96,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 	}
 
 	//First bring in the structural wetted surface mesh into the code
-	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
+	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
 	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl_1surf.inp");
-	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp");
+	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp");
 	if (!infile_algo5) {
 		std::cout << "can not open the structure input file" << std::endl;
 		system("PAUSE ");
@@ -379,8 +379,6 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 		}
 	}
 	if (mappingalgo == 4 || mappingalgo == 5) {
-		
-
 		double x1, x2, x3; double y1, y2, y3; double z1, z2, z3;
 		double ax, ay, az; double bx, by, bz;
 		double n1, n2, n3; double absn;
@@ -1236,6 +1234,7 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 						xu = (b2*(A01*A12 - A02*A11)) / (A00*A11*A22 - A00*A12*A21 - A01*A10*A22 + A01*A12*A20 + A02*A10*A21 - A02*A11*A20) - (b1*(A01*A22 - A02*A21)) / (A00*A11*A22 - A00*A12*A21 - A01*A10*A22 + A01*A12*A20 + A02*A10*A21 - A02*A11*A20) + (b0*(A11*A22 - A12*A21)) / (A00*A11*A22 - A00*A12*A21 - A01*A10*A22 + A01*A12*A20 + A02*A10*A21 - A02*A11*A20);
 						yu = (b1*(A00*A22 - A02*A20)) / (A00*A11*A22 - A00*A12*A21 - A01*A10*A22 + A01*A12*A20 + A02*A10*A21 - A02*A11*A20) - (b2*(A00*A12 - A02*A10)) / (A00*A11*A22 - A00*A12*A21 - A01*A10*A22 + A01*A12*A20 + A02*A10*A21 - A02*A11*A20) - (b0*(A10*A22 - A12*A20)) / (A00*A11*A22 - A00*A12*A21 - A01*A10*A22 + A01*A12*A20 + A02*A10*A21 - A02*A11*A20);
 						zu = (b2*(A00*A11 - A01*A10)) / (A00*A11*A22 - A00*A12*A21 - A01*A10*A22 + A01*A12*A20 + A02*A10*A21 - A02*A11*A20) - (b1*(A00*A21 - A01*A20)) / (A00*A11*A22 - A00*A12*A21 - A01*A10*A22 + A01*A12*A20 + A02*A10*A21 - A02*A11*A20) + (b0*(A10*A21 - A11*A20)) / (A00*A11*A22 - A00*A12*A21 - A01*A10*A22 + A01*A12*A20 + A02*A10*A21 - A02*A11*A20);
+						
 						//We need to determine at this stage if the projected node is within the searched element, if not we need to pass this element. 
 						double xi_k, eta_k;
 						double xi_k_1, eta_k_1;
