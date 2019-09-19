@@ -31,6 +31,10 @@ int main()
 	//double LMAX;
 	int h, q, z, e, i, j, k, ii, jj; //error prone: cannot be the same with data structure type (z is the same as Z)
 	int TIME = 0;     //CONTROL TIME
+	if (charge_loc == 1) {
+		std::cout << "Are you sure you want to manually set charge location?" << std::endl;
+		system("PAUSE ");
+	}
 	if (FEM == 1 && N != 1) {
 		std::cout << "the current code doesn't support high-order FEM" << std::endl;
 		system("PAUSE ");
@@ -299,24 +303,47 @@ int main()
 	double dists = 0.0; //distance from charge center to nearest structural point
 	double distf = 0.0; //distance from charge center to nearest freesurface point
 	//determine the explosion center
-	ZC = stdoff*0.3048 + SZ / 2;
-	YC = -depth*0.3048;
-	XC = x_loc;
-
-	//determine the stand-off point (nearest structural node or free surface node depending on which one is closer)
-	dists = sqrt(pow(XC - x_loc, 2) + pow(YC - (-SY), 2) + pow(ZC - SZ / 2, 2));
-	distf = -YC;
-	
-	if (dists > distf) {
-		XO = XC;
-		YO = 0;
-		ZO = ZC;
+	if (charge_loc == 0) {
+		ZC = stdoff*0.3048 + SZ / 2;
+		YC = -depth*0.3048;
+		XC = x_loc;
+		//determine the stand-off point (nearest structural node or free surface node depending on which one is closer)
+		dists = sqrt(pow(XC - x_loc, 2) + pow(YC - (-SY), 2) + pow(ZC - SZ / 2, 2));
+		distf = -YC;
+		if (dists > distf) {
+			XO = XC;
+			ZO = ZC;
+		}
+		else {
+			//XO = 0.0;
+			XO = XC;
+			YO = -SY;
+			ZO = SZ / 2;
+		}
 	}
-	else {
-		//XO = 0.0;
-		XO = XC;
-		YO = -SY;
-		ZO = SZ / 2;
+	else { //manually configure the charge center
+		XC = x_loc;
+		YC = y_loc;
+		ZC = z_loc;
+		//check the evernote "Charge center location distribution" for case 1 ~ 6 arrangement
+		if (XC >= -SX && ZC >= -SZ / 2 && ZC <= SZ / 2) { //case 1
+			XO = XC; YO = -SY; ZO = ZC;
+		}
+		else if (ZC < -SZ / 2 && XC > -SX) { //case 2 
+			XO = XC; YO = -SY; ZO = -SZ / 2;
+		}
+		else if (ZC < -SZ / 2 && XC < -SX) { //case 3
+			XO = -SX; YO = -SY; ZO = -SZ / 2;
+		}
+		else if (XC < -SX && ZC > -SZ / 2 && ZC < SZ / 2) { //case 4
+			XO = -SX; YO = -SY; ZO = ZC;
+		}
+		else if (XC < -SX && ZC > SZ / 2) { //case 5
+			XO = -SX; YO = -SY; ZO = SZ / 2;
+		}
+		else if (XC > -SX && ZC > SZ / 2) { //case 6
+			XO = XC; YO = -SY; ZO = SZ / 2;
+		}
 	}
 
 	dist = sqrt(pow((XC - XO), 2) + pow((YC - YO), 2) + pow((ZC - ZO), 2));
@@ -354,8 +381,11 @@ int main()
 		PPEAK = 1e6; 
 	}
 
-	std::vector<int>shadow_pts = shadow_pt_identification(XC, YC, ZC, a.NNODE, a.GCOORD);
-
+	std::vector<int>shadow_pts;
+	if (tfm == 0) {
+		shadow_pts = shadow_pt_identification(XC, YC, ZC, a.NNODE, a.GCOORD);
+	}
+	
 	TIME_INT(a.NNODE, a.GCOORD, c.LNA, a.IEN, a.NEL, TIME, T, t.DT, t.NDT, o.Q, KAPPA, PPEAK, TAU, XC, YC, ZC, XO, YO, ZO, g.SHOD, o.gamman, o.gamma_tn, o.Gn,
 		o.gamma_t, o.gamma, o.G, f.W, g.SHL, n.SHG_tet, m.JACOB_tet, o.HMASTER, shadow_pts);
 

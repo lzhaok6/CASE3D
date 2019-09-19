@@ -33,13 +33,12 @@ struct interface_mappingstruct interface_mapping(int fluid2structure, double ** 
 	double accu = 0.0;
 	int ct = 0;
 
-	//This subroutine is temporarily changed to test the BS fluid domain (without side modules)
 	switch (fluid2structure) //sem points to fem points
 	{
 	case 1:
 		if (mappingalgo == 2) {
 			if (element_type == 0) { //hexahedral element 
-									 //In this code, we use the 2nd order GLL integration instead of 1st order GL integration in FSP case since we have to include a 2D Jacobian determinate to accommodate the geometric mapping
+				//In this code, we use the 2nd order GLL integration instead of 1st order GL integration in FSP case since we have to include a 2D Jacobian determinate to accommodate the geometric mapping
 				ct = 0;
 				for (z = 0; z < owsfnumber; z++) {
 					if (ol[z].FSNEL > 0) {

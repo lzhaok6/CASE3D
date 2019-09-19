@@ -56,7 +56,8 @@ struct meshgenerationstruct meshgeneration() {
 	int ct = -1;
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1ftbasemesh_tet_150m_10m_24m.inp";
 	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=1_1ft_BOLT.msh";
-	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_0.83ftbasemesh_fs_150m_10m_24m.inp";
+	//const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/FSP_N=2_mismatch.msh";
+	const char* filename = "C:/Users/lzhaok6/OneDrive/CASE_MESH/DDG_1.25ftbasemesh_fs_150m_10m_24m.inp";
 	FILE *fp = fopen(filename, "r");
 	if (!fp) {
 		printf("Cannot open the mesh file");

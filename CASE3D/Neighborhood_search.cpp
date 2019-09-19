@@ -96,9 +96,9 @@ void Neighborhood_search(double** GCOORD, int***LNA, int*IEN_flu, int NEL_flu) {
 	}
 
 	//First bring in the structural wetted surface mesh into the code
-	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
+	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp"); //The Abaqus input file
 	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/FSP_canopy_0.15_abaqus_MpCCI_explicit_sym_0.3048wl_1surf.inp");
-	std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp");
+	//std::ifstream infile_algo5("C:/Users/lzhaok6/Desktop/DDG_datacheck.inp");
 	if (!infile_algo5) {
 		std::cout << "can not open the structure input file" << std::endl;
 		system("PAUSE ");

@@ -16,7 +16,7 @@
 
 
 //This code identifies shadow points in the fluid domain. Only applicable to SFM. 
-//This function loop through the fluid domain points. If the line segment connecting the point and charge center intersects 
+//This function loop through the fluid domain points. If the line segment connecting the point and charge center intersects. 
 //one of the fluid wetted surface elements, then we can say that the fluid node is in the shadow.
 //Check out the post-processing folder shadow1.jpg and shadow2.jpg on how to determine if line and element intersect. 
 std::vector<int> shadow_pt_identification(double XC, double YC, double ZC, int NNODE, double** GCOORD) {
