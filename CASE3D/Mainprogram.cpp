@@ -304,13 +304,28 @@ int main()
 	double distf = 0.0; //distance from charge center to nearest freesurface point
 	//determine the explosion center
 	if (charge_loc == 0) {
-		ZC = stdoff*0.3048 + SZ / 2;
+		ZC = stdoff*0.3048 + SZ / 2; 
 		YC = -depth*0.3048;
 		XC = x_loc;
+		//calculate the closest fluid FSI surface point to the charge center
+		dists = 1e6; 
+		for (z = 0; z < owsfnumber; z++) {
+			for (int i = 0; i < ol[z].GIDNct; i++) {
+				int temp = sqrt(pow(XC - a.GCOORD[ol[z].GIDN[i] - 1][0], 2) + pow(YC - a.GCOORD[ol[z].GIDN[i] - 1][1], 2) + pow(ZC - a.GCOORD[ol[z].GIDN[i] - 1][2], 2));
+				if (temp < dists) {
+					dists = temp; 
+					XO = a.GCOORD[ol[z].GIDN[i] - 1][0];
+					YO = a.GCOORD[ol[z].GIDN[i] - 1][1];
+					ZO = a.GCOORD[ol[z].GIDN[i] - 1][2];
+				}
+			}
+		}
+		distf = -YC;
+		/*
 		//determine the stand-off point (nearest structural node or free surface node depending on which one is closer)
 		dists = sqrt(pow(XC - x_loc, 2) + pow(YC - (-SY), 2) + pow(ZC - SZ / 2, 2));
 		distf = -YC;
-		if (dists > distf) {
+		if (dists > distf) { //the stand-off point is on the free surface
 			XO = XC;
 			ZO = ZC;
 		}
@@ -320,6 +335,13 @@ int main()
 			YO = -SY;
 			ZO = SZ / 2;
 		}
+		*/
+		if (dists > distf) { //the stand-off point is on the free surface
+			XO = XC; 
+			YO = 0; 
+			ZO = ZC; 
+		}
+		//std::cout << " " << std::endl; 
 	}
 	else { //manually configure the charge center
 		XC = x_loc;
