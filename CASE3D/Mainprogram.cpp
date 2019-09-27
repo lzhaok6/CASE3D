@@ -311,7 +311,7 @@ int main()
 		dists = 1e6; 
 		for (z = 0; z < owsfnumber; z++) {
 			for (int i = 0; i < ol[z].GIDNct; i++) {
-				int temp = sqrt(pow(XC - a.GCOORD[ol[z].GIDN[i] - 1][0], 2) + pow(YC - a.GCOORD[ol[z].GIDN[i] - 1][1], 2) + pow(ZC - a.GCOORD[ol[z].GIDN[i] - 1][2], 2));
+				double temp = sqrt(pow(XC - a.GCOORD[ol[z].GIDN[i] - 1][0], 2) + pow(YC - a.GCOORD[ol[z].GIDN[i] - 1][1], 2) + pow(ZC - a.GCOORD[ol[z].GIDN[i] - 1][2], 2));
 				if (temp < dists) {
 					dists = temp; 
 					XO = a.GCOORD[ol[z].GIDN[i] - 1][0];
